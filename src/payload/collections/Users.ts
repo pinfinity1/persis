@@ -1,0 +1,19 @@
+import type { CollectionConfig } from "payload";
+
+export const Users: CollectionConfig = {
+  slug: "users",
+  admin: {
+    useAsTitle: "email",
+    description: "مدیریت حساب کاربری ادمین",
+  },
+  // فعال بودن auth باعث میشه Payload خودش فیلدهای ایمیل و پسورد رو بسازه
+  auth: true,
+  fields: [
+    {
+      name: "name",
+      type: "text",
+      label: "نام",
+    },
+    // هیچ فیلد اضافه یا نقش‌بندی (Role) اینجا نیاز نیست
+  ],
+};
