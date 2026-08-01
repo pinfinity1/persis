@@ -1,1 +1,44 @@
-{"Index": {"title": "سلام دنیا"}}
+{
+  "Index": {
+    "title": "پرسیس کوارتز"
+  },
+  "Header": {
+    "products": "محصولات",
+    "collections": "کالکشن‌ها",
+    "monocolorSeries": "سری مونوکالر",
+    "monocolorDesc": "سطوح یکدست، مدرن و ساده سفید و مشکی",
+    "veinedEffectSeries": "سری رگه‌ای (Veined Effect)",
+    "veinedEffectDesc": "بافت‌های نرم، ابر و بادی و الهام‌گرفته از طبیعت",
+    "calacattaSeries": "سری کالاکاتا",
+    "calacattaDesc": "طرح‌های لوکس با رگه‌های برجسته سفید، طوسی و طلایی",
+    "featured": "ویژه",
+    "featuredCollectionTitle": "جدیدترین طرح‌های کوارتز ۲۰۲۶",
+    "applications": "کاربردها",
+    "kitchenCountertops": "کانترتاپ و جزیره آشپزخانه",
+    "vanitiesAndBathrooms": "روشویی و سرویس بهداشتی",
+    "commercialProjects": "پروژه‌های تجاری و اداری",
+    "catalogs": "کاتالوگ‌ها",
+    "dealers": "نمایندگی‌ها",
+    "careAndMaintenance": "نگهداری و مراقبت",
+    "about": "درباره ما",
+    "contactUs": "تماس با ما"
+  },
+  "Footer": {
+    "description": "تولیدکننده سطوح کوارتز مهندسی‌شده با استانداردهای جهانی؛ تلفیقی از استحکام بی‌نظیر و زیبایی معماری.",
+    "address": "تهران، شهرک صنعتی شمس‌آباد، بلوار بوستان",
+    "email": "info@persisquartz.com",
+    "productsTitle": "کالکشن‌ها",
+    "monocolorSeries": "سری تک‌رنگ (Monocolor)",
+    "veinedEffectSeries": "سری افکت رگه‌دار (Veined)",
+    "calacattaSeries": "سری کالاکاتا (Calacatta)",
+    "quickLinksTitle": "دسترسی سریع",
+    "findDealers": "نمایندگی‌ها",
+    "downloadCatalog": "دانلود کاتالوگ",
+    "aboutUs": "درباره ما",
+    "contactUs": "تماس با ما",
+    "infoAndLegalTitle": "اطلاعات و قوانین",
+    "termsAndConditions": "شرایط و قوانین استفاده",
+    "faq": "سوالات متداول",
+    "copyright": "تمامی حقوق مادی و معنوی محفوظ است."
+  }
+}

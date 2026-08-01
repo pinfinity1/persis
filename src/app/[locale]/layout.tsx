@@ -1,21 +1,35 @@
+// src/app/[locale]/layout.tsx
 import type { Metadata } from "next";
-import { Inter, Vazirmatn } from "next/font/google";
+import localFont from "next/font/local";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import { notFound } from "next/navigation";
+import { Header } from "@/components/shared/header";
+import { Footer } from "@/components/shared/footer";
 import "../globals.css";
 
-// تنظیم فونت‌ها
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const vazirmatn = Vazirmatn({
-  subsets: ["arabic"],
+const vazirmatn = localFont({
+  src: [
+    { path: "../assets/Vazir-Medium.woff2", weight: "400", style: "normal" },
+    { path: "../assets/Vazir-Bold.woff2", weight: "700", style: "normal" },
+  ],
   variable: "--font-vazirmatn",
+  display: "swap",
+});
+
+const inter = localFont({
+  src: [
+    { path: "../assets/Inter-Regular.woff2", weight: "400", style: "normal" },
+    { path: "../assets/Inter-Bold.woff2", weight: "700", style: "normal" },
+  ],
+  variable: "--font-inter",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Persis Quartz",
-  description: "Multilingual Corporate Website",
+  title: "Persis Quartz | سطوح لوکس کوارتز",
+  description: "Multilingual Corporate Website for Persis Quartz",
 };
 
 export default async function RootLayout({
@@ -25,27 +39,26 @@ export default async function RootLayout({
   children: React.ReactNode;
   params: Promise<{ locale: string }>;
 }>) {
-  // در Next.js 15 پارامترها به صورت Promise هستند
   const { locale } = await params;
 
-  // بررسی معتبر بودن زبان
   if (!routing.locales.includes(locale as any)) {
     notFound();
   }
 
-  // دریافت ترجمه‌ها برای کامپوننت‌های کلاینت
   const messages = await getMessages();
-
-  // تعیین جهت و فونت بر اساس زبان
   const dir = locale === "en" ? "ltr" : "rtl";
-  const fontClass = locale === "en" ? inter.variable : vazirmatn.variable;
 
   return (
-    <html lang={locale} dir={dir} className={fontClass}>
-      {/* استفاده از کلاس font-sans برای اعمال فونتی که در متغیر تنظیم شده */}
-      <body className="antialiased font-sans">
+    <html
+      lang={locale}
+      dir={dir}
+      className={`${vazirmatn.variable} ${inter.variable}`}
+    >
+      <body className="antialiased font-sans flex flex-col min-h-screen">
         <NextIntlClientProvider messages={messages}>
-          {children}
+          <Header />
+          <div className="flex-1">{children}</div>
+          <Footer />
         </NextIntlClientProvider>
       </body>
     </html>

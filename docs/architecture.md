@@ -6,7 +6,7 @@
 - **Language:** TypeScript
 - **Styling:** Tailwind CSS
 - **UI Components:** Shadcn UI
-- **Animations:** Framer Motion
+- **Animations:** Motion
 - **Form Handling & Validation:** React Hook Form + Zod
 - **Internationalization (i18n):** next-intl
 
@@ -47,7 +47,7 @@ src/
 ### A. Server/Client Component Pattern
 
 - **Server Components (Default):** Fetch data directly from `services/`, handle backend logic, and pass raw data as props.
-- **Client Components (`"use client"`):** Placed at the leaf nodes of the component tree. Used ONLY for state, user events, and Framer Motion animations.
+- **Client Components (`"use client"`):** Placed at the leaf nodes of the component tree. Used ONLY for state, user events, and Motion animations.
 
 ### B. Service Layer / Data Fetching
 

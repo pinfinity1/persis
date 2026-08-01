@@ -1,14 +1,31 @@
-import { useTranslations } from "next-intl";
+// src/app/[locale]/page.tsx
+import { HeroBanner } from "@/components/home/hero-banner";
+import { FeaturedProducts } from "@/components/home/featured-products";
+import { InteractiveTools } from "@/components/home/interactive-tools";
+import { QuickContactBanner } from "@/components/home/quick-contact-banner";
+import { MOCK_PRODUCTS } from "@/lib/fake-products";
+import { useLocale } from "next-intl";
 
 export default function HomePage() {
-  const t = useTranslations("Index");
+  const locale = useLocale() as "fa" | "en";
+
+  // تبدیل ساختار چندزبانه برای ارسال به کامپوننت UI
+  const productsForUi = MOCK_PRODUCTS.map((p) => ({
+    id: p.id,
+    title: p.title[locale] || p.title.fa,
+    code: p.code,
+    category: p.category,
+    color: p.color,
+    imageUrl: p.imageUrl,
+    slug: p.slug,
+  }));
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-8">
-      <h1 className="text-4xl font-bold text-primary">{t("title")}</h1>
-      <p className="text-muted-foreground text-lg">
-        Next.js 15 + i18n + Tailwind
-      </p>
-    </div>
+    <main className="min-h-screen bg-background font-sans">
+      <HeroBanner />
+      <FeaturedProducts products={productsForUi} />
+      <InteractiveTools />
+      <QuickContactBanner />
+    </main>
   );
 }

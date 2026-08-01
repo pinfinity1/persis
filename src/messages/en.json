@@ -1,1 +1,44 @@
-{"Index": {"title": "Hello World"}}
+{
+  "Index": {
+    "title": "Persis Quartz"
+  },
+  "Header": {
+    "products": "Products",
+    "collections": "Collections",
+    "monocolorSeries": "Monocolor Series",
+    "monocolorDesc": "Pure white & black timeless surfaces",
+    "veinedEffectSeries": "Veined Effect",
+    "veinedEffectDesc": "Soft mist & cloud-like natural textures",
+    "calacattaSeries": "Calacatta Series",
+    "calacattaDesc": "Bold luxury veining in white, gold & black",
+    "featured": "Featured",
+    "featuredCollectionTitle": "New Quartz Collections 2026",
+    "applications": "Applications",
+    "kitchenCountertops": "Kitchen Countertops & Islands",
+    "vanitiesAndBathrooms": "Vanities & Bathrooms",
+    "commercialProjects": "Commercial & Corporate Projects",
+    "catalogs": "Catalogs",
+    "dealers": "Dealers",
+    "careAndMaintenance": "Care & Maintenance",
+    "about": "About Us",
+    "contactUs": "Contact Us"
+  },
+  "Footer": {
+    "description": "Manufacturer of premium engineered quartz surfaces; blending unmatched durability with architectural aesthetics.",
+    "address": "Shamsabad Ind. Zone, Tehran, Iran",
+    "email": "info@persisquartz.com",
+    "productsTitle": "Collections",
+    "monocolorSeries": "Monocolor Series",
+    "veinedEffectSeries": "Veined Effect Series",
+    "calacattaSeries": "Calacatta Series",
+    "quickLinksTitle": "Quick Links",
+    "findDealers": "Find Dealers",
+    "downloadCatalog": "Download Catalog",
+    "aboutUs": "About Us",
+    "contactUs": "Contact Us",
+    "infoAndLegalTitle": "Info & Legal",
+    "termsAndConditions": "Terms & Conditions",
+    "faq": "FAQ",
+    "copyright": "All rights reserved."
+  }
+}

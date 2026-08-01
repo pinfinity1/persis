@@ -1,1 +1,44 @@
-{"Index": {"title": "مرحبا بالعالم"}}
+{
+  "Index": {
+    "title": "برسيس كوارتز"
+  },
+  "Header": {
+    "products": "المنتجات",
+    "collections": "المجموعات",
+    "monocolorSeries": "سلسلة مونوكولور",
+    "monocolorDesc": "أسطح نقية باللونين الأبيض والأسود",
+    "veinedEffectSeries": "سلسلة التأثير العرقي",
+    "veinedEffectDesc": "قوام ناعم وضبابي مستوحى من الطبيعة",
+    "calacattaSeries": "سلسلة كالاكاتا",
+    "calacattaDesc": "تصاميم فاخرة بتعريقات بارزة ذهبية ورمادية",
+    "featured": "مميز",
+    "featuredCollectionTitle": "تصاميم الكوارتز الجديدة ٢٠٢٦",
+    "applications": "التطبيقات",
+    "kitchenCountertops": "أسطح المطابخ والجزر",
+    "vanitiesAndBathrooms": "المغاسل والحمامات",
+    "commercialProjects": "المشاريع التجارية والإدارية",
+    "catalogs": "الكتالوجات",
+    "dealers": "الوكلاء",
+    "careAndMaintenance": "العناية والصيانة",
+    "about": "من نحن",
+    "contactUs": "اتصل بنا"
+  },
+  "Footer": {
+    "description": "شركة مصنعة لأسطح الكوارتز الهندسي بملامح فاخرة؛ تجمع بين الصلابة الاستثنائية والجمال المعماري.",
+    "address": "طهران، مدينة شمس آباد الصناعية",
+    "email": "info@persisquartz.com",
+    "productsTitle": "المجموعات",
+    "monocolorSeries": "سلسلة أحادية اللون",
+    "veinedEffectSeries": "سلسلة التأثير العرقي",
+    "calacattaSeries": "سلسلة كالاكاتا",
+    "quickLinksTitle": "روابط سريعة",
+    "findDealers": "الموزعون",
+    "downloadCatalog": "تحميل الكتالوج",
+    "aboutUs": "من نحن",
+    "contactUs": "اتصل بنا",
+    "infoAndLegalTitle": "المعلومات والأحكام",
+    "termsAndConditions": "الشروط والأحكام",
+    "faq": "الأسئلة الشائعة",
+    "copyright": "جميع الحقوق محفوظة."
+  }
+}

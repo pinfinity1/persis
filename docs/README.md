@@ -4,7 +4,7 @@ A modern, high-performance multilingual website and CMS built with Next.js 15, P
 
 ## 🚀 Tech Stack
 
-- **Frontend:** Next.js 15 (App Router), TypeScript, Tailwind CSS, Shadcn UI, Framer Motion
+- **Frontend:** Next.js 15 (App Router), TypeScript, Tailwind CSS, Shadcn UI, Motion
 - **Backend & CMS:** Payload CMS
 - **Database:** PostgreSQL
 - **Internationalization:** next-intl (fa, en, ar)

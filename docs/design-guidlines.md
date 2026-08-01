@@ -12,7 +12,7 @@ The UI/UX, visual identity, layout, and overall feel of the website MUST closely
 
 - Use **Tailwind CSS** for all styling. Avoid custom CSS files.
 - Use **Shadcn UI** for base components (buttons, inputs, dialogs, etc.). Customize them via Tailwind configuration to match the premium industrial look.
-- Use **Framer Motion** for smooth, professional page transitions, scroll animations, and interactive component animations (avoid overly bouncy or playful animations; keep them elegant).
+- Use **Motion** for smooth, professional page transitions, scroll animations, and interactive component animations (avoid overly bouncy or playful animations; keep them elegant).
 
 ## Responsive Design
 
