@@ -6,18 +6,16 @@
     "products": "Products",
     "collections": "Collections",
     "monocolorSeries": "Monocolor Series",
-    "monocolorDesc": "Pure white & black timeless surfaces",
-    "veinedEffectSeries": "Veined Effect",
-    "veinedEffectDesc": "Soft mist & cloud-like natural textures",
+    "monocolorDesc": "Seamless, modern, and pure solid tones",
+    "veinedEffectSeries": "Veined Series",
+    "veinedEffectDesc": "Soft textures inspired by natural stone",
     "calacattaSeries": "Calacatta Series",
-    "calacattaDesc": "Bold luxury veining in white, gold & black",
-    "featured": "Featured",
-    "featuredCollectionTitle": "New Quartz Collections 2026",
+    "calacattaDesc": "Luxury designs featuring bold veins",
     "applications": "Applications",
     "kitchenCountertops": "Kitchen Countertops & Islands",
     "vanitiesAndBathrooms": "Vanities & Bathrooms",
     "commercialProjects": "Commercial & Corporate Projects",
-    "catalogs": "Catalogs",
+    "catalogs": "Catalog",
     "dealers": "Dealers",
     "careAndMaintenance": "Care & Maintenance",
     "about": "About Us",
@@ -45,5 +43,11 @@
     "tagline": "PERSIS QUARTZ",
     "title": "Engineered Precision for Lasting Beauty",
     "subtitle": "Surfaces beyond mere covering; crafting harmony and authenticity in modern architecture"
+  },
+  "BrandIntro": {
+    "tagline": "Designed for Modern Spaces",
+    "description": "Beautiful and highly durable surfaces crafted for kitchen countertops, vanities, and wall cladding. We help you bring practical ideas and a unique style to every space.",
+    "ctaProducts": "Explore Products",
+    "ctaCatalogs": "Download Catalog"
   }
 }

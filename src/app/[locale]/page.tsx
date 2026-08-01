@@ -1,5 +1,6 @@
 // src/app/[locale]/page.tsx
 import { HeroBanner } from "@/components/home/hero-banner";
+import { BrandIntro } from "@/components/home/brand-intro"; // <-- کامپوننت جدید
 import { FeaturedProducts } from "@/components/home/featured-products";
 import { InteractiveTools } from "@/components/home/interactive-tools";
 import { QuickContactBanner } from "@/components/home/quick-contact-banner";
@@ -9,7 +10,6 @@ import { useLocale } from "next-intl";
 export default function HomePage() {
   const locale = useLocale() as "fa" | "en";
 
-  // تبدیل ساختار چندزبانه برای ارسال به کامپوننت UI
   const productsForUi = MOCK_PRODUCTS.map((p) => ({
     id: p.id,
     title: p.title[locale] || p.title.fa,
@@ -23,6 +23,7 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-background font-sans">
       <HeroBanner />
+      <BrandIntro />
       <FeaturedProducts products={productsForUi} />
       <InteractiveTools />
       <QuickContactBanner />

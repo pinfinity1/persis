@@ -5,19 +5,17 @@
   "Header": {
     "products": "محصولات",
     "collections": "کالکشن‌ها",
-    "monocolorSeries": "سری مونوکالر",
-    "monocolorDesc": "سطوح یکدست، مدرن و ساده سفید و مشکی",
-    "veinedEffectSeries": "سری رگه‌ای (Veined Effect)",
-    "veinedEffectDesc": "بافت‌های نرم، ابر و بادی و الهام‌گرفته از طبیعت",
+    "monocolorSeries": "سری تک‌رنگ",
+    "monocolorDesc": "سطوح یکدست، مدرن و خالص سفید و مشکی",
+    "veinedEffectSeries": "سری رگه‌دار",
+    "veinedEffectDesc": "بافت‌های نرم و الهام‌گرفته از بافت طبیعی سنگ",
     "calacattaSeries": "سری کالاکاتا",
-    "calacattaDesc": "طرح‌های لوکس با رگه‌های برجسته سفید، طوسی و طلایی",
-    "featured": "ویژه",
-    "featuredCollectionTitle": "جدیدترین طرح‌های کوارتز ۲۰۲۶",
+    "calacattaDesc": "طرح‌های لوکس با رگه‌های برجسته و چشم‌نواز",
     "applications": "کاربردها",
     "kitchenCountertops": "کانترتاپ و جزیره آشپزخانه",
     "vanitiesAndBathrooms": "روشویی و سرویس بهداشتی",
     "commercialProjects": "پروژه‌های تجاری و اداری",
-    "catalogs": "کاتالوگ‌ها",
+    "catalogs": "کاتالوگ‌",
     "dealers": "نمایندگی‌ها",
     "careAndMaintenance": "نگهداری و مراقبت",
     "about": "درباره ما",
@@ -45,5 +43,17 @@
     "tagline": "PERSIS QUARTZ",
     "title": "دقت مهندسی برای آفرینش زیبایی ماندگار",
     "subtitle": "سطوحی فراتر از یک پوشش؛ خلق هارمونی و اصالت در معماری مدرن"
+  },
+  "BrandIntro": {
+    "tagline": "آمیزه‌ای از هنر معماری و ماندگاری کوارتز",
+    "description": "پرسیس کوارتز با بهره‌گیری از تکنولوژی روز و متریال لوکس، سطوحی با کیفیت بی‌نظیر برای فضاهای مدرن و معمارانه خلق می‌کند.",
+    "ctaProducts": "مشاهده محصولات",
+    "ctaCatalogs": "دانلود کاتالوگ",
+    "feature1Title": "کیفیت ساختاری و متریال",
+    "feature1Desc": "مقاومت فوق‌العاده در برابر خط و خش، حرارت و لکه‌های محیطی.",
+    "feature2Title": "طراحی پیشرو و معمارانه",
+    "feature2Desc": "تنوع در بافت و رنگ‌بندی طبق آخرین استانداردهای دیزاین روز دنیا.",
+    "feature3Title": "ضمانت و اصالت برند",
+    "feature3Desc": "تضمین اصالت کالا و پشتوانه خدمات پس از فروش مطمئن."
   }
 }

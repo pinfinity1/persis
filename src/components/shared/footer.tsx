@@ -1,9 +1,48 @@
-import React from "react";
+// src/components/shared/footer.tsx
+"use client";
+
+import React, { useState } from "react";
 import { Link } from "@/i18n/routing";
 import { Logo } from "@/components/shared/logo";
 import { Separator } from "@/components/ui/separator";
 import { useTranslations } from "next-intl";
-import { Mail, MapPin } from "lucide-react";
+import { Mail, MapPin, ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+interface FooterSectionProps {
+  title: string;
+  children: React.ReactNode;
+}
+
+const FooterSection: React.FC<FooterSectionProps> = ({ title, children }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="border-b border-neutral-800/60 sm:border-none pb-4 sm:pb-0 space-y-4">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between text-xs font-semibold text-white uppercase tracking-widest text-start sm:cursor-default"
+      >
+        <span>{title}</span>
+        <ChevronDown
+          className={cn(
+            "h-4 w-4 text-neutral-400 transition-transform duration-200 sm:hidden",
+            isOpen && "rotate-180",
+          )}
+        />
+      </button>
+
+      <div
+        className={cn(
+          "space-y-2.5 text-sm font-light text-neutral-400 transition-all",
+          isOpen ? "block pt-2" : "hidden sm:block",
+        )}
+      >
+        {children}
+      </div>
+    </div>
+  );
+};
 
 export const Footer: React.FC = () => {
   const t = useTranslations("Footer");
@@ -11,9 +50,9 @@ export const Footer: React.FC = () => {
   return (
     <footer className="bg-neutral-950 text-neutral-300 border-t border-neutral-800">
       <div className="container mx-auto px-6 sm:px-12 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-16">
-          {/* ستون برند (۲ ستون در لایوت بزرگ) */}
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12 mb-16">
+          {/* ستون برند (در همه سایزها ثابت و باز) */}
+          <div className="lg:col-span-2 space-y-6 pb-6 sm:pb-0 border-b border-neutral-800 sm:border-none">
             <Logo variant="icon-white-bg" size={48} />
             <p className="text-sm text-neutral-400 leading-relaxed max-w-sm font-light">
               {t("description")}
@@ -23,22 +62,16 @@ export const Footer: React.FC = () => {
                 <MapPin className="h-4 w-4 text-neutral-400 shrink-0" />
                 <span>{t("address")}</span>
               </p>
-              <p
-                dir="ltr"
-                className="flex items-center gap-2 justify-start sm:justify-start"
-              >
+              <p dir="ltr" className="flex items-center gap-2 justify-start">
                 <Mail className="h-4 w-4 text-neutral-400 shrink-0" />
                 <span>{t("email")}</span>
               </p>
             </div>
           </div>
 
-          {/* ستون محصولات و کالکشن‌ها */}
-          <div className="space-y-4">
-            <h4 className="text-xs font-semibold text-white uppercase tracking-widest">
-              {t("productsTitle")}
-            </h4>
-            <ul className="space-y-2.5 text-sm font-light text-neutral-400">
+          {/* ستون ۱: کالکشن‌ها */}
+          <FooterSection title={t("productsTitle")}>
+            <ul className="space-y-2.5">
               <li>
                 <Link
                   href="/products?cat=monocolor"
@@ -64,14 +97,11 @@ export const Footer: React.FC = () => {
                 </Link>
               </li>
             </ul>
-          </div>
+          </FooterSection>
 
-          {/* دسترسی سریع */}
-          <div className="space-y-4">
-            <h4 className="text-xs font-semibold text-white uppercase tracking-widest">
-              {t("quickLinksTitle")}
-            </h4>
-            <ul className="space-y-2.5 text-sm font-light text-neutral-400">
+          {/* ستون ۲: دسترسی سریع */}
+          <FooterSection title={t("quickLinksTitle")}>
+            <ul className="space-y-2.5">
               <li>
                 <Link
                   href="/dealers"
@@ -105,14 +135,11 @@ export const Footer: React.FC = () => {
                 </Link>
               </li>
             </ul>
-          </div>
+          </FooterSection>
 
-          {/* اطلاعات و قوانین */}
-          <div className="space-y-4">
-            <h4 className="text-xs font-semibold text-white uppercase tracking-widest">
-              {t("infoAndLegalTitle")}
-            </h4>
-            <ul className="space-y-2.5 text-sm font-light text-neutral-400">
+          {/* ستون ۳: اطلاعات و قوانین */}
+          <FooterSection title={t("infoAndLegalTitle")}>
+            <ul className="space-y-2.5">
               <li>
                 <Link
                   href="/terms"
@@ -130,12 +157,12 @@ export const Footer: React.FC = () => {
                 </Link>
               </li>
             </ul>
-          </div>
+          </FooterSection>
         </div>
 
         <Separator className="bg-neutral-800 my-8" />
 
-        {/* بخش پایین فوتر و شبکه‌های اجتماعی */}
+        {/* بخش حقوق و شبکه‌های اجتماعی */}
         <div className="flex flex-col sm:flex-row items-center justify-between text-xs text-neutral-500 font-light gap-6">
           <p>
             © {new Date().getFullYear()} Persis Quartz. {t("copyright")}
@@ -164,7 +191,6 @@ export const Footer: React.FC = () => {
                 <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
               </svg>
             </a>
-
             {/* لینکدین */}
             <a
               href="https://linkedin.com"
@@ -177,7 +203,6 @@ export const Footer: React.FC = () => {
                 <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z" />
               </svg>
             </a>
-
             {/* تلگرام */}
             <a
               href="https://t.me"

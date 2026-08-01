@@ -5,19 +5,17 @@
   "Header": {
     "products": "المنتجات",
     "collections": "المجموعات",
-    "monocolorSeries": "سلسلة مونوكولور",
-    "monocolorDesc": "أسطح نقية باللونين الأبيض والأسود",
-    "veinedEffectSeries": "سلسلة التأثير العرقي",
-    "veinedEffectDesc": "قوام ناعم وضبابي مستوحى من الطبيعة",
+    "monocolorSeries": "سلسلة أحادية اللون",
+    "monocolorDesc": "أسطح نقية، حديثة وموحدة بالكامل",
+    "veinedEffectSeries": "سلسلة التموجات",
+    "veinedEffectDesc": "أنماط ناعمة مستوحاة من الحجر الطبيعي",
     "calacattaSeries": "سلسلة كالاكاتا",
-    "calacattaDesc": "تصاميم فاخرة بتعريقات بارزة ذهبية ورمادية",
-    "featured": "مميز",
-    "featuredCollectionTitle": "تصاميم الكوارتز الجديدة ٢٠٢٦",
+    "calacattaDesc": "تصاميم فاخرة بتعريقات بارزة وأنيقة",
     "applications": "التطبيقات",
     "kitchenCountertops": "أسطح المطابخ والجزر",
     "vanitiesAndBathrooms": "المغاسل والحمامات",
     "commercialProjects": "المشاريع التجارية والإدارية",
-    "catalogs": "الكتالوجات",
+    "catalogs": "الكتالوج",
     "dealers": "الوكلاء",
     "careAndMaintenance": "العناية والصيانة",
     "about": "من نحن",
@@ -45,5 +43,11 @@
     "tagline": "PERSIS QUARTZ",
     "title": "دقة هندسية لإبداع جمال يدوم",
     "subtitle": "أسطح تتجاوز مجرد التغطية؛ خلق تناغم وأصالة في المعمار الحديث"
+  },
+  "BrandIntro": {
+    "tagline": "تصميمٌ يتناسب مع مساحاتك",
+    "description": "أسطح جميلة ومتينة للغاية صُممت لأسطح المطابخ، المغاسل، والتكسيات الجدارية. نساعدك على تنفيذ أفكارك وتطبيق أسلوبك الفريد في كل زاوية.",
+    "ctaProducts": "استكشاف المنتجات",
+    "ctaCatalogs": "تحميل الكتالوج"
   }
 }
