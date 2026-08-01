@@ -45,9 +45,15 @@
     "subtitle": "Surfaces beyond mere covering; crafting harmony and authenticity in modern architecture"
   },
   "BrandIntro": {
-    "tagline": "Designed for Modern Spaces",
-    "description": "Beautiful and highly durable surfaces crafted for kitchen countertops, vanities, and wall cladding. We help you bring practical ideas and a unique style to every space.",
+    "tagline": "A Fusion of Architectural Art & Quartz Durability",
+    "description": "Persis Quartz utilizes cutting-edge technology and premium materials to create surfaces of unmatched quality for modern architectural spaces.",
     "ctaProducts": "Explore Products",
-    "ctaCatalogs": "Download Catalog"
+    "ctaCatalogs": "Download Catalog",
+    "feature1Title": "Structural Quality & Material",
+    "feature1Desc": "Exceptional resistance to scratches, heat, and everyday stains.",
+    "feature2Title": "Architectural Design",
+    "feature2Desc": "Versatile textures and color palettes matching international design standards.",
+    "feature3Title": "Authenticity & Warranty",
+    "feature3Desc": "Guaranteed brand authenticity with reliable technical support."
   }
 }
