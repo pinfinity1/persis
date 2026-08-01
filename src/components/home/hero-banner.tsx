@@ -4,21 +4,22 @@ import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { motion } from "motion/react";
 import { ChevronDown } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface HeroBannerProps {
-  title?: string;
-  subtitle?: string;
-  posterUrl?: string;
-  videoUrl?: string;
+  desktopPosterUrl?: string;
+  mobilePosterUrl?: string;
+  desktopVideoUrl?: string;
+  mobileVideoUrl?: string;
 }
 
 export const HeroBanner: React.FC<HeroBannerProps> = ({
-  title = "دقت مهندسی برای آفرینش زیبایی ماندگار",
-  subtitle = "سطوحی فراتر از یک پوشش؛ خلق هارمونی و اصالت در معماری مدرن",
-  posterUrl = "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2000&auto=format&fit=crop",
-  // لینک ویدیوی مستقیم و پایدار (MP4 مستقیم از Wikimedia Commons)
-  videoUrl = "https://upload.wikimedia.org/wikipedia/commons/transcoded/c/c0/Big_Buck_Bunny_4K.webm/Big_Buck_Bunny_4K.webm.480p.vp9.webm",
+  desktopPosterUrl = "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2000&auto=format&fit=crop",
+  mobilePosterUrl = "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800&auto=format&fit=crop",
+  desktopVideoUrl = "https://upload.wikimedia.org/wikipedia/commons/transcoded/c/c0/Big_Buck_Bunny_4K.webm/Big_Buck_Bunny_4K.webm.480p.vp9.webm",
+  mobileVideoUrl = "https://upload.wikimedia.org/wikipedia/commons/transcoded/c/c0/Big_Buck_Bunny_4K.webm/Big_Buck_Bunny_4K.webm.480p.vp9.webm",
 }) => {
+  const t = useTranslations("Hero");
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const [hasVideoError, setHasVideoError] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -33,20 +34,32 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
   }, [hasVideoError]);
 
   return (
-    <section className="relative h-screen h-[100dvh] w-full overflow-hidden bg-neutral-950 text-white flex flex-col justify-end">
-      {/* 1. LCP Priority Poster Image */}
+    <section className="relative h-[100dvh] w-full overflow-hidden bg-neutral-950 text-white flex flex-col justify-end">
+      {/* 1. LCP Priority Poster Image (Desktop) */}
       <Image
-        src={posterUrl}
+        src={desktopPosterUrl}
         alt="Persis Quartz Luxury Surface"
         fill
         priority
         sizes="100vw"
-        className={`object-cover transition-opacity duration-1000 ${
+        className={`hidden md:block object-cover transition-opacity duration-1000 ${
           isVideoLoaded && !hasVideoError ? "opacity-0" : "opacity-100"
         }`}
       />
 
-      {/* 2. Background Video */}
+      {/* 1. LCP Priority Poster Image (Mobile) */}
+      <Image
+        src={mobilePosterUrl}
+        alt="Persis Quartz Luxury Surface"
+        fill
+        priority
+        sizes="100vw"
+        className={`block md:hidden object-cover transition-opacity duration-1000 ${
+          isVideoLoaded && !hasVideoError ? "opacity-0" : "opacity-100"
+        }`}
+      />
+
+      {/* 2. Background Video (Adaptive Mobile & Desktop) */}
       {!hasVideoError && (
         <video
           ref={videoRef}
@@ -63,14 +76,23 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
             isVideoLoaded ? "opacity-100" : "opacity-0"
           }`}
         >
-          <source src={videoUrl} type="video/webm" />
-          <source src={videoUrl} type="video/mp4" />
+          {/* مرورگر به‌صورت Native بر اساس media query ویدیوی مناسب را دانلود می‌کند */}
+          <source
+            src={mobileVideoUrl}
+            type="video/mp4"
+            media="(max-width: 767px)"
+          />
+          <source
+            src={desktopVideoUrl}
+            type="video/mp4"
+            media="(min-width: 768px)"
+          />
         </video>
       )}
 
-      {/* Overlay ترکیبی بسیار ملایم */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/80" />
-      <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px]" />
+      {/* Overlays */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/80 pointer-events-none" />
+      <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px] pointer-events-none" />
 
       {/* Content Container */}
       <div className="container relative z-10 mx-auto px-6 sm:px-12 pb-20 sm:pb-28">
@@ -78,24 +100,21 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
-          className="max-w-3xl space-y-5 border-r border-white/20 pr-6 sm:pr-8"
+          className="max-w-3xl space-y-5 border-r rtl:border-r ltr:border-r-0 ltr:border-l border-white/20 pr-6 rtl:pr-6 ltr:pr-0 ltr:pl-6 sm:pr-8 sm:ltr:pl-8"
         >
-          {/* Eyebrow Label / Tagline */}
           <div className="flex items-center gap-3">
             <span className="h-[1px] w-8 bg-primary"></span>
-            <span className="text-[11px] sm:text-xs uppercase tracking-[0.25em] font-mono text-neutral-300 font-light">
-              PERSIS QUARTZ SURFACE
+            <span className="text-[11px] sm:text-xs uppercase tracking-[0.25em] font-mono text-black font-light">
+              {t("tagline")}
             </span>
           </div>
 
-          {/* Main Title */}
           <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extralight tracking-tight leading-[1.3] text-neutral-100 text-balance">
-            {title}
+            {t("title")}
           </h1>
 
-          {/* Subtitle */}
           <p className="text-xs sm:text-base font-light text-neutral-300/90 leading-relaxed max-w-xl">
-            {subtitle}
+            {t("subtitle")}
           </p>
         </motion.div>
       </div>

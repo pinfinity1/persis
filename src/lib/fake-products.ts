@@ -1,4 +1,4 @@
-// src/lib/data/products.ts
+// src/lib/fake-products.ts
 
 export interface Product {
   id: string;
@@ -10,6 +10,7 @@ export interface Product {
   category: "monocolor" | "veined-effect" | "calacatta";
   color: "white" | "black" | "grey";
   veinColor?: "white" | "black" | "gold" | "grey";
+  dimensions: string; // مثلا 320x75 cm یا 320x92 cm
   description: {
     fa: string;
     en: string;
@@ -20,18 +21,20 @@ export interface Product {
 }
 
 export const MOCK_PRODUCTS: Product[] = [
-  // --- Monocolor (ساده) ---
+  // --- Monocolor Series ---
   {
     id: "1",
     title: { fa: "میکونوس", en: "Mykonos" },
     code: "PQ-101",
     category: "monocolor",
     color: "white",
+    dimensions: "320 × 75 / 320 × 92 cm",
     description: {
-      fa: "سفید ساده - الهام‌گرفته از خانه‌های سفید میکونوس",
-      en: "Pure White - Inspired by the whitewashed homes of Mykonos",
+      fa: "سفید یکدست و خالص با ساختار متراکم و بدون خلل و فرج.",
+      en: "Pure, seamless white surface with non-porous structure.",
     },
-    imageUrl: "/images/products/mykonos.jpg",
+    imageUrl:
+      "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=800&auto=format&fit=crop",
     slug: "mykonos",
     isFeatured: true,
   },
@@ -41,27 +44,31 @@ export const MOCK_PRODUCTS: Product[] = [
     code: "PQ-102",
     category: "monocolor",
     color: "black",
+    dimensions: "320 × 75 / 320 × 92 cm",
     description: {
-      fa: "مشکی ساده - لحظه‌ای که نور تسلیم سیاهی مطلق می‌شود",
-      en: "Pure Black - The moment light surrenders to darkness",
+      fa: "مشکی عمق‌دار و مدرن، مناسب برای فضای آشپزخانه و تجاری.",
+      en: "Deep modern black, ideal for kitchens and commercial spaces.",
     },
-    imageUrl: "/images/products/eclipse.jpg",
+    imageUrl:
+      "https://images.unsplash.com/photo-1618221118493-9cfa1a1c00da?q=80&w=800&auto=format&fit=crop",
     slug: "eclipse",
     isFeatured: true,
   },
 
-  // --- Veined Effect (ابر و بادی) ---
+  // --- Veined Effect Series ---
   {
     id: "3",
     title: { fa: "وایت سند", en: "White Sand" },
     code: "PQ-201",
     category: "veined-effect",
     color: "white",
+    dimensions: "320 × 75 / 320 × 92 cm",
     description: {
-      fa: "سفید ابر و بادی - موج‌های سپیدی خالص بر شن‌های کویر",
-      en: "Soft White Mist - Waves of pure white carved into sand",
+      fa: "سفید ابر و بادی - موج‌های سپیدی خالص و بافت نرم طبیعی.",
+      en: "Soft white mist with natural subtle cloud-like textures.",
     },
-    imageUrl: "/images/products/white-sand.jpg",
+    imageUrl:
+      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800&auto=format&fit=crop",
     slug: "white-sand",
     isFeatured: true,
   },
@@ -71,88 +78,50 @@ export const MOCK_PRODUCTS: Product[] = [
     code: "PQ-202",
     category: "veined-effect",
     color: "grey",
+    dimensions: "320 × 75 / 320 × 92 cm",
     description: {
-      fa: "سفید و طوسی ابر و بادی - الهام‌گرفته از مه صبحگاهی قله‌های البرز",
-      en: "Grey & White Mist - Inspired by morning mist over Alborz peaks",
+      fa: "سفید و طوسی بافت‌دار - الهام‌گرفته از مه صبحگاهی قله‌های البرز.",
+      en: "Grey & white mist - Inspired by morning mist over mountain peaks.",
     },
-    imageUrl: "/images/products/alborz-mist.jpg",
+    imageUrl:
+      "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=800&auto=format&fit=crop",
     slug: "alborz-mist",
     isFeatured: true,
   },
+
+  // --- Calacatta Series ---
   {
     id: "5",
-    title: { fa: "ویک", en: "Vik" },
-    code: "PQ-203",
-    category: "veined-effect",
-    color: "black",
-    description: {
-      fa: "مشکی ابر و بادی - سواحل آتشفشانی و رازآلود ایسلند",
-      en: "Black Mist - Inspired by the black sand shores of Vik, Iceland",
-    },
-    imageUrl: "/images/products/vik.jpg",
-    slug: "vik",
-    isFeatured: true,
-  },
-
-  // --- Calacatta (رگه‌دار) ---
-  {
-    id: "6",
     title: { fa: "آرکتیک", en: "Arctic" },
     code: "PQ-301",
     category: "calacatta",
     color: "white",
     veinColor: "grey",
+    dimensions: "320 × 75 / 320 × 92 cm",
     description: {
-      fa: "سفید با رگه طوسی/مشکی - ترک‌های ظریف نقره‌ای بر پهنه قطب",
-      en: "White with Grey Veins - Delicate cracks carved through endless ice",
+      fa: "سفید با رگه طوسی - ترک‌های ظریف نقره‌ای و بافت کالاکاتا.",
+      en: "White with grey veins - Delicate silver cracks in Calacatta style.",
     },
-    imageUrl: "/images/products/arctic.jpg",
+    imageUrl:
+      "https://images.unsplash.com/photo-1615529182904-14819c35db37?q=80&w=800&auto=format&fit=crop",
     slug: "arctic",
     isFeatured: true,
   },
   {
-    id: "7",
+    id: "6",
     title: { fa: "زرشوران", en: "Zarshouran" },
     code: "PQ-302",
     category: "calacatta",
     color: "white",
     veinColor: "gold",
+    dimensions: "320 × 75 / 320 × 92 cm",
     description: {
-      fa: "سفید با رگه‌های طلایی - رگه‌های درخشان متولد شده در دل طبیعت",
-      en: "White with Gold Veins - Golden veins born upon pure white",
+      fa: "سفید با رگه‌های درخشان طلایی - لوکس و چشم‌نواز.",
+      en: "White with brilliant golden veins - Luxurious and striking.",
     },
-    imageUrl: "/images/products/zarshouran.jpg",
+    imageUrl:
+      "https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?q=80&w=800&auto=format&fit=crop",
     slug: "zarshouran",
-    isFeatured: true,
-  },
-  {
-    id: "8",
-    title: { fa: "طوفان زاگرس", en: "Zagros Storm" },
-    code: "PQ-303",
-    category: "calacatta",
-    color: "black",
-    veinColor: "white",
-    description: {
-      fa: "مشکی با رگه سفید - درخشش آذرخش بر سیاهی شب در کوهستان",
-      en: "Black with White Veins - Silver veins flashing across dark night",
-    },
-    imageUrl: "/images/products/zagros-storm.jpg",
-    slug: "zagros-storm",
-    isFeatured: true,
-  },
-  {
-    id: "9",
-    title: { fa: "بایکال", en: "Baikal" },
-    code: "PQ-304",
-    category: "calacatta",
-    color: "grey",
-    veinColor: "white",
-    description: {
-      fa: "طوسی با رگه سفید - ترک‌های کریستالی یخ روی دریاچه بایکال",
-      en: "Grey with White Veins - Delicate ice fracture veins on cold grey",
-    },
-    imageUrl: "/images/products/baikal.jpg",
-    slug: "baikal",
     isFeatured: true,
   },
 ];

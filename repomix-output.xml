@@ -115,6 +115,118 @@ tsconfig.json
 <files>
 This section contains the contents of the repository's files.
 
+<file path="src/app/(payload)/admin/[[...segments]]/page.tsx">
+import type { Metadata } from "next";
+import config from "@/payload.config";
+import { RootPage, generatePageMetadata } from "@payloadcms/next/views";
+import { importMap } from "../importMap"; // <-- تغییر این خط
+
+type Args = {
+  params: Promise<{
+    segments: string[];
+  }>;
+  searchParams: Promise<{
+    [key: string]: string | string[];
+  }>;
+};
+
+export const generateMetadata = ({
+  params,
+  searchParams,
+}: Args): Promise<Metadata> =>
+  generatePageMetadata({ config, params, searchParams });
+
+export default function Page({ params, searchParams }: Args) {
+  return RootPage({ config, params, searchParams, importMap });
+}
+</file>
+
+<file path="src/app/(payload)/admin/importMap.js">
+import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
+
+/** @type import('payload').ImportMap */
+export const importMap = {
+  "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
+}
+</file>
+
+<file path="src/app/(payload)/admin/importMap.ts">
+export const importMap: Record<string, any> = {};
+</file>
+
+<file path="src/app/(payload)/api/[...slug]/route.ts">
+import config from "@/payload.config";
+import {
+  REST_GET,
+  REST_POST,
+  REST_DELETE,
+  REST_OPTIONS,
+  REST_PATCH,
+  REST_PUT,
+} from "@payloadcms/next/routes";
+
+export const GET = REST_GET(config);
+export const POST = REST_POST(config);
+export const DELETE = REST_DELETE(config);
+export const OPTIONS = REST_OPTIONS(config);
+export const PATCH = REST_PATCH(config);
+export const PUT = REST_PUT(config);
+</file>
+
+<file path="src/app/(payload)/layout.tsx">
+import config from "../../payload.config";
+import "@payloadcms/next/css";
+import { RootLayout, handleServerFunctions } from "@payloadcms/next/layouts";
+import { importMap } from "./admin/importMap";
+import React from "react";
+import type { ServerFunctionClient } from "payload";
+
+const serverFunction: ServerFunctionClient = async (args) => {
+  "use server";
+  return handleServerFunctions({
+    ...args,
+    config,
+    importMap,
+  });
+};
+
+const Layout = ({ children }: { children: React.ReactNode }) => (
+  <RootLayout
+    config={config}
+    importMap={importMap}
+    serverFunction={serverFunction}
+  >
+    {children}
+  </RootLayout>
+);
+
+export default Layout;
+</file>
+
+<file path="src/app/manifest.json">
+{
+  "name": "PersisQuartz",
+  "short_name": "Persis",
+  "icons": [
+    {
+      "src": "/web-app-manifest-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/web-app-manifest-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
+  "display": "standalone"
+}
+</file>
+
 <file path="src/components/home/featured-products.tsx">
 // src/components/home/featured-products.tsx
 "use client";
@@ -261,12 +373,9 @@ export const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
 <file path="src/components/home/hero-banner.tsx">
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { motion } from "motion/react";
-import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/button";
-import { Link } from "@/i18n/routing";
 import { ChevronDown } from "lucide-react";
 
 interface HeroBannerProps {
@@ -277,14 +386,24 @@ interface HeroBannerProps {
 }
 
 export const HeroBanner: React.FC<HeroBannerProps> = ({
-  title = "Persis Quartz | زیبایی بی‌انتها، دوام ماندگار",
-  subtitle = "ارائه‌دهنده سطوح کوارتز لوکس و مهندسی‌شده برای معماری مدرن و فاخر",
-  // دیتای فیک با کیفیت بالا جهت تست و مشاهده
+  title = "دقت مهندسی برای آفرینش زیبایی ماندگار",
+  subtitle = "سطوحی فراتر از یک پوشش؛ خلق هارمونی و اصالت در معماری مدرن",
   posterUrl = "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2000&auto=format&fit=crop",
-  videoUrl = "https://assets.mixkit.co/videos/preview/mixkit-kitchen-with-marble-countertops-41334-large.mp4",
+  // لینک ویدیوی مستقیم و پایدار (MP4 مستقیم از Wikimedia Commons)
+  videoUrl = "https://upload.wikimedia.org/wikipedia/commons/transcoded/c/c0/Big_Buck_Bunny_4K.webm/Big_Buck_Bunny_4K.webm.480p.vp9.webm",
 }) => {
-  const t = useTranslations("Index");
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+  const [hasVideoError, setHasVideoError] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (videoRef.current && !hasVideoError) {
+      videoRef.current.muted = true;
+      videoRef.current.play().catch((err) => {
+        console.warn("Autoplay notice:", err);
+      });
+    }
+  }, [hasVideoError]);
 
   return (
     <section className="relative h-screen h-[100dvh] w-full overflow-hidden bg-neutral-950 text-white flex flex-col justify-end">
@@ -296,60 +415,61 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
         priority
         sizes="100vw"
         className={`object-cover transition-opacity duration-1000 ${
-          isVideoLoaded ? "opacity-0" : "opacity-100"
+          isVideoLoaded && !hasVideoError ? "opacity-0" : "opacity-100"
         }`}
       />
 
-      {/* 2. Optimized Video Background */}
-      <video
-        autoPlay
-        loop
-        muted
-        playsInline
-        onCanPlay={() => setIsVideoLoaded(true)}
-        className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${
-          isVideoLoaded ? "opacity-100" : "opacity-0"
-        }`}
-      >
-        <source src={videoUrl} type="video/mp4" />
-      </video>
+      {/* 2. Background Video */}
+      {!hasVideoError && (
+        <video
+          ref={videoRef}
+          autoPlay
+          loop
+          muted
+          playsInline
+          onLoadedData={() => setIsVideoLoaded(true)}
+          onError={() => {
+            console.warn("Video failed to load. Falling back to poster image.");
+            setHasVideoError(true);
+          }}
+          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${
+            isVideoLoaded ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          <source src={videoUrl} type="video/webm" />
+          <source src={videoUrl} type="video/mp4" />
+        </video>
+      )}
 
-      {/* Dark Gradient Overlay (گرادینت از پایین و بالا برای خوانایی کامل هدر و متن) */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/60 backdrop-blur-[0.5px]" />
+      {/* Overlay ترکیبی بسیار ملایم */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/80" />
+      <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px]" />
 
       {/* Content Container */}
-      <div className="container relative z-10 mx-auto px-6 sm:px-12 pb-24 sm:pb-32">
+      <div className="container relative z-10 mx-auto px-6 sm:px-12 pb-20 sm:pb-28">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
-          className="max-w-3xl space-y-6 sm:space-y-8"
+          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
+          className="max-w-3xl space-y-5 border-r border-white/20 pr-6 sm:pr-8"
         >
-          <h1 className="text-3xl font-light leading-tight sm:text-5xl lg:text-7xl tracking-tight text-balance">
+          {/* Eyebrow Label / Tagline */}
+          <div className="flex items-center gap-3">
+            <span className="h-[1px] w-8 bg-primary"></span>
+            <span className="text-[11px] sm:text-xs uppercase tracking-[0.25em] font-mono text-neutral-300 font-light">
+              PERSIS QUARTZ SURFACE
+            </span>
+          </div>
+
+          {/* Main Title */}
+          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extralight tracking-tight leading-[1.3] text-neutral-100 text-balance">
             {title}
           </h1>
-          <p className="text-sm font-light text-neutral-300 sm:text-xl max-w-2xl leading-relaxed">
+
+          {/* Subtitle */}
+          <p className="text-xs sm:text-base font-light text-neutral-300/90 leading-relaxed max-w-xl">
             {subtitle}
           </p>
-
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
-            <Button
-              asChild
-              size="lg"
-              className="bg-white text-black hover:bg-neutral-200 rounded-none px-8 py-6 text-sm sm:text-base font-medium tracking-wide transition-all"
-            >
-              <Link href="/products">مشاهده محصولات</Link>
-            </Button>
-
-            <Button
-              asChild
-              variant="outline"
-              size="lg"
-              className="border-white/30 text-white bg-black/20 backdrop-blur-md hover:bg-white hover:text-black rounded-none px-8 py-6 text-sm sm:text-base font-medium transition-all"
-            >
-              <Link href="/catalogs">دانلود کاتالوگ</Link>
-            </Button>
-          </div>
         </motion.div>
       </div>
 
@@ -357,8 +477,8 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 1.2, duration: 0.8 }}
-        className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1 text-white/50 hover:text-white transition-colors cursor-pointer"
+        transition={{ delay: 1, duration: 0.8 }}
+        className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 text-white/40 hover:text-white transition-colors cursor-pointer group"
         onClick={() => {
           window.scrollTo({
             top: window.innerHeight,
@@ -367,10 +487,10 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
         }}
       >
         <motion.div
-          animate={{ y: [0, 8, 0] }}
+          animate={{ y: [0, 6, 0] }}
           transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
         >
-          <ChevronDown className="h-6 w-6 stroke-[1.5]" />
+          <ChevronDown className="size-6 stroke-[1]" />
         </motion.div>
       </motion.div>
     </section>
@@ -926,7 +1046,7 @@ export const Header: React.FC = () => {
   return (
     <header
       className={cn(
-        "sticky top-0 z-50 w-full transition-all duration-300",
+        "fixed top-0 left-0 right-0 z-50 w-full transition-all duration-500",
         isHomePage && !isScrolled
           ? "bg-transparent border-transparent text-white"
           : "border-b border-border/40 bg-background/95 backdrop-blur-md text-foreground shadow-sm",
@@ -1314,6 +1434,76 @@ export const Logo: React.FC<LogoProps> = ({
     </Link>
   );
 };
+</file>
+
+<file path="src/components/ui/button.tsx">
+import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority"
+import { Slot } from "radix-ui"
+
+import { cn } from "@/lib/utils"
+
+const buttonVariants = cva(
+  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground hover:bg-primary/80",
+        outline:
+          "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
+        ghost:
+          "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
+        destructive:
+          "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
+        link: "text-primary underline-offset-4 hover:underline",
+      },
+      size: {
+        default:
+          "h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
+        xs: "h-6 gap-1 rounded-[min(var(--radius-md),10px)] px-2 text-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
+        sm: "h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
+        lg: "h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
+        icon: "size-8",
+        "icon-xs":
+          "size-6 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",
+        "icon-sm":
+          "size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg",
+        "icon-lg": "size-9",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+)
+
+function Button({
+  className,
+  variant = "default",
+  size = "default",
+  asChild = false,
+  ...props
+}: React.ComponentProps<"button"> &
+  VariantProps<typeof buttonVariants> & {
+    asChild?: boolean
+  }) {
+  const Comp = asChild ? Slot.Root : "button"
+
+  return (
+    <Comp
+      data-slot="button"
+      data-variant={variant}
+      data-size={size}
+      className={cn(buttonVariants({ variant, size, className }))}
+      {...props}
+    />
+  )
+}
+
+export { Button, buttonVariants }
 </file>
 
 <file path="src/components/ui/dropdown-menu.tsx">
@@ -2102,6 +2292,37 @@ function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
 export { Textarea }
 </file>
 
+<file path="src/i18n/request.ts">
+import { getRequestConfig } from "next-intl/server";
+import { routing } from "./routing";
+
+export default getRequestConfig(async ({ requestLocale }) => {
+  let locale = await requestLocale;
+
+  if (!locale || !routing.locales.includes(locale as any)) {
+    locale = routing.defaultLocale;
+  }
+
+  return {
+    locale,
+    messages: (await import(`../messages/${locale}.json`)).default,
+  };
+});
+</file>
+
+<file path="src/i18n/routing.ts">
+import { defineRouting } from "next-intl/routing";
+import { createNavigation } from "next-intl/navigation";
+
+export const routing = defineRouting({
+  locales: ["fa", "en", "ar"],
+  defaultLocale: "fa",
+});
+
+export const { Link, redirect, usePathname, useRouter, getPathname } =
+  createNavigation(routing);
+</file>
+
 <file path="src/lib/validations/contact.ts">
 // src/lib/validations/contact.ts
 import { z } from "zod";
@@ -2280,6 +2501,199 @@ export const MOCK_PRODUCTS: Product[] = [
     isFeatured: true,
   },
 ];
+</file>
+
+<file path="src/lib/utils.ts">
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+</file>
+
+<file path="src/payload/collections/Users.ts">
+import type { CollectionConfig } from "payload";
+
+export const Users: CollectionConfig = {
+  slug: "users",
+  admin: {
+    useAsTitle: "email",
+    description: "مدیریت حساب کاربری ادمین",
+  },
+  // فعال بودن auth باعث میشه Payload خودش فیلدهای ایمیل و پسورد رو بسازه
+  auth: true,
+  fields: [
+    {
+      name: "name",
+      type: "text",
+      label: "نام",
+    },
+    // هیچ فیلد اضافه یا نقش‌بندی (Role) اینجا نیاز نیست
+  ],
+};
+</file>
+
+<file path="src/types/declarations.d.ts">
+declare module "*.css";
+</file>
+
+<file path="src/middleware.ts">
+import createMiddleware from "next-intl/middleware";
+import { routing } from "./i18n/routing";
+
+export default createMiddleware(routing);
+
+export const config = {
+  matcher: ["/", "/(fa|en|ar)/:path*"],
+};
+</file>
+
+<file path="src/payload.config.ts">
+import { buildConfig } from "payload";
+import { postgresAdapter } from "@payloadcms/db-postgres";
+import { lexicalEditor } from "@payloadcms/richtext-lexical";
+import path from "path";
+import { fileURLToPath } from "url";
+import { Users } from "./payload/collections/Users";
+
+const filename = fileURLToPath(import.meta.url);
+const dirname = path.dirname(filename);
+
+export default buildConfig({
+  admin: {
+    user: Users.slug,
+    // می‌توانید مسیر پیش‌فرض پنل ادمین را در آینده تغییر دهید
+  },
+  // معرفی کالکشن‌ها به صورت ماژولار
+  collections: [Users],
+
+  // تنظیم ویرایشگر متن غنی (Lexical Editor)
+  editor: lexicalEditor({}),
+
+  // تنظیمات چندزبانه بر اساس معماری پروژه (فارسی، انگلیسی، عربی)
+  localization: {
+    locales: ["fa", "en", "ar"],
+    defaultLocale: "fa",
+    fallback: true,
+  },
+
+  secret: process.env.PAYLOAD_SECRET || "",
+
+  // تنظیمات تولید تایپ‌های TypeScript به صورت خودکار
+  typescript: {
+    outputFile: path.resolve(dirname, "payload-types.ts"),
+  },
+
+  // اتصال به پایگاه‌داده PostgreSQL
+  db: postgresAdapter({
+    pool: {
+      connectionString: process.env.DATABASE_URI || "",
+    },
+  }),
+});
+</file>
+
+<file path="components.json">
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "radix-nova",
+  "rsc": true,
+  "tsx": true,
+  "tailwind": {
+    "config": "",
+    "css": "src/app/globals.css",
+    "baseColor": "neutral",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "iconLibrary": "lucide",
+  "rtl": false,
+  "aliases": {
+    "components": "@/components",
+    "utils": "@/lib/utils",
+    "ui": "@/components/ui",
+    "lib": "@/lib",
+    "hooks": "@/hooks"
+  },
+  "menuColor": "default",
+  "menuAccent": "subtle",
+  "registries": {}
+}
+</file>
+
+<file path="docker-compose.yml">
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: persisquartz_db
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-persisquartz}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-persisquartz}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - app_network
+
+volumes:
+  pgdata:
+    name: persisquartz_pgdata
+
+networks:
+  app_network:
+    driver: bridge
+</file>
+
+<file path="eslint.config.mjs">
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+import { FlatCompat } from "@eslint/eslintrc";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+});
+
+const eslintConfig = [
+  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  {
+    ignores: [
+      "node_modules/**",
+      ".next/**",
+      "out/**",
+      "build/**",
+      "next-env.d.ts",
+    ],
+  },
+];
+
+export default eslintConfig;
+</file>
+
+<file path="postcss.config.mjs">
+const config = {
+  plugins: ["@tailwindcss/postcss"],
+};
+
+export default config;
 </file>
 
 <file path="docs/architecture.md">
@@ -2512,94 +2926,6 @@ When generating code for this project, you MUST follow these rules:
 - Multi-language content management.
 </file>
 
-<file path="src/app/(payload)/admin/[[...segments]]/page.tsx">
-import type { Metadata } from "next";
-import config from "@/payload.config";
-import { RootPage, generatePageMetadata } from "@payloadcms/next/views";
-import { importMap } from "../importMap"; // <-- تغییر این خط
-
-type Args = {
-  params: Promise<{
-    segments: string[];
-  }>;
-  searchParams: Promise<{
-    [key: string]: string | string[];
-  }>;
-};
-
-export const generateMetadata = ({
-  params,
-  searchParams,
-}: Args): Promise<Metadata> =>
-  generatePageMetadata({ config, params, searchParams });
-
-export default function Page({ params, searchParams }: Args) {
-  return RootPage({ config, params, searchParams, importMap });
-}
-</file>
-
-<file path="src/app/(payload)/admin/importMap.js">
-import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
-
-/** @type import('payload').ImportMap */
-export const importMap = {
-  "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
-}
-</file>
-
-<file path="src/app/(payload)/admin/importMap.ts">
-export const importMap: Record<string, any> = {};
-</file>
-
-<file path="src/app/(payload)/api/[...slug]/route.ts">
-import config from "@/payload.config";
-import {
-  REST_GET,
-  REST_POST,
-  REST_DELETE,
-  REST_OPTIONS,
-  REST_PATCH,
-  REST_PUT,
-} from "@payloadcms/next/routes";
-
-export const GET = REST_GET(config);
-export const POST = REST_POST(config);
-export const DELETE = REST_DELETE(config);
-export const OPTIONS = REST_OPTIONS(config);
-export const PATCH = REST_PATCH(config);
-export const PUT = REST_PUT(config);
-</file>
-
-<file path="src/app/(payload)/layout.tsx">
-import config from "../../payload.config";
-import "@payloadcms/next/css";
-import { RootLayout, handleServerFunctions } from "@payloadcms/next/layouts";
-import { importMap } from "./admin/importMap";
-import React from "react";
-import type { ServerFunctionClient } from "payload";
-
-const serverFunction: ServerFunctionClient = async (args) => {
-  "use server";
-  return handleServerFunctions({
-    ...args,
-    config,
-    importMap,
-  });
-};
-
-const Layout = ({ children }: { children: React.ReactNode }) => (
-  <RootLayout
-    config={config}
-    importMap={importMap}
-    serverFunction={serverFunction}
-  >
-    {children}
-  </RootLayout>
-);
-
-export default Layout;
-</file>
-
 <file path="src/app/[locale]/layout.tsx">
 // src/app/[locale]/layout.tsx
 import type { Metadata } from "next";
@@ -2700,140 +3026,6 @@ export default function HomePage() {
       <QuickContactBanner />
     </main>
   );
-}
-</file>
-
-<file path="src/app/manifest.json">
-{
-  "name": "PersisQuartz",
-  "short_name": "Persis",
-  "icons": [
-    {
-      "src": "/web-app-manifest-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "/web-app-manifest-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
-  ],
-  "theme_color": "#ffffff",
-  "background_color": "#ffffff",
-  "display": "standalone"
-}
-</file>
-
-<file path="src/components/ui/button.tsx">
-import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
-import { Slot } from "radix-ui"
-
-import { cn } from "@/lib/utils"
-
-const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-  {
-    variants: {
-      variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/80",
-        outline:
-          "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
-        secondary:
-          "bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
-        ghost:
-          "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
-        destructive:
-          "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
-        link: "text-primary underline-offset-4 hover:underline",
-      },
-      size: {
-        default:
-          "h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
-        xs: "h-6 gap-1 rounded-[min(var(--radius-md),10px)] px-2 text-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
-        lg: "h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
-        icon: "size-8",
-        "icon-xs":
-          "size-6 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",
-        "icon-sm":
-          "size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg",
-        "icon-lg": "size-9",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
-  }
-)
-
-function Button({
-  className,
-  variant = "default",
-  size = "default",
-  asChild = false,
-  ...props
-}: React.ComponentProps<"button"> &
-  VariantProps<typeof buttonVariants> & {
-    asChild?: boolean
-  }) {
-  const Comp = asChild ? Slot.Root : "button"
-
-  return (
-    <Comp
-      data-slot="button"
-      data-variant={variant}
-      data-size={size}
-      className={cn(buttonVariants({ variant, size, className }))}
-      {...props}
-    />
-  )
-}
-
-export { Button, buttonVariants }
-</file>
-
-<file path="src/i18n/request.ts">
-import { getRequestConfig } from "next-intl/server";
-import { routing } from "./routing";
-
-export default getRequestConfig(async ({ requestLocale }) => {
-  let locale = await requestLocale;
-
-  if (!locale || !routing.locales.includes(locale as any)) {
-    locale = routing.defaultLocale;
-  }
-
-  return {
-    locale,
-    messages: (await import(`../messages/${locale}.json`)).default,
-  };
-});
-</file>
-
-<file path="src/i18n/routing.ts">
-import { defineRouting } from "next-intl/routing";
-import { createNavigation } from "next-intl/navigation";
-
-export const routing = defineRouting({
-  locales: ["fa", "en", "ar"],
-  defaultLocale: "fa",
-});
-
-export const { Link, redirect, usePathname, useRouter, getPathname } =
-  createNavigation(routing);
-</file>
-
-<file path="src/lib/utils.ts">
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
 }
 </file>
 
@@ -2978,188 +3170,34 @@ export function cn(...inputs: ClassValue[]) {
 }
 </file>
 
-<file path="src/payload/collections/Users.ts">
-import type { CollectionConfig } from "payload";
-
-export const Users: CollectionConfig = {
-  slug: "users",
-  admin: {
-    useAsTitle: "email",
-    description: "مدیریت حساب کاربری ادمین",
-  },
-  // فعال بودن auth باعث میشه Payload خودش فیلدهای ایمیل و پسورد رو بسازه
-  auth: true,
-  fields: [
-    {
-      name: "name",
-      type: "text",
-      label: "نام",
-    },
-    // هیچ فیلد اضافه یا نقش‌بندی (Role) اینجا نیاز نیست
-  ],
-};
-</file>
-
-<file path="src/types/declarations.d.ts">
-declare module "*.css";
-</file>
-
-<file path="src/middleware.ts">
-import createMiddleware from "next-intl/middleware";
-import { routing } from "./i18n/routing";
-
-export default createMiddleware(routing);
-
-export const config = {
-  matcher: ["/", "/(fa|en|ar)/:path*"],
-};
-</file>
-
-<file path="src/payload.config.ts">
-import { buildConfig } from "payload";
-import { postgresAdapter } from "@payloadcms/db-postgres";
-import { lexicalEditor } from "@payloadcms/richtext-lexical";
-import path from "path";
-import { fileURLToPath } from "url";
-import { Users } from "./payload/collections/Users";
-
-const filename = fileURLToPath(import.meta.url);
-const dirname = path.dirname(filename);
-
-export default buildConfig({
-  admin: {
-    user: Users.slug,
-    // می‌توانید مسیر پیش‌فرض پنل ادمین را در آینده تغییر دهید
-  },
-  // معرفی کالکشن‌ها به صورت ماژولار
-  collections: [Users],
-
-  // تنظیم ویرایشگر متن غنی (Lexical Editor)
-  editor: lexicalEditor({}),
-
-  // تنظیمات چندزبانه بر اساس معماری پروژه (فارسی، انگلیسی، عربی)
-  localization: {
-    locales: ["fa", "en", "ar"],
-    defaultLocale: "fa",
-    fallback: true,
-  },
-
-  secret: process.env.PAYLOAD_SECRET || "",
-
-  // تنظیمات تولید تایپ‌های TypeScript به صورت خودکار
-  typescript: {
-    outputFile: path.resolve(dirname, "payload-types.ts"),
-  },
-
-  // اتصال به پایگاه‌داده PostgreSQL
-  db: postgresAdapter({
-    pool: {
-      connectionString: process.env.DATABASE_URI || "",
-    },
-  }),
-});
-</file>
-
-<file path="components.json">
+<file path="tsconfig.json">
 {
-  "$schema": "https://ui.shadcn.com/schema.json",
-  "style": "radix-nova",
-  "rsc": true,
-  "tsx": true,
-  "tailwind": {
-    "config": "",
-    "css": "src/app/globals.css",
-    "baseColor": "neutral",
-    "cssVariables": true,
-    "prefix": ""
-  },
-  "iconLibrary": "lucide",
-  "rtl": false,
-  "aliases": {
-    "components": "@/components",
-    "utils": "@/lib/utils",
-    "ui": "@/components/ui",
-    "lib": "@/lib",
-    "hooks": "@/hooks"
-  },
-  "menuColor": "default",
-  "menuAccent": "subtle",
-  "registries": {}
-}
-</file>
-
-<file path="docker-compose.yml">
-services:
-  postgres:
-    image: postgres:15-alpine
-    container_name: persisquartz_db
-    restart: unless-stopped
-    env_file:
-      - .env
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB:-persisquartz}
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-persisquartz}",
-        ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-    networks:
-      - app_network
-
-volumes:
-  pgdata:
-    name: persisquartz_pgdata
-
-networks:
-  app_network:
-    driver: bridge
-</file>
-
-<file path="eslint.config.mjs">
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
-
-const eslintConfig = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
-  {
-    ignores: [
-      "node_modules/**",
-      ".next/**",
-      "out/**",
-      "build/**",
-      "next-env.d.ts",
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
     ],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
-];
-
-export default eslintConfig;
-</file>
-
-<file path="postcss.config.mjs">
-const config = {
-  plugins: ["@tailwindcss/postcss"],
-};
-
-export default config;
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts" , "src/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
 </file>
 
 <file path="src/app/globals.css">
@@ -3360,36 +3398,6 @@ export default withPayload(withNextIntl(nextConfig));
     "tailwindcss": "^4",
     "typescript": "^5"
   }
-}
-</file>
-
-<file path="tsconfig.json">
-{
-  "compilerOptions": {
-    "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "preserve",
-    "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    "paths": {
-      "@/*": ["./src/*"]
-    }
-  },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts" , "src/types/**/*.ts"],
-  "exclude": ["node_modules"]
 }
 </file>
 

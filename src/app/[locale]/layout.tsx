@@ -28,8 +28,7 @@ const inter = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Persis Quartz | سطوح لوکس کوارتز",
-  description: "Multilingual Corporate Website for Persis Quartz",
+  title: "Persis Quartz",
 };
 
 export default async function RootLayout({

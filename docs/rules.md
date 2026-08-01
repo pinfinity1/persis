@@ -12,6 +12,9 @@ When generating code for this project, you MUST follow these rules:
 6. **Form Handling:** Always combine `react-hook-form` and `@hookform/resolvers/zod`. Define Zod schemas in a separate file or outside the component.
 7. **Imports:** Use absolute imports (e.g., `@/components/...`).
 8. **Clean Code & Modularization:** Pages must only act as layouts/wrappers. Break large UI parts into small, modular, single-responsibility components under `src/components/`.
+9. **Uncompromised Performance & Logical Styling:**
+   - **Performance:** Optimize all media assets (Next.js `<Image />` with proper `sizes` and `priority`, lightweight video loading), ensure zero layout shifts (CLS), and use lazy loading / Dynamic Imports for non-critical code.
+   - **Logical Tailwind Properties:** ALWAYS use logical CSS properties (e.g., `ms-`, `me-`, `ps-`, `pe-`, `border-s`, `border-e`) instead of physical ones (`ml-`, `mr-`, etc.) to guarantee seamless, zero-duplicate RTL/LTR support across all languages (FA, EN, AR).
 
 ---
 
