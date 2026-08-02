@@ -55,5 +55,11 @@
     "feature2Desc": "تنوع در بافت و رنگ‌بندی طبق آخرین استانداردهای دیزاین روز دنیا.",
     "feature3Title": "ضمانت و اصالت برند",
     "feature3Desc": "تضمین اصالت کالا و پشتوانه خدمات پس از فروش مطمئن."
+  },
+  "FeaturedProducts": {
+    "tagline": "PERSIS QUARTZ COLLECTION",
+    "title": "محصولات منتخب",
+    "viewAll": "مشاهده همه محصولات",
+    "viewDetails": "مشاهده جزئیات"
   }
 }

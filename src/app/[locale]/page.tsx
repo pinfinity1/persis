@@ -1,7 +1,6 @@
-// src/app/[locale]/page.tsx
 import { HeroBanner } from "@/components/home/hero-banner";
-import { BrandIntro } from "@/components/home/brand-intro"; // <-- کامپوننت جدید
-import { FeaturedProducts } from "@/components/home/featured-products";
+import { BrandIntro } from "@/components/home/brand-intro";
+import { ProductShowcase } from "@/components/home/product-showcase";
 import { InteractiveTools } from "@/components/home/interactive-tools";
 import { QuickContactBanner } from "@/components/home/quick-contact-banner";
 import { MOCK_PRODUCTS } from "@/lib/fake-products";
@@ -24,7 +23,7 @@ export default function HomePage() {
     <main className="min-h-screen bg-background font-sans">
       <HeroBanner />
       <BrandIntro />
-      <FeaturedProducts products={productsForUi} />
+      <ProductShowcase products={productsForUi} />
       <InteractiveTools />
       <QuickContactBanner />
     </main>

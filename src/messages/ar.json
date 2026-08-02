@@ -55,5 +55,11 @@
     "feature2Desc": "تنوع في الأنسجة والألوان وفقاً لأحدث معايير التصميم العالمية.",
     "feature3Title": "الأصالة والضمان",
     "feature3Desc": "ضمان أصالة المنتج ودعم فني موثوق بعد البيع."
+  },
+  "FeaturedProducts": {
+    "tagline": "PERSIS QUARTZ COLLECTION",
+    "title": "المنتجات المختارة",
+    "viewAll": "عرض جميع المنتجات",
+    "viewDetails": "عرض التفاصيل"
   }
 }

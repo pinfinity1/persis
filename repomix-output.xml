@@ -3577,118 +3577,6 @@ export default withPayload(withNextIntl(nextConfig));
 }
 </file>
 
-<file path="src/messages/ar.json">
-{
-  "Index": {
-    "title": "برسيس كوارتز"
-  },
-  "Header": {
-    "products": "المنتجات",
-    "collections": "المجموعات",
-    "monocolorSeries": "سلسلة أحادية اللون",
-    "monocolorDesc": "أسطح نقية، حديثة وموحدة بالكامل",
-    "veinedEffectSeries": "سلسلة التموجات",
-    "veinedEffectDesc": "أنماط ناعمة مستوحاة من الحجر الطبيعي",
-    "calacattaSeries": "سلسلة كالاكاتا",
-    "calacattaDesc": "تصاميم فاخرة بتعريقات بارزة وأنيقة",
-    "applications": "التطبيقات",
-    "kitchenCountertops": "أسطح المطابخ والجزر",
-    "vanitiesAndBathrooms": "المغاسل والحمامات",
-    "commercialProjects": "المشاريع التجارية والإدارية",
-    "catalogs": "الكتالوج",
-    "dealers": "الوكلاء",
-    "careAndMaintenance": "العناية والصيانة",
-    "about": "من نحن",
-    "contactUs": "اتصل بنا"
-  },
-  "Footer": {
-    "description": "شركة مصنعة لأسطح الكوارتز الهندسي بملامح فاخرة؛ تجمع بين الصلابة الاستثنائية والجمال المعماري.",
-    "address": "طهران، مدينة شمس آباد الصناعية",
-    "email": "info@persisquartz.com",
-    "productsTitle": "المجموعات",
-    "monocolorSeries": "سلسلة أحادية اللون",
-    "veinedEffectSeries": "سلسلة التأثير العرقي",
-    "calacattaSeries": "سلسلة كالاكاتا",
-    "quickLinksTitle": "روابط سريعة",
-    "findDealers": "الموزعون",
-    "downloadCatalog": "تحميل الكتالوج",
-    "aboutUs": "من نحن",
-    "contactUs": "اتصل بنا",
-    "infoAndLegalTitle": "المعلومات والأحكام",
-    "termsAndConditions": "الشروط والأحكام",
-    "faq": "الأسئلة الشائعة",
-    "copyright": "جميع الحقوق محفوظة."
-  },
-  "Hero": {
-    "tagline": "PERSIS QUARTZ",
-    "title": "دقة هندسية لإبداع جمال يدوم",
-    "subtitle": "أسطح تتجاوز مجرد التغطية؛ خلق تناغم وأصالة في المعمار الحديث"
-  },
-  "BrandIntro": {
-    "tagline": "تصميمٌ يتناسب مع مساحاتك",
-    "description": "أسطح جميلة ومتينة للغاية صُممت لأسطح المطابخ، المغاسل، والتكسيات الجدارية. نساعدك على تنفيذ أفكارك وتطبيق أسلوبك الفريد في كل زاوية.",
-    "ctaProducts": "استكشاف المنتجات",
-    "ctaCatalogs": "تحميل الكتالوج"
-  }
-}
-</file>
-
-<file path="src/messages/en.json">
-{
-  "Index": {
-    "title": "Persis Quartz"
-  },
-  "Header": {
-    "products": "Products",
-    "collections": "Collections",
-    "monocolorSeries": "Monocolor Series",
-    "monocolorDesc": "Seamless, modern, and pure solid tones",
-    "veinedEffectSeries": "Veined Series",
-    "veinedEffectDesc": "Soft textures inspired by natural stone",
-    "calacattaSeries": "Calacatta Series",
-    "calacattaDesc": "Luxury designs featuring bold veins",
-    "applications": "Applications",
-    "kitchenCountertops": "Kitchen Countertops & Islands",
-    "vanitiesAndBathrooms": "Vanities & Bathrooms",
-    "commercialProjects": "Commercial & Corporate Projects",
-    "catalogs": "Catalog",
-    "dealers": "Dealers",
-    "careAndMaintenance": "Care & Maintenance",
-    "about": "About Us",
-    "contactUs": "Contact Us"
-  },
-  "Footer": {
-    "description": "Manufacturer of premium engineered quartz surfaces; blending unmatched durability with architectural aesthetics.",
-    "address": "Shamsabad Ind. Zone, Tehran, Iran",
-    "email": "info@persisquartz.com",
-    "productsTitle": "Collections",
-    "monocolorSeries": "Monocolor Series",
-    "veinedEffectSeries": "Veined Effect Series",
-    "calacattaSeries": "Calacatta Series",
-    "quickLinksTitle": "Quick Links",
-    "findDealers": "Find Dealers",
-    "downloadCatalog": "Download Catalog",
-    "aboutUs": "About Us",
-    "contactUs": "Contact Us",
-    "infoAndLegalTitle": "Info & Legal",
-    "termsAndConditions": "Terms & Conditions",
-    "faq": "FAQ",
-    "copyright": "All rights reserved."
-  },
-  "Hero": {
-    "tagline": "PERSIS QUARTZ",
-    "title": "Engineered Precision for Lasting Beauty",
-    "subtitle": "Surfaces beyond mere covering; crafting harmony and authenticity in modern architecture"
-  },
-  "BrandIntro": {
-    "tagline": "Designed for Modern Spaces",
-    "description": "Beautiful and highly durable surfaces crafted for kitchen countertops, vanities, and wall cladding. We help you bring practical ideas and a unique style to every space.",
-    "ctaProducts": "Explore Products",
-    "ctaCatalogs": "Download Catalog"
-  }
-}
-</file>
-
 <file path="src/messages/fa.json">
 {
   "Index": {
@@ -3747,6 +3635,130 @@ export default withPayload(withNextIntl(nextConfig));
     "feature2Desc": "تنوع در بافت و رنگ‌بندی طبق آخرین استانداردهای دیزاین روز دنیا.",
     "feature3Title": "ضمانت و اصالت برند",
     "feature3Desc": "تضمین اصالت کالا و پشتوانه خدمات پس از فروش مطمئن."
+  }
+}
+</file>
+
+<file path="src/messages/ar.json">
+{
+  "Index": {
+    "title": "برسيس كوارتز"
+  },
+  "Header": {
+    "products": "المنتجات",
+    "collections": "المجموعات",
+    "monocolorSeries": "سلسلة أحادية اللون",
+    "monocolorDesc": "أسطح نقية، حديثة وموحدة بالكامل",
+    "veinedEffectSeries": "سلسلة التموجات",
+    "veinedEffectDesc": "أنماط ناعمة مستوحاة من الحجر الطبيعي",
+    "calacattaSeries": "سلسلة كالاكاتا",
+    "calacattaDesc": "تصاميم فاخرة بتعريقات بارزة وأنيقة",
+    "applications": "التطبيقات",
+    "kitchenCountertops": "أسطح المطابخ والجزر",
+    "vanitiesAndBathrooms": "المغاسل والحمامات",
+    "commercialProjects": "المشاريع التجارية والإدارية",
+    "catalogs": "الكتالوج",
+    "dealers": "الوكلاء",
+    "careAndMaintenance": "العناية والصيانة",
+    "about": "من نحن",
+    "contactUs": "اتصل بنا"
+  },
+  "Footer": {
+    "description": "شركة مصنعة لأسطح الكوارتز الهندسي بملامح فاخرة؛ تجمع بين الصلابة الاستثنائية والجمال المعماري.",
+    "address": "طهران، مدينة شمس آباد الصناعية",
+    "email": "info@persisquartz.com",
+    "productsTitle": "المجموعات",
+    "monocolorSeries": "سلسلة أحادية اللون",
+    "veinedEffectSeries": "سلسلة التأثير العرقي",
+    "calacattaSeries": "سلسلة كالاكاتا",
+    "quickLinksTitle": "روابط سريعة",
+    "findDealers": "الموزعون",
+    "downloadCatalog": "تحميل الكتالوج",
+    "aboutUs": "من نحن",
+    "contactUs": "اتصل بنا",
+    "infoAndLegalTitle": "المعلومات والأحكام",
+    "termsAndConditions": "الشروط والأحكام",
+    "faq": "الأسئلة الشائعة",
+    "copyright": "جميع الحقوق محفوظة."
+  },
+  "Hero": {
+    "tagline": "PERSIS QUARTZ",
+    "title": "دقة هندسية لإبداع جمال يدوم",
+    "subtitle": "أسطح تتجاوز مجرد التغطية؛ خلق تناغم وأصالة في المعمار الحديث"
+  },
+  "BrandIntro": {
+    "tagline": "مزيج من الفن المعماري ومتانة الكوارتز",
+    "description": "تستخدم برسيوس كوارتز أحدث التقنيات والمواد الفاخرة لإنشاء أسطح ذات جودة لا مثيل لها للمساحات المعمارية الحديثة.",
+    "ctaProducts": "استكشاف المنتجات",
+    "ctaCatalogs": "تحميل الكتالوج",
+    "feature1Title": "جودة الهيكل والمواد",
+    "feature1Desc": "مقاومة استثنائية للخدوش والحرارة والبقع اليومية.",
+    "feature2Title": "تصميم معماري متقدم",
+    "feature2Desc": "تنوع في الأنسجة والألوان وفقاً لأحدث معايير التصميم العالمية.",
+    "feature3Title": "الأصالة والضمان",
+    "feature3Desc": "ضمان أصالة المنتج ودعم فني موثوق بعد البيع."
+  }
+}
+</file>
+
+<file path="src/messages/en.json">
+{
+  "Index": {
+    "title": "Persis Quartz"
+  },
+  "Header": {
+    "products": "Products",
+    "collections": "Collections",
+    "monocolorSeries": "Monocolor Series",
+    "monocolorDesc": "Seamless, modern, and pure solid tones",
+    "veinedEffectSeries": "Veined Series",
+    "veinedEffectDesc": "Soft textures inspired by natural stone",
+    "calacattaSeries": "Calacatta Series",
+    "calacattaDesc": "Luxury designs featuring bold veins",
+    "applications": "Applications",
+    "kitchenCountertops": "Kitchen Countertops & Islands",
+    "vanitiesAndBathrooms": "Vanities & Bathrooms",
+    "commercialProjects": "Commercial & Corporate Projects",
+    "catalogs": "Catalog",
+    "dealers": "Dealers",
+    "careAndMaintenance": "Care & Maintenance",
+    "about": "About Us",
+    "contactUs": "Contact Us"
+  },
+  "Footer": {
+    "description": "Manufacturer of premium engineered quartz surfaces; blending unmatched durability with architectural aesthetics.",
+    "address": "Shamsabad Ind. Zone, Tehran, Iran",
+    "email": "info@persisquartz.com",
+    "productsTitle": "Collections",
+    "monocolorSeries": "Monocolor Series",
+    "veinedEffectSeries": "Veined Effect Series",
+    "calacattaSeries": "Calacatta Series",
+    "quickLinksTitle": "Quick Links",
+    "findDealers": "Find Dealers",
+    "downloadCatalog": "Download Catalog",
+    "aboutUs": "About Us",
+    "contactUs": "Contact Us",
+    "infoAndLegalTitle": "Info & Legal",
+    "termsAndConditions": "Terms & Conditions",
+    "faq": "FAQ",
+    "copyright": "All rights reserved."
+  },
+  "Hero": {
+    "tagline": "PERSIS QUARTZ",
+    "title": "Engineered Precision for Lasting Beauty",
+    "subtitle": "Surfaces beyond mere covering; crafting harmony and authenticity in modern architecture"
+  },
+  "BrandIntro": {
+    "tagline": "A Fusion of Architectural Art & Quartz Durability",
+    "description": "Persis Quartz utilizes cutting-edge technology and premium materials to create surfaces of unmatched quality for modern architectural spaces.",
+    "ctaProducts": "Explore Products",
+    "ctaCatalogs": "Download Catalog",
+    "feature1Title": "Structural Quality & Material",
+    "feature1Desc": "Exceptional resistance to scratches, heat, and everyday stains.",
+    "feature2Title": "Architectural Design",
+    "feature2Desc": "Versatile textures and color palettes matching international design standards.",
+    "feature3Title": "Authenticity & Warranty",
+    "feature3Desc": "Guaranteed brand authenticity with reliable technical support."
   }
 }
 </file>

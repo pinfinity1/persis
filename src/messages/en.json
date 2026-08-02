@@ -55,5 +55,11 @@
     "feature2Desc": "Versatile textures and color palettes matching international design standards.",
     "feature3Title": "Authenticity & Warranty",
     "feature3Desc": "Guaranteed brand authenticity with reliable technical support."
+  },
+  "FeaturedProducts": {
+    "tagline": "PERSIS QUARTZ COLLECTION",
+    "title": "Featured Products",
+    "viewAll": "View All Products",
+    "viewDetails": "View Details"
   }
 }
