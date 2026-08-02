@@ -1,7 +1,7 @@
 // src/components/home/info-cards-stack.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { useTranslations, useLocale } from "next-intl";
@@ -73,6 +73,7 @@ export const InfoCardsStack: React.FC = () => {
   const isRtl = locale === "fa" || locale === "ar";
 
   const [cards, setCards] = useState<CardItem[]>(CARDS_DATA);
+  const touchStartX = useRef<number | null>(null);
 
   const handleNext = () => {
     setCards((prev) => {
@@ -87,6 +88,26 @@ export const InfoCardsStack: React.FC = () => {
       const rest = prev.slice(0, prev.length - 1);
       return [last, ...rest];
     });
+  };
+
+  // مدیریت Swipe روان بدون تداخل با Dragهای سنگین Framer Motion
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX.current - touchEndX;
+
+    if (Math.abs(diff) > 40) {
+      if (diff > 0) {
+        isRtl ? handlePrev() : handleNext();
+      } else {
+        isRtl ? handleNext() : handlePrev();
+      }
+    }
+    touchStartX.current = null;
   };
 
   const featuresList = [
@@ -135,70 +156,38 @@ export const InfoCardsStack: React.FC = () => {
 
         <div
           className="relative w-full max-w-4xl mx-auto h-[560px] sm:h-[460px] flex items-center justify-center"
-          style={{ perspective: "1200px" }}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
         >
-          <AnimatePresence mode="popLayout">
-            {cards.map((card, index) => {
+          <AnimatePresence mode="popLayout" initial={false}>
+            {cards.slice(0, 3).map((card, index) => {
               const isFront = index === 0;
-
-              const scale = 1 - index * 0.045;
-              const translateY = index * 12;
-              const translateZ = -index * 30;
-              const opacity = index > 2 ? 0 : 1 - index * 0.18;
 
               return (
                 <motion.div
                   key={card.id}
                   layout
-                  style={{
-                    transformStyle: "preserve-3d",
-                  }}
-                  initial={{
-                    scale: 0.88,
-                    opacity: 0,
-                    y: 30,
-                    rotateX: -10,
-                  }}
+                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
                   animate={{
-                    scale,
-                    y: translateY,
-                    z: translateZ,
-                    opacity,
-                    rotateX: 0,
-                    rotateY: 0,
-                    rotateZ: 0,
+                    scale: 1 - index * 0.04,
+                    y: index * 14,
+                    opacity: 1 - index * 0.15,
                     zIndex: cards.length - index,
                   }}
                   exit={{
-                    x: isRtl ? -420 : 420,
-                    y: -20,
-                    rotateY: isRtl ? -25 : 25,
-                    rotateZ: isRtl ? -12 : 12,
+                    x: isRtl ? -300 : 300,
                     opacity: 0,
-                    scale: 0.85,
+                    scale: 0.9,
                   }}
                   transition={{
-                    type: "spring",
-                    stiffness: 180,
-                    damping: 22,
-                    mass: 0.8,
+                    duration: 0.35,
+                    ease: [0.16, 1, 0.3, 1], // Smooth cubic-bezier
                   }}
-                  drag={isFront ? "x" : false}
-                  dragConstraints={{ left: 0, right: 0 }}
-                  dragElastic={0.2}
-                  onDragEnd={(_, info) => {
-                    if (Math.abs(info.offset.x) > 60) {
-                      handleNext();
-                    }
-                  }}
-                  onClick={isFront ? handleNext : undefined}
-                  className={`absolute inset-0 w-full bg-card border border-border/80 shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-12 min-h-[500px] sm:min-h-[440px] rounded-none origin-bottom-center will-change-transform ${
-                    isFront
-                      ? "cursor-grab active:cursor-grabbing"
-                      : "pointer-events-none"
+                  className={`absolute inset-0 w-full bg-card border border-border/80 shadow-xl overflow-hidden grid grid-cols-1 md:grid-cols-12 min-h-[500px] sm:min-h-[440px] rounded-none origin-bottom ${
+                    !isFront && "pointer-events-none"
                   }`}
                 >
-                  <div className="relative md:col-span-5 h-44 md:h-auto bg-muted overflow-hidden pointer-events-none">
+                  <div className="relative md:col-span-5 h-44 md:h-auto bg-muted overflow-hidden">
                     <Image
                       src={card.imageUrl}
                       alt={t(card.titleKey as any)}
@@ -224,7 +213,6 @@ export const InfoCardsStack: React.FC = () => {
                           </h4>
                         </div>
 
-                        {/* گرید افقی بدون بهم‌ریختگی */}
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-3 border-t border-border/40">
                           {featuresList.map((item, idx) => (
                             <div
@@ -263,7 +251,6 @@ export const InfoCardsStack: React.FC = () => {
                             asChild
                             variant="link"
                             className="p-0 h-auto text-xs tracking-wider uppercase text-foreground hover:text-primary gap-2"
-                            onClick={(e) => e.stopPropagation()}
                           >
                             <Link href={card.link || "#"}>
                               <span>{t(card.ctaKey as any)}</span>

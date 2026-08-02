@@ -23,7 +23,8 @@
   },
   "Footer": {
     "description": "Manufacturer of premium engineered quartz surfaces; blending unmatched durability with architectural aesthetics.",
-    "address": "Shamsabad Ind. Zone, Tehran, Iran",
+    "address": "No. 369, Andisheh 6, Phase 3, Industrial Zone, Shahrekord, Iran",
+    "phone": "+98 38 3228 1752",
     "email": "info@persisquartz.com",
     "productsTitle": "Collections",
     "monocolorSeries": "Monocolor Series",
@@ -86,5 +87,31 @@
     "card4Title": "Request a Sample Box",
     "card4Desc": "Get touchable quartz sample kits delivered to architects and interior designers for material verification.",
     "card4Cta": "Order Sample Box"
+  },
+  "InteractiveTools": {
+    "tagline": "PERSIS QUARTZ SERVICES",
+    "title": "Services & Project Support",
+    "dealerTitle": "Sales Network & Dealers",
+    "dealerDesc": "View the directory of official Persis Quartz distributors across regions.",
+    "viewDealersBtn": "View Dealers List",
+    "projectTitle": "Project & Export Inquiry",
+    "projectDesc": "Technical advice, product codes, or material supply for domestic and international projects.",
+    "fullNameLabel": "Full Name",
+    "fullNamePlaceholder": "Enter your full name",
+    "countryLabel": "Country / Region",
+    "countryPlaceholder": "e.g., UAE, UK, Germany",
+    "phoneLabel": "Phone / WhatsApp",
+    "phonePlaceholder": "+971 ... or +44 ...",
+    "messageLabel": "Project Details",
+    "messagePlaceholder": "Mention project scale, estimated quantity, or product codes...",
+    "submitBtn": "Submit Inquiry",
+    "submittingBtn": "Processing",
+    "successMessage": "Inquiry submitted successfully.",
+    "successSubtext": "Our international sales team will contact you shortly.",
+    "newRequestBtn": "Submit Another Request",
+    "fullNameError": "Please enter your full name.",
+    "countryError": "Please specify your country or region.",
+    "phoneError": "Please enter a valid phone number.",
+    "messageError": "Please provide project details."
   }
 }
