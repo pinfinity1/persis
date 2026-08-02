@@ -5,6 +5,7 @@ import { InteractiveTools } from "@/components/home/interactive-tools";
 import { QuickContactBanner } from "@/components/home/quick-contact-banner";
 import { MOCK_PRODUCTS } from "@/lib/fake-products";
 import { useLocale } from "next-intl";
+import { InfoCardsStack } from "@/components/home/info-cards-stack";
 
 export default function HomePage() {
   const locale = useLocale() as "fa" | "en";
@@ -24,6 +25,7 @@ export default function HomePage() {
       <HeroBanner />
       <BrandIntro />
       <ProductShowcase products={productsForUi} />
+      <InfoCardsStack />
       <InteractiveTools />
       <QuickContactBanner />
     </main>

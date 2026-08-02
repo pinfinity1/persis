@@ -61,5 +61,30 @@
     "title": "Featured Products",
     "viewAll": "View All Products",
     "viewDetails": "View Details"
+  },
+  "InfoCards": {
+    "tagline": "PERSIS QUARTZ INSIGHTS",
+    "title": "Architecture, Quality & Services",
+    "card1Category": "01 / Core Advantages",
+    "card1Title": "Structural Excellence & Standards",
+    "card1Desc": "Engineered for superior durability and hygiene in modern architectural spaces.",
+    "featScratch": "Scratch Resistant",
+    "featStain": "Stain Resistant",
+    "featImpact": "Impact Resistant",
+    "featImpermeable": "Non-Porous & Dense",
+    "featAntibacterial": "Antibacterial Surface",
+    "featEasyClean": "Easy Maintenance",
+    "card2Category": "02 / Care & Maintenance",
+    "card2Title": "Long-Lasting Shine with Simple Care",
+    "card2Desc": "Maintain beauty without sealers or polish; simple cleaning with warm water and mild soap.",
+    "card2Cta": "Care & Maintenance Guide",
+    "card3Category": "03 / Technical Specs",
+    "card3Title": "Comprehensive Catalog & Specifications",
+    "card3Desc": "Explore standard slab dimensions (320x75 & 320x92 cm), color palettes, and technical data.",
+    "card3Cta": "Download Catalog",
+    "card4Category": "04 / Architect Services",
+    "card4Title": "Request a Sample Box",
+    "card4Desc": "Get touchable quartz sample kits delivered to architects and interior designers for material verification.",
+    "card4Cta": "Order Sample Box"
   }
 }
