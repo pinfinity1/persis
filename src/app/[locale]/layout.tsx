@@ -28,7 +28,7 @@ const inter = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Persis Quartz | سطوح مهندسی‌شده کوارتز",
+  title: "Persis Quartz",
   description:
     "تولیدکننده سطوح کوارتز مهندسی‌شده با استانداردهای جهانی؛ تلفیقی از استحکام بی‌نظیر و زیبایی معماری.",
 };

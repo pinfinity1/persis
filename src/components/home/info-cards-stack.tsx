@@ -155,7 +155,7 @@ export const InfoCardsStack: React.FC = () => {
         </div>
 
         <div
-          className="relative w-full max-w-4xl mx-auto h-[560px] sm:h-[460px] flex items-center justify-center"
+          className="relative w-full max-w-4xl mx-auto h-[600px] sm:h-[500px] flex items-center justify-center"
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
@@ -167,23 +167,28 @@ export const InfoCardsStack: React.FC = () => {
                 <motion.div
                   key={card.id}
                   layout
-                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                  initial={{ opacity: 0, scale: 0.9, y: 30 }}
                   animate={{
-                    scale: 1 - index * 0.04,
-                    y: index * 14,
-                    opacity: 1 - index * 0.15,
+                    y: index * 22,
+                    scale: 1 - index * 0.05,
+                    opacity: 1 - index * 0.18,
+                    x: isRtl ? index * -6 : index * 6,
                     zIndex: cards.length - index,
+                    filter:
+                      index === 0
+                        ? "brightness(100%)"
+                        : `brightness(${95 - index * 10}%)`,
                   }}
                   exit={{
-                    x: isRtl ? -300 : 300,
+                    x: isRtl ? -350 : 350,
                     opacity: 0,
-                    scale: 0.9,
+                    scale: 0.85,
                   }}
                   transition={{
-                    duration: 0.35,
-                    ease: [0.16, 1, 0.3, 1], // Smooth cubic-bezier
+                    duration: 0.4,
+                    ease: [0.16, 1, 0.3, 1],
                   }}
-                  className={`absolute inset-0 w-full bg-card border border-border/80 shadow-xl overflow-hidden grid grid-cols-1 md:grid-cols-12 min-h-[500px] sm:min-h-[440px] rounded-none origin-bottom ${
+                  className={`absolute inset-0 w-full bg-card border border-border/80 shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-12 min-h-[500px] sm:min-h-[440px] rounded-none origin-bottom ${
                     !isFront && "pointer-events-none"
                   }`}
                 >
@@ -213,7 +218,7 @@ export const InfoCardsStack: React.FC = () => {
                           </h4>
                         </div>
 
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-3 border-t border-border/40">
+                        <div className="grid grid-cols-2 gap-2.5 pt-3 border-t border-border/40">
                           {featuresList.map((item, idx) => (
                             <div
                               key={idx}
@@ -236,7 +241,7 @@ export const InfoCardsStack: React.FC = () => {
                       </div>
                     ) : (
                       <div className="space-y-4 my-auto">
-                        <span className="text-[11px] uppercase tracking-widest font-mono text-primary font-semibold block">
+                        <span className="text-[11px] uppercase tracking-widest text-primary font-semibold block">
                           {t(card.categoryKey as any)}
                         </span>
                         <h4 className="text-lg sm:text-2xl font-light text-foreground leading-snug">
