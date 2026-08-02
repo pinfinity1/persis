@@ -1,7 +1,7 @@
 // src/components/shared/header.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, usePathname, useRouter } from "@/i18n/routing";
 import { useTranslations, useLocale } from "next-intl";
 import { Logo } from "@/components/shared/logo";
@@ -35,9 +35,12 @@ export const Header: React.FC = () => {
   const [isMobileProductsOpen, setIsMobileProductsOpen] = useState(false);
   const [isMobileAppsOpen, setIsMobileAppsOpen] = useState(false);
 
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
   const isHomePage = pathname === "/" || pathname === `/${locale}`;
   const isRtl = locale === "fa" || locale === "ar";
 
+  // قفل کردن اسکرول صفحه هنگام باز بودن کشوی موبایل
   useEffect(() => {
     if (isMobileMenuOpen) {
       document.body.style.overflow = "hidden";
@@ -49,14 +52,34 @@ export const Header: React.FC = () => {
     };
   }, [isMobileMenuOpen]);
 
+  // سنجش اسکرول با IntersectionObserver و useRef
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 40);
-    };
+    if (!isHomePage) {
+      setIsScrolled(true);
+      return;
+    }
 
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+    const sentinelEl = sentinelRef.current;
+    if (!sentinelEl) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        // اگر المان بالای صفحه دیده می‌شود => isScrolled = false (هدر شفاف)
+        // اگر المان بالای صفحه از دید خارج شد => isScrolled = true (هدر کدر/تیره)
+        setIsScrolled(!entry.isIntersecting);
+      },
+      {
+        root: null,
+        threshold: 0,
+      },
+    );
+
+    observer.observe(sentinelEl);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [isHomePage]);
 
   const handleLanguageChange = (newLocale: "fa" | "en" | "ar") => {
     router.replace(pathname, { locale: newLocale });
@@ -79,6 +102,15 @@ export const Header: React.FC = () => {
 
   return (
     <>
+      {/* المان مرزی سنجش اسکرول - قرارگیری در بالای جریان DOM */}
+      {isHomePage && (
+        <div
+          ref={sentinelRef}
+          aria-hidden="true"
+          className="absolute top-0 left-0 right-0 h-10 pointer-events-none"
+        />
+      )}
+
       <header
         className={cn(
           "fixed top-0 left-0 right-0 z-40 w-full transition-all duration-500",
@@ -299,7 +331,7 @@ export const Header: React.FC = () => {
         </div>
       </header>
 
-      {/* ۴. کشوی موبایل با دکمه بستن اختصاصی داخل کشو (z-50) */}
+      {/* ۴. کشوی موبایل */}
       <div
         className={cn(
           "fixed inset-0 z-50 lg:hidden transition-all duration-300",
@@ -308,13 +340,11 @@ export const Header: React.FC = () => {
             : "opacity-0 pointer-events-none",
         )}
       >
-        {/* پس‌زمینه نیمه‌شفاف */}
         <div
           onClick={() => setIsMobileMenuOpen(false)}
           className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         />
 
-        {/* کشوی محتوا */}
         <div
           className={cn(
             "absolute top-0 bottom-0 w-[85%] max-w-md bg-background border-e border-border/40 p-6 flex flex-col justify-between shadow-2xl transition-transform duration-300 ease-out overflow-y-auto",
@@ -327,7 +357,6 @@ export const Header: React.FC = () => {
           )}
         >
           <div>
-            {/* هدر کشو: شامل لوگو و دکمه ضربدر تمیز */}
             <div className="flex items-center justify-between pb-6 border-b border-border/40 mb-6">
               <Logo variant="full" className="w-32" />
               <button
@@ -339,9 +368,7 @@ export const Header: React.FC = () => {
               </button>
             </div>
 
-            {/* لیست لینک‌ها */}
             <nav className="space-y-4">
-              {/* ۱. آکاردئون محصولات */}
               <div className="border-b border-border/50 pb-3">
                 <button
                   onClick={() => setIsMobileProductsOpen(!isMobileProductsOpen)}
@@ -388,7 +415,6 @@ export const Header: React.FC = () => {
                 )}
               </div>
 
-              {/* ۲. آکاردئون کاربردها */}
               <div className="border-b border-border/50 pb-3">
                 <button
                   onClick={() => setIsMobileAppsOpen(!isMobileAppsOpen)}
@@ -426,7 +452,6 @@ export const Header: React.FC = () => {
                 )}
               </div>
 
-              {/* سایر لینک‌ها */}
               <Link
                 href="/dealers"
                 onClick={() => setIsMobileMenuOpen(false)}
@@ -469,7 +494,6 @@ export const Header: React.FC = () => {
             </nav>
           </div>
 
-          {/* انتخاب زبان در انتهای کشو */}
           <div className="pt-6 border-t border-border/60 space-y-3 mt-6">
             <span className="text-[11px] uppercase tracking-widest text-muted-foreground font-mono block">
               زبان / Language
