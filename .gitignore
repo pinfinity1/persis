@@ -41,4 +41,9 @@ yarn-error.log*
 next-env.d.ts
 
 
+# Exclude uploaded media from Git tracking
+public/media/*
+media/*
+!**/media/.gitkeep
+
 repomix-output.xml

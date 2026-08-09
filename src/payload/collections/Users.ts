@@ -6,14 +6,22 @@ export const Users: CollectionConfig = {
     useAsTitle: "email",
     description: "مدیریت حساب کاربری ادمین",
   },
-  // فعال بودن auth باعث میشه Payload خودش فیلدهای ایمیل و پسورد رو بسازه
-  auth: true,
+  auth: {
+    // تنظیمات قفل شدن حساب در صورت ورود ناموفق متوالی
+    maxLoginAttempts: 5,
+    lockTime: 600 * 1000, // ۱۰ دقیقه قفل در صورت ۵ بار اشتباه
+  },
+  access: {
+    create: ({ req: { user } }) => Boolean(user),
+    read: ({ req: { user } }) => Boolean(user),
+    update: ({ req: { user } }) => Boolean(user),
+    delete: ({ req: { user } }) => Boolean(user),
+  },
   fields: [
     {
       name: "name",
       type: "text",
       label: "نام",
     },
-    // هیچ فیلد اضافه یا نقش‌بندی (Role) اینجا نیاز نیست
   ],
 };

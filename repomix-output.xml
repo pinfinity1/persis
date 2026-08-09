@@ -74,7 +74,6 @@ src/
       info-cards-stack.tsx
       interactive-tools.tsx
       product-showcase.tsx
-      quick-contact-banner.tsx
     shared/
       footer.tsx
       header.tsx
@@ -92,6 +91,8 @@ src/
     request.ts
     routing.ts
   lib/
+    payload/
+      hero.ts
     validations/
       contact.ts
     fake-products.ts
@@ -102,9 +103,12 @@ src/
     fa.json
   payload/
     collections/
+      HeroBanner.ts
+      Media.ts
       Users.ts
   types/
     declarations.d.ts
+    hero.ts
   middleware.ts
   payload.config.ts
 components.json
@@ -118,6 +122,256 @@ tsconfig.json
 
 <files>
 This section contains the contents of the repository's files.
+
+<file path="src/lib/payload/hero.ts">
+import { getPayload } from "payload";
+import configPromise from "@/payload.config";
+
+export async function getHeroBanners(locale: string = "fa") {
+  try {
+    const payload = await getPayload({ config: configPromise });
+
+    const response = await payload.find({
+      collection: "hero-banners",
+      locale: locale as "fa" | "en" | "ar",
+      depth: 1, // <-- این خط کلیدی است: باعث می‌شود url ویدیوها و عکس‌ها دریافت شود
+      where: {
+        status: {
+          equals: "published",
+        },
+      },
+      sort: "order",
+    });
+
+    return response.docs;
+  } catch (error) {
+    console.error("Error fetching Hero Banners from Payload:", error);
+    return [];
+  }
+}
+</file>
+
+<file path="src/payload/collections/HeroBanner.ts">
+import { CollectionConfig } from "payload";
+
+export const HeroBanner: CollectionConfig = {
+  slug: "hero-banners",
+  admin: {
+    useAsTitle: "title",
+    group: "Home Page",
+    defaultColumns: ["title", "order", "status", "updatedAt"],
+  },
+  access: {
+    read: () => true, // دسترسی عمومی برای خواندن در فرانت‌‌اند
+  },
+  fields: [
+    // --- ۱. اطلاعات متنی (چندزبانه) ---
+    {
+      name: "tagline",
+      type: "text",
+      localized: true,
+      defaultValue: "PERSIS QUARTZ",
+      admin: {
+        description: "متن کوچک بالای تیتر (مانند PERSIS QUARTZ)",
+      },
+    },
+    {
+      name: "title",
+      type: "text",
+      required: true,
+      localized: true,
+      admin: {
+        description: "تیتر اصلی اسلاید",
+      },
+    },
+    {
+      name: "subtitle",
+      type: "textarea",
+      localized: true,
+      admin: {
+        description: "توضیحات تکمیلی زیر تیتر",
+      },
+    },
+
+    // --- ۲. رسانه‌های دسکتاپ (Desktop Media) ---
+    {
+      type: "row", // قرارگیری فیلدها کنار هم در پنل ادمین
+      fields: [
+        {
+          name: "desktopPoster",
+          type: "upload",
+          relationTo: "media",
+          required: true,
+          admin: {
+            description:
+              "پوستر دسکتاپ (مهم برای SEO و حالت لودینگ/اینترنت ضعیف)",
+          },
+        },
+        {
+          name: "desktopVideo",
+          type: "upload",
+          relationTo: "media",
+          admin: {
+            description: "ویدیو پس‌زمینه دسکتاپ (اختیاری)",
+          },
+        },
+      ],
+    },
+
+    // --- ۳. رسانه‌های موبایل (Mobile Media) ---
+    {
+      type: "row",
+      fields: [
+        {
+          name: "mobilePoster",
+          type: "upload",
+          relationTo: "media",
+          required: true,
+          admin: {
+            description: "پوستر موبایل (حالت عمودی)",
+          },
+        },
+        {
+          name: "mobileVideo",
+          type: "upload",
+          relationTo: "media",
+          admin: {
+            description: "ویدیو پس‌زمینه موبایل (اختیاری)",
+          },
+        },
+      ],
+    },
+
+    // --- ۴. دکمه/لینک اختیاری (Optional CTA) ---
+    {
+      type: "row",
+      fields: [
+        {
+          name: "ctaText",
+          type: "text",
+          localized: true,
+          admin: {
+            description: "متن دکمه (اگر خالی باشد، دکمه نمایش داده نمی‌شود)",
+          },
+        },
+        {
+          name: "ctaLink",
+          type: "text",
+          admin: {
+            description: "لینک هدف دکمه (مثلاً products/ یا contact/)",
+          },
+        },
+      ],
+    },
+
+    // --- ۵. تنظیمات نمایش و دیزاین ---
+    {
+      type: "row",
+      fields: [
+        {
+          name: "overlayOpacity",
+          type: "number",
+          min: 0,
+          max: 100,
+          defaultValue: 40,
+          admin: {
+            description: "میزان تیرگی لایه روی ویدیو/عکس (درصد از ۰ تا ۱۰۰)",
+          },
+        },
+        {
+          name: "order",
+          type: "number",
+          defaultValue: 0,
+          admin: {
+            description:
+              "ترتیب نمایش اسلایدها (اعداد کوچک‌تر اول نمایش داده می‌شوند)",
+          },
+        },
+        {
+          name: "status",
+          type: "select",
+          defaultValue: "published",
+          options: [
+            { label: "منتشر شده (Published)", value: "published" },
+            { label: "پیش‌نویس (Draft)", value: "draft" },
+          ],
+        },
+      ],
+    },
+  ],
+};
+</file>
+
+<file path="src/payload/collections/Media.ts">
+// src/payload/collections/Media.ts
+import type { CollectionConfig } from "payload";
+
+export const Media: CollectionConfig = {
+  slug: "media",
+  access: {
+    read: () => true, // دسترسی عمومی برای خواندن تصاویر/ویدیوها در فرانت‌‌اند
+  },
+  upload: {
+    staticDir: "media", // پوشه ذخیره‌سازی محلی فایل‌ها
+    adminThumbnail: "card",
+    imageSizes: [
+      {
+        name: "thumbnail",
+        width: 400,
+        height: 300,
+        position: "centre",
+      },
+      {
+        name: "card",
+        width: 768,
+        height: 1024,
+        position: "centre",
+      },
+      {
+        name: "desktop",
+        width: 1920,
+        height: 1080,
+        position: "centre",
+      },
+    ],
+    mimeTypes: ["image/*", "video/mp4", "video/webm"], // پشتیبانی از عکس و ویدیو
+  },
+  fields: [
+    {
+      name: "alt",
+      type: "text",
+      localized: true,
+      admin: {
+        description: "متن جایگزین تصویر برای سئو (Alt Text)",
+      },
+    },
+  ],
+};
+</file>
+
+<file path="src/types/hero.ts">
+export interface MediaFile {
+  id: string;
+  url?: string;
+  alt?: string;
+}
+
+export interface HeroSlideData {
+  id: string;
+  tagline?: string;
+  title: string;
+  subtitle?: string;
+  desktopPoster: MediaFile | string;
+  desktopVideo?: MediaFile | string;
+  mobilePoster: MediaFile | string;
+  mobileVideo?: MediaFile | string;
+  ctaText?: string;
+  ctaLink?: string;
+  overlayOpacity?: number;
+  order?: number;
+  status?: "published" | "draft";
+}
+</file>
 
 <file path="docs/content.md">
 .۱
@@ -463,656 +717,6 @@ export const BrandIntro: React.FC = () => {
 };
 </file>
 
-<file path="src/components/home/info-cards-stack.tsx">
-// src/components/home/info-cards-stack.tsx
-"use client";
-
-import React, { useState } from "react";
-import Image from "next/image";
-import { motion, AnimatePresence } from "motion/react";
-import { useTranslations, useLocale } from "next-intl";
-import { Link } from "@/i18n/routing";
-import { Button } from "@/components/ui/button";
-import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
-
-type CardType = "features" | "maintenance" | "catalog" | "sample";
-
-interface CardItem {
-  id: number;
-  type: CardType;
-  categoryKey: string;
-  titleKey: string;
-  descKey: string;
-  ctaKey?: string;
-  link?: string;
-  imageUrl: string;
-}
-
-const CARDS_DATA: CardItem[] = [
-  {
-    id: 1,
-    type: "features",
-    categoryKey: "card1Category",
-    titleKey: "card1Title",
-    descKey: "",
-    imageUrl:
-      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1000&auto=format&fit=crop",
-  },
-  {
-    id: 2,
-    type: "maintenance",
-    categoryKey: "card2Category",
-    titleKey: "card2Title",
-    descKey: "card2Desc",
-    ctaKey: "card2Cta",
-    link: "/care-and-maintenance",
-    imageUrl:
-      "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=1000&auto=format&fit=crop",
-  },
-  {
-    id: 3,
-    type: "catalog",
-    categoryKey: "card3Category",
-    titleKey: "card3Title",
-    descKey: "card3Desc",
-    ctaKey: "card3Cta",
-    link: "/catalogs",
-    imageUrl:
-      "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=1000&auto=format&fit=crop",
-  },
-  {
-    id: 4,
-    type: "sample",
-    categoryKey: "card4Category",
-    titleKey: "card4Title",
-    descKey: "card4Desc",
-    ctaKey: "card4Cta",
-    link: "/contact?type=sample",
-    imageUrl:
-      "https://images.unsplash.com/photo-1615529182904-14819c35db37?q=80&w=1000&auto=format&fit=crop",
-  },
-];
-
-export const InfoCardsStack: React.FC = () => {
-  const t = useTranslations("InfoCards");
-  const locale = useLocale();
-  const isRtl = locale === "fa" || locale === "ar";
-
-  const [cards, setCards] = useState<CardItem[]>(CARDS_DATA);
-
-  const handleNext = () => {
-    setCards((prev) => {
-      const [first, ...rest] = prev;
-      return [...rest, first];
-    });
-  };
-
-  const handlePrev = () => {
-    setCards((prev) => {
-      const last = prev[prev.length - 1];
-      const rest = prev.slice(0, prev.length - 1);
-      return [last, ...rest];
-    });
-  };
-
-  const featuresList = [
-    { label: t("featScratch"), icon: "/icons/scratch.png" },
-    { label: t("featStain"), icon: "/icons/stain.png" },
-    { label: t("featImpact"), icon: "/icons/impact.png" },
-    { label: t("featImpermeable"), icon: "/icons/layerbarrier.png" },
-    { label: t("featAntibacterial"), icon: "/icons/antibacterial.png" },
-    { label: t("featEasyClean"), icon: "/icons/easyclean.png" },
-  ];
-
-  return (
-    <section className="py-16 sm:py-24 bg-background border-b border-border/40 select-none overflow-hidden">
-      <div className="container mx-auto px-6 sm:px-12">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-12 gap-4 max-w-4xl mx-auto">
-          <div>
-            <span className="text-[11px] sm:text-xs uppercase tracking-widest text-primary font-mono block mb-1">
-              {t("tagline")}
-            </span>
-            <h3 className="text-2xl sm:text-3xl font-light text-foreground">
-              {t("title")}
-            </h3>
-          </div>
-
-          <div className="flex items-center gap-2 self-start sm:self-auto">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handlePrev}
-              className="rounded-none border-border hover:bg-muted h-9 w-9 sm:h-10 sm:w-10 transition-colors"
-              aria-label="Previous Card"
-            >
-              <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 rtl:rotate-0 ltr:rotate-180" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleNext}
-              className="rounded-none border-border hover:bg-muted h-9 w-9 sm:h-10 sm:w-10 transition-colors"
-              aria-label="Next Card"
-            >
-              <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5 rtl:rotate-0 ltr:rotate-180" />
-            </Button>
-          </div>
-        </div>
-
-        <div
-          className="relative w-full max-w-4xl mx-auto h-[560px] sm:h-[460px] flex items-center justify-center"
-          style={{ perspective: "1200px" }}
-        >
-          <AnimatePresence mode="popLayout">
-            {cards.map((card, index) => {
-              const isFront = index === 0;
-
-              const scale = 1 - index * 0.045;
-              const translateY = index * 12;
-              const translateZ = -index * 30;
-              const opacity = index > 2 ? 0 : 1 - index * 0.18;
-
-              return (
-                <motion.div
-                  key={card.id}
-                  layout
-                  style={{
-                    transformStyle: "preserve-3d",
-                  }}
-                  initial={{
-                    scale: 0.88,
-                    opacity: 0,
-                    y: 30,
-                    rotateX: -10,
-                  }}
-                  animate={{
-                    scale,
-                    y: translateY,
-                    z: translateZ,
-                    opacity,
-                    rotateX: 0,
-                    rotateY: 0,
-                    rotateZ: 0,
-                    zIndex: cards.length - index,
-                  }}
-                  exit={{
-                    x: isRtl ? -420 : 420,
-                    y: -20,
-                    rotateY: isRtl ? -25 : 25,
-                    rotateZ: isRtl ? -12 : 12,
-                    opacity: 0,
-                    scale: 0.85,
-                  }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 180,
-                    damping: 22,
-                    mass: 0.8,
-                  }}
-                  drag={isFront ? "x" : false}
-                  dragConstraints={{ left: 0, right: 0 }}
-                  dragElastic={0.2}
-                  onDragEnd={(_, info) => {
-                    if (Math.abs(info.offset.x) > 60) {
-                      handleNext();
-                    }
-                  }}
-                  onClick={isFront ? handleNext : undefined}
-                  className={`absolute inset-0 w-full bg-card border border-border/80 shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-12 min-h-[500px] sm:min-h-[440px] rounded-none origin-bottom-center will-change-transform ${
-                    isFront
-                      ? "cursor-grab active:cursor-grabbing"
-                      : "pointer-events-none"
-                  }`}
-                >
-                  <div className="relative md:col-span-5 h-44 md:h-auto bg-muted overflow-hidden pointer-events-none">
-                    <Image
-                      src={card.imageUrl}
-                      alt={t(card.titleKey as any)}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 400px"
-                      className="object-cover"
-                      priority={isFront}
-                    />
-                    <div className="absolute top-3 start-3 bg-background/90 backdrop-blur-md px-2.5 py-1 border border-border/50 text-[10px] font-mono tracking-widest uppercase text-foreground">
-                      0{card.id} / 0{CARDS_DATA.length}
-                    </div>
-                  </div>
-
-                  <div className="md:col-span-7 p-6 sm:p-8 flex flex-col justify-between bg-card">
-                    {card.type === "features" ? (
-                      <div className="space-y-4 my-auto">
-                        <div>
-                          <span className="text-[11px] uppercase tracking-widest font-mono text-primary font-semibold block mb-1">
-                            {t(card.categoryKey as any)}
-                          </span>
-                          <h4 className="text-lg sm:text-xl font-light text-foreground">
-                            {t(card.titleKey as any)}
-                          </h4>
-                        </div>
-
-                        {/* گرید افقی بدون بهم‌ریختگی */}
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-3 border-t border-border/40">
-                          {featuresList.map((item, idx) => (
-                            <div
-                              key={idx}
-                              className="p-2.5 bg-muted/20 border border-border/40 flex items-center gap-2.5 group hover:border-primary/50 transition-colors h-14"
-                            >
-                              <div className="relative h-6 w-6 shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
-                                <Image
-                                  src={item.icon}
-                                  alt={item.label}
-                                  fill
-                                  className="object-contain dark:invert"
-                                />
-                              </div>
-                              <span className="text-[11px] sm:text-xs font-light text-foreground leading-tight line-clamp-2">
-                                {item.label}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-4 my-auto">
-                        <span className="text-[11px] uppercase tracking-widest font-mono text-primary font-semibold block">
-                          {t(card.categoryKey as any)}
-                        </span>
-                        <h4 className="text-lg sm:text-2xl font-light text-foreground leading-snug">
-                          {t(card.titleKey as any)}
-                        </h4>
-                        <p className="text-xs sm:text-sm text-muted-foreground font-light leading-relaxed">
-                          {t(card.descKey as any)}
-                        </p>
-
-                        <div className="pt-4 border-t border-border/40 flex items-center justify-between">
-                          <Button
-                            asChild
-                            variant="link"
-                            className="p-0 h-auto text-xs tracking-wider uppercase text-foreground hover:text-primary gap-2"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Link href={card.link || "#"}>
-                              <span>{t(card.ctaKey as any)}</span>
-                              <ArrowUpRight className="h-4 w-4" />
-                            </Link>
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
-        </div>
-      </div>
-    </section>
-  );
-};
-</file>
-
-<file path="src/components/home/interactive-tools.tsx">
-// src/components/home/interactive-tools.tsx
-"use client";
-
-import React, { useState, useCallback, useEffect, useRef } from "react";
-import Image from "next/image";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useTranslations, useLocale } from "next-intl";
-import { Link } from "@/i18n/routing";
-import {
-  quickContactSchema,
-  type QuickContactValues,
-} from "@/lib/validations/contact";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  ArrowUpRight,
-  MapPin,
-  Send,
-  CheckCircle2,
-  Loader2,
-} from "lucide-react";
-
-export const InteractiveTools: React.FC = () => {
-  const t = useTranslations("InteractiveTools");
-  const locale = useLocale();
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [cooldown, setCooldown] = useState(false);
-
-  // useRef جهت مدیریت امن تایمر و جلوگیری از Memory Leak در هنگام unmount
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, []);
-
-  const {
-    control,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<QuickContactValues>({
-    resolver: zodResolver(quickContactSchema),
-    mode: "onTouched",
-    defaultValues: {
-      fullName: "",
-      country: locale === "fa" ? "ایران" : "",
-      phone: "",
-      message: "",
-    },
-  });
-
-  const onSubmit = useCallback(
-    async (data: QuickContactValues) => {
-      if (cooldown || isSubmitting) return;
-
-      setIsSubmitting(true);
-      setCooldown(true);
-
-      const sanitizedData = {
-        fullName: data.fullName.trim().replace(/[<>]/g, ""),
-        country: data.country.trim().replace(/[<>]/g, ""),
-        phone: data.phone.trim().replace(/[^0-9+]/g, ""),
-        message: data.message.trim().replace(/[<>]/g, ""),
-        locale,
-      };
-
-      try {
-        const response = await fetch("/api/v1/leads/quick-contact", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Requested-With": "XMLHttpRequest",
-          },
-          body: JSON.stringify(sanitizedData),
-        });
-
-        if (response.ok) {
-          setIsSuccess(true);
-          reset();
-        }
-      } catch (error) {
-        console.error("Error submitting project inquiry:", error);
-      } finally {
-        setIsSubmitting(false);
-        timerRef.current = setTimeout(() => setCooldown(false), 5000);
-      }
-    },
-    [cooldown, isSubmitting, reset, locale],
-  );
-
-  return (
-    <section className="py-10 sm:py-16 bg-background border-b border-border/40 select-none overflow-hidden">
-      <div className="container mx-auto px-4 sm:px-12">
-        {/* عنوان بخش */}
-        <div className="max-w-3xl mb-6 sm:mb-10">
-          <span className="text-[10px] sm:text-xs uppercase tracking-widest text-primary font-mono block mb-1">
-            {t("tagline")}
-          </span>
-          <h3 className="text-lg sm:text-2xl lg:text-3xl font-light text-foreground">
-            {t("title")}
-          </h3>
-        </div>
-
-        {/* گرید اصلی */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch">
-          {/* کارت ۱: شبکه فروش و نقشه ایران (واضح، محوشدگی لبه پایین و بدون خط جداکننده) */}
-          <div className="lg:col-span-5 bg-card border border-border/60 flex flex-col justify-between hover:border-primary/40 transition-colors duration-500 rounded-none overflow-hidden relative group">
-            {/* بخش نقشه ایران - شفافیت عالی، انیمیشن هاور و گرادینت نرم */}
-            <div className="relative w-full h-48 sm:h-56 lg:h-52 bg-muted/30 p-4 flex items-center justify-center overflow-hidden">
-              <Image
-                src="/iran-map.png"
-                alt="Persis Quartz Dealer Network Iran Map"
-                fill
-                sizes="(max-width: 1024px) 100vw, 40vw"
-                className="object-contain p-2 opacity-85 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500 grayscale dark:invert"
-              />
-              <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-card to-transparent pointer-events-none" />
-            </div>
-
-            {/* محتوای متنی کارت ۱ */}
-            <div className="p-5 sm:p-7 pt-2 flex flex-col justify-between flex-1 space-y-6 z-10">
-              <div className="space-y-3 sm:space-y-4">
-                <div className="p-2 bg-muted/60 w-fit border border-border/50 text-primary">
-                  <MapPin className="h-5 w-5" />
-                </div>
-
-                <h4 className="text-base sm:text-lg lg:text-xl font-light text-foreground leading-snug">
-                  {t("dealerTitle")}
-                </h4>
-
-                <p className="text-xs sm:text-sm text-muted-foreground font-light leading-relaxed">
-                  {t("dealerDesc")}
-                </p>
-              </div>
-
-              <div className="pt-4 border-t border-border/40">
-                <Button
-                  asChild
-                  className="w-full sm:w-auto rounded-none h-11 px-6 bg-primary hover:bg-primary/90 text-primary-foreground text-xs uppercase tracking-wider transition-all"
-                >
-                  <Link
-                    href="/dealers"
-                    className="flex items-center justify-between gap-3"
-                  >
-                    <span>{t("viewDealersBtn")}</span>
-                    <ArrowUpRight className="h-4 w-4" />
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* کارت ۲: فرم درخواست مشاوره پروژه */}
-          <div className="lg:col-span-7 bg-card border border-border/60 p-5 sm:p-7 flex flex-col justify-between space-y-4 hover:border-primary/40 transition-colors duration-300 rounded-none">
-            <div className="space-y-1">
-              <h4 className="text-base sm:text-lg lg:text-xl font-light text-foreground">
-                {t("projectTitle")}
-              </h4>
-              <p className="text-xs sm:text-sm text-muted-foreground font-light leading-relaxed">
-                {t("projectDesc")}
-              </p>
-            </div>
-
-            <div className="pt-2">
-              {isSuccess ? (
-                <div className="p-6 bg-muted/30 border border-emerald-600/30 text-center space-y-2 my-auto">
-                  <CheckCircle2 className="h-7 w-7 text-emerald-600 mx-auto" />
-                  <p className="text-xs sm:text-sm font-medium text-foreground">
-                    {t("successMessage")}
-                  </p>
-                  <p className="text-[11px] text-muted-foreground font-light">
-                    {t("successSubtext")}
-                  </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-2 rounded-none text-xs h-8"
-                    onClick={() => setIsSuccess(false)}
-                  >
-                    {t("newRequestBtn")}
-                  </Button>
-                </div>
-              ) : (
-                <form
-                  onSubmit={handleSubmit(onSubmit)}
-                  noValidate
-                  className="space-y-3"
-                >
-                  {/* ردیف ۱: نام و کشور */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
-                    {/* نام و نام خانوادگی */}
-                    <div className="flex flex-col relative pb-5">
-                      <label
-                        htmlFor="fullName"
-                        className="text-[11px] font-normal text-foreground mb-1 block"
-                      >
-                        {t("fullNameLabel")} *
-                      </label>
-                      <Controller
-                        name="fullName"
-                        control={control}
-                        render={({ field }) => (
-                          <Input
-                            {...field}
-                            id="fullName"
-                            type="text"
-                            autoComplete="name"
-                            maxLength={60}
-                            className={`rounded-none h-10 bg-background text-xs transition-colors ${
-                              errors.fullName
-                                ? "border-destructive focus-visible:ring-destructive"
-                                : ""
-                            }`}
-                          />
-                        )}
-                      />
-                      {errors.fullName && (
-                        <span className="absolute bottom-0 start-0 text-[10px] text-destructive font-light leading-none">
-                          {t("fullNameError")}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* کشور / شهر */}
-                    <div className="flex flex-col relative pb-5">
-                      <label
-                        htmlFor="country"
-                        className="text-[11px] font-normal text-foreground mb-1 block"
-                      >
-                        {t("countryLabel")} *
-                      </label>
-                      <Controller
-                        name="country"
-                        control={control}
-                        render={({ field }) => (
-                          <Input
-                            {...field}
-                            id="country"
-                            type="text"
-                            maxLength={50}
-                            className={`rounded-none h-10 bg-background text-xs transition-colors ${
-                              errors.country
-                                ? "border-destructive focus-visible:ring-destructive"
-                                : ""
-                            }`}
-                          />
-                        )}
-                      />
-                      {errors.country && (
-                        <span className="absolute bottom-0 start-0 text-[10px] text-destructive font-light leading-none">
-                          {t("countryError")}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* ردیف ۲: شماره همراه */}
-                  <div className="flex flex-col relative pb-5">
-                    <label
-                      htmlFor="phone"
-                      className="text-[11px] font-normal text-foreground mb-1 block"
-                    >
-                      {t("phoneLabel")} *
-                    </label>
-                    <Controller
-                      name="phone"
-                      control={control}
-                      render={({ field }) => (
-                        <Input
-                          {...field}
-                          id="phone"
-                          type="tel"
-                          inputMode="tel"
-                          placeholder="+98..."
-                          dir="ltr"
-                          maxLength={20}
-                          onInput={(e) => {
-                            const input = e.target as HTMLInputElement;
-                            input.value = input.value.replace(/[^0-9+]/g, "");
-                          }}
-                          className={`rounded-none h-10 bg-background text-xs transition-colors placeholder:text-muted-foreground/30 ${
-                            errors.phone
-                              ? "border-destructive focus-visible:ring-destructive"
-                              : ""
-                          }`}
-                          autoComplete="tel"
-                        />
-                      )}
-                    />
-                    {errors.phone && (
-                      <span className="absolute bottom-0 start-0 text-[10px] text-destructive font-light leading-none">
-                        {t("phoneError")}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* توضیحات پروژه */}
-                  <div className="flex flex-col relative pb-5">
-                    <label
-                      htmlFor="message"
-                      className="text-[11px] font-normal text-foreground mb-1 block"
-                    >
-                      {t("messageLabel")} *
-                    </label>
-                    <Controller
-                      name="message"
-                      control={control}
-                      render={({ field }) => (
-                        <Textarea
-                          {...field}
-                          id="message"
-                          maxLength={500}
-                          className={`rounded-none bg-background resize-none text-xs h-20 min-h-[80px] transition-colors ${
-                            errors.message
-                              ? "border-destructive focus-visible:ring-destructive"
-                              : ""
-                          }`}
-                        />
-                      )}
-                    />
-                    {errors.message && (
-                      <span className="absolute bottom-0 start-0 text-[10px] text-destructive font-light leading-none">
-                        {t("messageError")}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* دکمه ارسال */}
-                  <div>
-                    <Button
-                      type="submit"
-                      disabled={isSubmitting || cooldown}
-                      className="w-full sm:w-auto px-8 rounded-none bg-primary text-primary-foreground hover:bg-primary/90 h-11 text-xs uppercase tracking-wider transition-all disabled:opacity-70"
-                    >
-                      {isSubmitting ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <span className="flex items-center gap-2">
-                          <span>{t("submitBtn")}</span>
-                          <Send className="h-3.5 w-3.5" />
-                        </span>
-                      )}
-                    </Button>
-                  </div>
-                </form>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-};
-</file>
-
 <file path="src/components/home/product-showcase.tsx">
 // src/components/home/product-showcase.tsx
 "use client";
@@ -1268,201 +872,6 @@ export const ProductShowcase: React.FC<ProductShowcaseProps> = ({
                 </Link>
               </div>
             ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-};
-</file>
-
-<file path="src/components/home/quick-contact-banner.tsx">
-// src/components/home/quick-contact-banner.tsx
-"use client";
-
-import React, { useState } from "react";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  quickContactSchema,
-  type QuickContactValues,
-} from "@/lib/validations/contact";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
-
-export const QuickContactBanner: React.FC = () => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-
-  const form = useForm<QuickContactValues>({
-    resolver: zodResolver(quickContactSchema),
-    defaultValues: {
-      fullName: "",
-      phone: "",
-      message: "",
-    },
-  });
-
-  const onSubmit = async (data: QuickContactValues) => {
-    setIsSubmitting(true);
-    try {
-      const response = await fetch("/api/v1/leads/quick-contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      if (response.ok) {
-        setIsSuccess(true);
-        form.reset();
-      }
-    } catch (error) {
-      console.error("Error submitting contact form:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <section className="bg-secondary/40 py-20 border-y border-border/50">
-      <div className="container mx-auto px-6 sm:px-12">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          {/* متن توضیحات */}
-          <div className="lg:col-span-5 space-y-4">
-            <span className="text-xs uppercase tracking-widest text-primary font-semibold">
-              مشاوره اختصاصی
-            </span>
-            <h3 className="text-3xl font-light text-foreground sm:text-4xl leading-tight">
-              نیاز به راهنمایی در انتخاب سنگ مناسب دارید؟
-            </h3>
-            <p className="text-muted-foreground text-sm leading-relaxed">
-              کارشناسان ما آماده ارائه مشاوره تخصصی برای پروژه‌های شما هستند.
-              فرم را تکمیل کنید تا با شما تماس بگیریم.
-            </p>
-          </div>
-
-          {/* فرم اصلی بر اساس ساختار Shadcn Controller & Field */}
-          <div className="lg:col-span-7 bg-card border border-border p-8 shadow-sm">
-            {isSuccess ? (
-              <div className="text-center py-8 space-y-3">
-                <div className="text-emerald-600 font-medium text-lg">
-                  درخواست شما با موفقیت ثبت شد.
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  کارشناسان ما در اسرع وقت با شما تماس خواهند گرفت.
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-4 rounded-none"
-                  onClick={() => setIsSuccess(false)}
-                >
-                  ثبت درخواست جدید
-                </Button>
-              </div>
-            ) : (
-              <form
-                id="quick-contact-form"
-                onSubmit={form.handleSubmit(onSubmit)}
-              >
-                <FieldGroup className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {/* نام و نام خانوادگی */}
-                    <Controller
-                      name="fullName"
-                      control={form.control}
-                      render={({ field, fieldState }) => (
-                        <Field data-invalid={fieldState.invalid}>
-                          <FieldLabel htmlFor={field.name}>
-                            نام و نام خانوادگی *
-                          </FieldLabel>
-                          <Input
-                            {...field}
-                            id={field.name}
-                            aria-invalid={fieldState.invalid}
-                            placeholder="مثال: علی محمدی"
-                            autoComplete="name"
-                            className="rounded-none h-11"
-                          />
-                          {fieldState.invalid && (
-                            <FieldError errors={[fieldState.error]} />
-                          )}
-                        </Field>
-                      )}
-                    />
-
-                    {/* شماره همراه */}
-                    <Controller
-                      name="phone"
-                      control={form.control}
-                      render={({ field, fieldState }) => (
-                        <Field data-invalid={fieldState.invalid}>
-                          <FieldLabel htmlFor={field.name}>
-                            شماره همراه *
-                          </FieldLabel>
-                          <Input
-                            {...field}
-                            id={field.name}
-                            aria-invalid={fieldState.invalid}
-                            placeholder="09123456789"
-                            dir="ltr"
-                            className="rounded-none h-11 text-right"
-                            autoComplete="tel"
-                          />
-                          {fieldState.invalid && (
-                            <FieldError errors={[fieldState.error]} />
-                          )}
-                        </Field>
-                      )}
-                    />
-                  </div>
-
-                  {/* توضیحات/پیام */}
-                  <Controller
-                    name="message"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel htmlFor={field.name}>
-                          پیام یا توضیحات پروژه *
-                        </FieldLabel>
-                        <Textarea
-                          {...field}
-                          id={field.name}
-                          aria-invalid={fieldState.invalid}
-                          placeholder="توضیحات کوتاه درباره متراژ، کاربری یا سوالات شما..."
-                          rows={4}
-                          className="rounded-none resize-none"
-                        />
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
-                      </Field>
-                    )}
-                  />
-
-                  {/* دکمه ثبت */}
-                  <div className="pt-2">
-                    <Button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="w-full sm:w-auto px-8 rounded-none bg-primary text-primary-foreground hover:bg-primary/90 h-12"
-                    >
-                      {isSubmitting
-                        ? "در حال ارسال..."
-                        : "ارسال درخواست مشاوره"}
-                    </Button>
-                  </div>
-                </FieldGroup>
-              </form>
-            )}
           </div>
         </div>
       </div>
@@ -2423,29 +1832,6 @@ export const { Link, redirect, usePathname, useRouter, getPathname } =
   createNavigation(routing);
 </file>
 
-<file path="src/lib/validations/contact.ts">
-// src/lib/validations/contact.ts
-import { z } from "zod";
-
-export const quickContactSchema = z.object({
-  fullName: z
-    .string()
-    .min(2, { message: "fullNameError" }) // کلید ترجمه برای Zod
-    .max(60),
-  country: z.string().min(2, { message: "countryError" }),
-  phone: z
-    .string()
-    .min(7, { message: "phoneError" })
-    .max(20)
-    .regex(/^[+]*[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/, {
-      message: "phoneInvalidError",
-    }),
-  message: z.string().min(5, { message: "messageError" }).max(500),
-});
-
-export type QuickContactValues = z.infer<typeof quickContactSchema>;
-</file>
-
 <file path="src/lib/utils.ts">
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
@@ -2493,12 +1879,15 @@ export const config = {
 </file>
 
 <file path="src/payload.config.ts">
+// src/payload.config.ts
 import { buildConfig } from "payload";
 import { postgresAdapter } from "@payloadcms/db-postgres";
 import { lexicalEditor } from "@payloadcms/richtext-lexical";
 import path from "path";
 import { fileURLToPath } from "url";
 import { Users } from "./payload/collections/Users";
+import { HeroBanner } from "./payload/collections/HeroBanner";
+import { Media } from "./payload/collections/Media"; // <-- اضافه شد
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -2506,15 +1895,12 @@ const dirname = path.dirname(filename);
 export default buildConfig({
   admin: {
     user: Users.slug,
-    // می‌توانید مسیر پیش‌فرض پنل ادمین را در آینده تغییر دهید
   },
-  // معرفی کالکشن‌ها به صورت ماژولار
-  collections: [Users],
+  // معرفی کالکشن Media در کنار بقیه
+  collections: [HeroBanner, Users, Media], // <-- Media اضافه شد
 
-  // تنظیم ویرایشگر متن غنی (Lexical Editor)
   editor: lexicalEditor({}),
 
-  // تنظیمات چندزبانه بر اساس معماری پروژه (فارسی، انگلیسی، عربی)
   localization: {
     locales: ["fa", "en", "ar"],
     defaultLocale: "fa",
@@ -2523,12 +1909,10 @@ export default buildConfig({
 
   secret: process.env.PAYLOAD_SECRET || "",
 
-  // تنظیمات تولید تایپ‌های TypeScript به صورت خودکار
   typescript: {
     outputFile: path.resolve(dirname, "payload-types.ts"),
   },
 
-  // اتصال به پایگاه‌داده PostgreSQL
   db: postgresAdapter({
     pool: {
       connectionString: process.env.DATABASE_URI || "",
@@ -2843,62 +2227,84 @@ import Image from "next/image";
 import { motion } from "motion/react";
 import { ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { HeroSlideData, MediaFile } from "@/types/hero";
 
 interface HeroBannerProps {
-  desktopPosterUrl?: string;
-  mobilePosterUrl?: string;
-  desktopVideoUrl?: string;
-  mobileVideoUrl?: string;
+  slides?: HeroSlideData[];
 }
 
-export const HeroBanner: React.FC<HeroBannerProps> = ({
-  desktopPosterUrl = "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2000&auto=format&fit=crop",
-  mobilePosterUrl = "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800&auto=format&fit=crop",
-  desktopVideoUrl = "https://upload.wikimedia.org/wikipedia/commons/transcoded/c/c0/Big_Buck_Bunny_4K.webm/Big_Buck_Bunny_4K.webm.480p.vp9.webm",
-  mobileVideoUrl = "https://upload.wikimedia.org/wikipedia/commons/transcoded/c/c0/Big_Buck_Bunny_4K.webm/Big_Buck_Bunny_4K.webm.480p.vp9.webm",
-}) => {
+export const HeroBanner: React.FC<HeroBannerProps> = ({ slides = [] }) => {
   const t = useTranslations("Hero");
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const [hasVideoError, setHasVideoError] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  const currentSlide = slides[0]; // دریافت اولین اسلاید بر اساس order
+
+  // تابع استخراج URL با در نظر گرفتن عمق (depth) دیتابیس
+  const getMediaUrl = (
+    media?: MediaFile | string | any,
+  ): string | undefined => {
+    if (!media) return undefined;
+    if (typeof media === "string") return media;
+    return media.url;
+  };
+
+  const desktopPoster =
+    getMediaUrl(currentSlide?.desktopPoster) ||
+    "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2000&auto=format&fit=crop";
+  const mobilePoster = getMediaUrl(currentSlide?.mobilePoster) || desktopPoster;
+  const desktopVideo = getMediaUrl(currentSlide?.desktopVideo);
+  const mobileVideo = getMediaUrl(currentSlide?.mobileVideo) || desktopVideo;
+
+  const tagline = currentSlide?.tagline || t("tagline");
+  const title = currentSlide?.title || t("title");
+  const subtitle = currentSlide?.subtitle || t("subtitle");
+  const overlayOpacity = (currentSlide?.overlayOpacity ?? 40) / 100;
+
+  const hasVideo = Boolean(desktopVideo || mobileVideo);
+
   useEffect(() => {
-    if (videoRef.current && !hasVideoError) {
+    if (videoRef.current && !hasVideoError && hasVideo) {
       videoRef.current.muted = true;
       videoRef.current.play().catch((err) => {
         console.warn("Autoplay notice:", err);
       });
     }
-  }, [hasVideoError]);
+  }, [hasVideoError, hasVideo, desktopVideo, mobileVideo]);
 
   return (
     <section className="relative h-[100dvh] w-full overflow-hidden bg-neutral-950 text-white flex flex-col justify-end">
-      {/* 1. LCP Priority Poster Image (Desktop) */}
+      {/* 1. Desktop Poster (لایه لودینگ دسکتاپ) */}
       <Image
-        src={desktopPosterUrl}
-        alt="Persis Quartz Luxury Surface"
+        src={desktopPoster}
+        alt="Persis Quartz Desktop Surface"
         fill
         priority
         sizes="100vw"
         className={`hidden md:block object-cover transition-opacity duration-1000 ${
-          isVideoLoaded && !hasVideoError ? "opacity-0" : "opacity-100"
+          isVideoLoaded && !hasVideoError && hasVideo
+            ? "opacity-0"
+            : "opacity-100"
         }`}
       />
 
-      {/* 1. LCP Priority Poster Image (Mobile) */}
+      {/* 2. Mobile Poster (لایه لودینگ موبایل) */}
       <Image
-        src={mobilePosterUrl}
-        alt="Persis Quartz Luxury Surface"
+        src={mobilePoster}
+        alt="Persis Quartz Mobile Surface"
         fill
         priority
         sizes="100vw"
         className={`block md:hidden object-cover transition-opacity duration-1000 ${
-          isVideoLoaded && !hasVideoError ? "opacity-0" : "opacity-100"
+          isVideoLoaded && !hasVideoError && hasVideo
+            ? "opacity-0"
+            : "opacity-100"
         }`}
       />
 
-      {/* 2. Background Video (Adaptive Mobile & Desktop) */}
-      {!hasVideoError && (
+      {/* 3. Responsive Background Video */}
+      {hasVideo && !hasVideoError && (
         <video
           ref={videoRef}
           autoPlay
@@ -2906,31 +2312,35 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
           muted
           playsInline
           onLoadedData={() => setIsVideoLoaded(true)}
-          onError={() => {
-            console.warn("Video failed to load. Falling back to poster image.");
-            setHasVideoError(true);
-          }}
+          onError={() => setHasVideoError(true)}
           className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${
             isVideoLoaded ? "opacity-100" : "opacity-0"
           }`}
         >
-          {/* مرورگر به‌صورت Native بر اساس media query ویدیوی مناسب را دانلود می‌کند */}
-          <source
-            src={mobileVideoUrl}
-            type="video/mp4"
-            media="(max-width: 767px)"
-          />
-          <source
-            src={desktopVideoUrl}
-            type="video/mp4"
-            media="(min-width: 768px)"
-          />
+          {/* مرورگر به صورت هوشمند تصمیم می‌گیرد کدام سورس را لود کند */}
+          {mobileVideo && (
+            <source
+              src={mobileVideo}
+              type="video/mp4"
+              media="(max-width: 767px)"
+            />
+          )}
+          {desktopVideo && (
+            <source
+              src={desktopVideo}
+              type="video/mp4"
+              media="(min-width: 768px)"
+            />
+          )}
         </video>
       )}
 
       {/* Overlays */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/80 pointer-events-none" />
-      <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px] pointer-events-none" />
+      <div
+        className="absolute inset-0 bg-black pointer-events-none transition-opacity"
+        style={{ opacity: overlayOpacity }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/80 pointer-events-none" />
 
       {/* Content Container */}
       <div className="container relative z-10 mx-auto px-6 sm:px-12 pb-20 sm:pb-28">
@@ -2938,26 +2348,37 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
-          className="max-w-3xl space-y-5 border-r rtl:border-r ltr:border-r-0 ltr:border-l border-white/20 pr-6 rtl:pr-6 ltr:pr-0 ltr:pl-6 sm:pr-8 sm:ltr:pl-8"
+          className="max-w-3xl space-y-5 border-s border-white/20 ps-6 sm:ps-8"
         >
           <div className="flex items-center gap-3">
             <span className="h-[1px] w-8 bg-primary"></span>
-            <span className="text-[11px] sm:text-xs uppercase tracking-[0.25em] font-mono text-black font-light">
-              {t("tagline")}
+            <span className="text-[11px] sm:text-xs uppercase tracking-[0.25em] font-mono text-neutral-300 font-light">
+              {tagline}
             </span>
           </div>
 
           <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extralight tracking-tight leading-[1.3] text-neutral-100 text-balance">
-            {t("title")}
+            {title}
           </h1>
 
           <p className="text-xs sm:text-base font-light text-neutral-300/90 leading-relaxed max-w-xl">
-            {t("subtitle")}
+            {subtitle}
           </p>
+
+          {currentSlide?.ctaText && currentSlide?.ctaLink && (
+            <div className="pt-2">
+              <a
+                href={currentSlide.ctaLink}
+                className="inline-flex items-center gap-2 text-xs uppercase tracking-wider bg-primary text-primary-foreground px-6 py-3 font-medium transition-all hover:bg-primary/90"
+              >
+                {currentSlide.ctaText}
+              </a>
+            </div>
+          )}
         </motion.div>
       </div>
 
-      {/* Scroll Down Indicator */}
+      {/* Scroll Indicator */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -2977,6 +2398,368 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
           <ChevronDown className="size-6 stroke-[1]" />
         </motion.div>
       </motion.div>
+    </section>
+  );
+};
+</file>
+
+<file path="src/components/home/interactive-tools.tsx">
+// src/components/home/interactive-tools.tsx
+"use client";
+
+import React, { useState, useCallback, useEffect, useRef } from "react";
+import Image from "next/image";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslations, useLocale } from "next-intl";
+import { Link } from "@/i18n/routing";
+import {
+  quickContactSchema,
+  type QuickContactValues,
+} from "@/lib/validations/contact";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  ArrowUpRight,
+  MapPin,
+  Send,
+  CheckCircle2,
+  Loader2,
+} from "lucide-react";
+
+export const InteractiveTools: React.FC = () => {
+  const t = useTranslations("InteractiveTools");
+  const locale = useLocale();
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [cooldown, setCooldown] = useState(false);
+
+  // useRef جهت مدیریت امن تایمر و جلوگیری از Memory Leak در هنگام unmount
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<QuickContactValues>({
+    resolver: zodResolver(quickContactSchema),
+    mode: "onTouched",
+    defaultValues: {
+      fullName: "",
+      country: locale === "fa" ? "ایران" : "",
+      phone: "",
+      message: "",
+    },
+  });
+
+  const onSubmit = useCallback(
+    async (data: QuickContactValues) => {
+      if (cooldown || isSubmitting) return;
+
+      setIsSubmitting(true);
+      setCooldown(true);
+
+      const sanitizedData = {
+        fullName: data.fullName.trim().replace(/[<>]/g, ""),
+        country: data.country.trim().replace(/[<>]/g, ""),
+        phone: data.phone.trim().replace(/[^0-9+]/g, ""),
+        message: data.message.trim().replace(/[<>]/g, ""),
+        locale,
+      };
+
+      try {
+        const response = await fetch("/api/v1/leads/quick-contact", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+          },
+          body: JSON.stringify(sanitizedData),
+        });
+
+        if (response.ok) {
+          setIsSuccess(true);
+          reset();
+        }
+      } catch (error) {
+        console.error("Error submitting project inquiry:", error);
+      } finally {
+        setIsSubmitting(false);
+        timerRef.current = setTimeout(() => setCooldown(false), 5000);
+      }
+    },
+    [cooldown, isSubmitting, reset, locale],
+  );
+
+  return (
+    <section className="py-10 sm:py-16 bg-background border-b border-border/40 select-none overflow-hidden">
+      <div className="container mx-auto px-4 sm:px-12">
+        {/* عنوان بخش */}
+        <div className="max-w-3xl mb-6 sm:mb-10">
+          <span className="text-[10px] sm:text-xs uppercase tracking-widest text-primary font-mono block mb-1">
+            {t("tagline")}
+          </span>
+          <h3 className="text-lg sm:text-2xl lg:text-3xl font-light text-foreground">
+            {t("title")}
+          </h3>
+        </div>
+
+        {/* گرید اصلی */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch">
+          {/* کارت ۱: شبکه فروش و نقشه ایران (واضح، محوشدگی لبه پایین و بدون خط جداکننده) */}
+          <div className="lg:col-span-5 bg-card border border-border/60 flex flex-col justify-between hover:border-primary/40 transition-colors duration-500 rounded-none overflow-hidden relative group">
+            {/* بخش نقشه ایران - شفافیت عالی، انیمیشن هاور و گرادینت نرم */}
+            <div className="relative w-full h-48 sm:h-56 lg:h-52 bg-muted/30 p-4 flex items-center justify-center overflow-hidden">
+              <Image
+                src="/iran-map.png"
+                alt="Persis Quartz Dealer Network Iran Map"
+                fill
+                sizes="(max-width: 1024px) 100vw, 40vw"
+                className="object-contain p-2 opacity-85 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500 grayscale dark:invert"
+              />
+              <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-card to-transparent pointer-events-none" />
+            </div>
+
+            {/* محتوای متنی کارت ۱ */}
+            <div className="p-5 sm:p-7 pt-2 flex flex-col justify-between flex-1 space-y-6 z-10">
+              <div className="space-y-3 sm:space-y-4">
+                <div className="p-2 bg-muted/60 w-fit border border-border/50 text-primary">
+                  <MapPin className="h-5 w-5" />
+                </div>
+
+                <h4 className="text-base sm:text-lg lg:text-xl font-light text-foreground leading-snug">
+                  {t("dealerTitle")}
+                </h4>
+
+                <p className="text-xs sm:text-sm text-muted-foreground font-light leading-relaxed">
+                  {t("dealerDesc")}
+                </p>
+              </div>
+
+              <div className="pt-4 border-t border-border/40">
+                <Button
+                  asChild
+                  className="w-full sm:w-auto rounded-none h-11 px-6 bg-primary hover:bg-primary/90 text-primary-foreground text-xs uppercase tracking-wider transition-all"
+                >
+                  <Link
+                    href="/dealers"
+                    className="flex items-center justify-between gap-3"
+                  >
+                    <span>{t("viewDealersBtn")}</span>
+                    <ArrowUpRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* کارت ۲: فرم درخواست مشاوره پروژه */}
+          <div className="lg:col-span-7 bg-card border border-border/60 p-5 sm:p-7 flex flex-col justify-between space-y-4 hover:border-primary/40 transition-colors duration-300 rounded-none">
+            <div className="space-y-1">
+              <h4 className="text-base sm:text-lg lg:text-xl font-light text-foreground">
+                {t("projectTitle")}
+              </h4>
+              <p className="text-xs sm:text-sm text-muted-foreground font-light leading-relaxed">
+                {t("projectDesc")}
+              </p>
+            </div>
+
+            <div className="pt-2">
+              {isSuccess ? (
+                <div className="p-6 bg-muted/30 border border-emerald-600/30 text-center space-y-2 my-auto">
+                  <CheckCircle2 className="h-7 w-7 text-emerald-600 mx-auto" />
+                  <p className="text-xs sm:text-sm font-medium text-foreground">
+                    {t("successMessage")}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground font-light">
+                    {t("successSubtext")}
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 rounded-none text-xs h-8"
+                    onClick={() => setIsSuccess(false)}
+                  >
+                    {t("newRequestBtn")}
+                  </Button>
+                </div>
+              ) : (
+                <form
+                  onSubmit={handleSubmit(onSubmit)}
+                  noValidate
+                  className="space-y-3"
+                >
+                  {/* ردیف ۱: نام و کشور */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
+                    {/* نام و نام خانوادگی */}
+                    <div className="flex flex-col relative pb-5">
+                      <label
+                        htmlFor="fullName"
+                        className="text-[11px] font-normal text-foreground mb-1 block"
+                      >
+                        {t("fullNameLabel")} *
+                      </label>
+                      <Controller
+                        name="fullName"
+                        control={control}
+                        render={({ field }) => (
+                          <Input
+                            {...field}
+                            id="fullName"
+                            type="text"
+                            autoComplete="name"
+                            maxLength={60}
+                            className={`rounded-none h-10 bg-background text-xs transition-colors ${
+                              errors.fullName
+                                ? "border-destructive focus-visible:ring-destructive"
+                                : ""
+                            }`}
+                          />
+                        )}
+                      />
+                      {errors.fullName && (
+                        <span className="absolute bottom-0 start-0 text-[10px] text-destructive font-light leading-none">
+                          {t("fullNameError")}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* کشور / شهر */}
+                    <div className="flex flex-col relative pb-5">
+                      <label
+                        htmlFor="country"
+                        className="text-[11px] font-normal text-foreground mb-1 block"
+                      >
+                        {t("countryLabel")} *
+                      </label>
+                      <Controller
+                        name="country"
+                        control={control}
+                        render={({ field }) => (
+                          <Input
+                            {...field}
+                            id="country"
+                            type="text"
+                            maxLength={50}
+                            className={`rounded-none h-10 bg-background text-xs transition-colors ${
+                              errors.country
+                                ? "border-destructive focus-visible:ring-destructive"
+                                : ""
+                            }`}
+                          />
+                        )}
+                      />
+                      {errors.country && (
+                        <span className="absolute bottom-0 start-0 text-[10px] text-destructive font-light leading-none">
+                          {t("countryError")}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* ردیف ۲: شماره همراه */}
+                  <div className="flex flex-col relative pb-5">
+                    <label
+                      htmlFor="phone"
+                      className="text-[11px] font-normal text-foreground mb-1 block"
+                    >
+                      {t("phoneLabel")} *
+                    </label>
+                    <Controller
+                      name="phone"
+                      control={control}
+                      render={({ field }) => (
+                        <Input
+                          {...field}
+                          id="phone"
+                          type="tel"
+                          inputMode="tel"
+                          placeholder="+98..."
+                          dir="ltr"
+                          maxLength={20}
+                          onInput={(e) => {
+                            const input = e.target as HTMLInputElement;
+                            input.value = input.value.replace(/[^0-9+]/g, "");
+                          }}
+                          className={`rounded-none h-10 bg-background text-xs transition-colors placeholder:text-muted-foreground/30 ${
+                            errors.phone
+                              ? "border-destructive focus-visible:ring-destructive"
+                              : ""
+                          }`}
+                          autoComplete="tel"
+                        />
+                      )}
+                    />
+                    {errors.phone && (
+                      <span className="absolute bottom-0 start-0 text-[10px] text-destructive font-light leading-none">
+                        {t("phoneError")}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* توضیحات پروژه */}
+                  <div className="flex flex-col relative pb-5">
+                    <label
+                      htmlFor="message"
+                      className="text-[11px] font-normal text-foreground mb-1 block"
+                    >
+                      {t("messageLabel")} *
+                    </label>
+                    <Controller
+                      name="message"
+                      control={control}
+                      render={({ field }) => (
+                        <Textarea
+                          {...field}
+                          id="message"
+                          maxLength={500}
+                          className={`rounded-none bg-background resize-none text-xs h-20 min-h-[80px] transition-colors ${
+                            errors.message
+                              ? "border-destructive focus-visible:ring-destructive"
+                              : ""
+                          }`}
+                        />
+                      )}
+                    />
+                    {errors.message && (
+                      <span className="absolute bottom-0 start-0 text-[10px] text-destructive font-light leading-none">
+                        {t("messageError")}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* دکمه ارسال */}
+                  <div>
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting || cooldown}
+                      className="w-full sm:w-auto px-8 rounded-none bg-primary text-primary-foreground hover:bg-primary/90 h-11 text-xs uppercase tracking-wider transition-all disabled:opacity-70"
+                    >
+                      {isSubmitting ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          <span>{t("submitBtn")}</span>
+                          <Send className="h-3.5 w-3.5" />
+                        </span>
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
   );
 };
@@ -3042,7 +2825,7 @@ export const Footer: React.FC = () => {
             <p className="text-sm text-neutral-400 leading-relaxed max-w-sm font-light">
               {t("description")}
             </p>
-            <div className="text-xs text-neutral-500 font-mono space-y-2">
+            <div className="text-xs text-neutral-500 space-y-2">
               <p className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-neutral-400 shrink-0" />
                 <span>{t("address")}</span>
@@ -3215,6 +2998,29 @@ export const Footer: React.FC = () => {
     </footer>
   );
 };
+</file>
+
+<file path="src/lib/validations/contact.ts">
+// src/lib/validations/contact.ts
+import { z } from "zod";
+
+export const quickContactSchema = z.object({
+  fullName: z
+    .string()
+    .min(2, { message: "fullNameError" }) // کلید ترجمه برای Zod
+    .max(60),
+  country: z.string().min(2, { message: "countryError" }),
+  phone: z
+    .string()
+    .min(7, { message: "phoneError" })
+    .max(20)
+    .regex(/^[+]*[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/, {
+      message: "phoneInvalidError",
+    }),
+  message: z.string().min(5, { message: "messageError" }).max(500),
+});
+
+export type QuickContactValues = z.infer<typeof quickContactSchema>;
 </file>
 
 <file path="src/lib/fake-products.ts">
@@ -3414,185 +3220,284 @@ When generating code for this project, you MUST follow these rules:
 - **Utilities & Services:** `camelCase.ts` (e.g., `formatCurrency.ts`).
 </file>
 
-<file path="src/app/[locale]/layout.tsx">
-// src/app/[locale]/layout.tsx
-import type { Metadata } from "next";
-import localFont from "next/font/local";
-import { NextIntlClientProvider } from "next-intl";
-import { getMessages } from "next-intl/server";
-import { routing } from "@/i18n/routing";
-import { notFound } from "next/navigation";
-import { Header } from "@/components/shared/header";
-import { Footer } from "@/components/shared/footer";
-import "../globals.css";
+<file path="src/components/home/info-cards-stack.tsx">
+// src/components/home/info-cards-stack.tsx
+"use client";
 
-const vazirmatn = localFont({
-  src: [
-    { path: "../assets/Vazir-Medium.woff2", weight: "400", style: "normal" },
-    { path: "../assets/Vazir-Bold.woff2", weight: "700", style: "normal" },
-  ],
-  variable: "--font-vazirmatn",
-  display: "swap",
-});
+import React, { useState, useRef } from "react";
+import Image from "next/image";
+import { motion, AnimatePresence } from "motion/react";
+import { useTranslations, useLocale } from "next-intl";
+import { Link } from "@/i18n/routing";
+import { Button } from "@/components/ui/button";
+import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
 
-const inter = localFont({
-  src: [
-    { path: "../assets/Inter-Regular.woff2", weight: "400", style: "normal" },
-    { path: "../assets/Inter-Bold.woff2", weight: "700", style: "normal" },
-  ],
-  variable: "--font-inter",
-  display: "swap",
-});
+type CardType = "features" | "maintenance" | "catalog" | "sample";
 
-export const metadata: Metadata = {
-  title: "Persis Quartz",
-};
+interface CardItem {
+  id: number;
+  type: CardType;
+  categoryKey: string;
+  titleKey: string;
+  descKey: string;
+  ctaKey?: string;
+  link?: string;
+  imageUrl: string;
+}
 
-export default async function RootLayout({
-  children,
-  params,
-}: Readonly<{
-  children: React.ReactNode;
-  params: Promise<{ locale: string }>;
-}>) {
-  const { locale } = await params;
+const CARDS_DATA: CardItem[] = [
+  {
+    id: 1,
+    type: "features",
+    categoryKey: "card1Category",
+    titleKey: "card1Title",
+    descKey: "",
+    imageUrl:
+      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1000&auto=format&fit=crop",
+  },
+  {
+    id: 2,
+    type: "maintenance",
+    categoryKey: "card2Category",
+    titleKey: "card2Title",
+    descKey: "card2Desc",
+    ctaKey: "card2Cta",
+    link: "/care-and-maintenance",
+    imageUrl:
+      "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=1000&auto=format&fit=crop",
+  },
+  {
+    id: 3,
+    type: "catalog",
+    categoryKey: "card3Category",
+    titleKey: "card3Title",
+    descKey: "card3Desc",
+    ctaKey: "card3Cta",
+    link: "/catalogs",
+    imageUrl:
+      "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=1000&auto=format&fit=crop",
+  },
+  {
+    id: 4,
+    type: "sample",
+    categoryKey: "card4Category",
+    titleKey: "card4Title",
+    descKey: "card4Desc",
+    ctaKey: "card4Cta",
+    link: "/contact?type=sample",
+    imageUrl:
+      "https://images.unsplash.com/photo-1615529182904-14819c35db37?q=80&w=1000&auto=format&fit=crop",
+  },
+];
 
-  if (!routing.locales.includes(locale as any)) {
-    notFound();
-  }
+export const InfoCardsStack: React.FC = () => {
+  const t = useTranslations("InfoCards");
+  const locale = useLocale();
+  const isRtl = locale === "fa" || locale === "ar";
 
-  const messages = await getMessages();
-  const dir = locale === "en" ? "ltr" : "rtl";
+  const [cards, setCards] = useState<CardItem[]>(CARDS_DATA);
+  const touchStartX = useRef<number | null>(null);
+
+  const handleNext = () => {
+    setCards((prev) => {
+      const [first, ...rest] = prev;
+      return [...rest, first];
+    });
+  };
+
+  const handlePrev = () => {
+    setCards((prev) => {
+      const last = prev[prev.length - 1];
+      const rest = prev.slice(0, prev.length - 1);
+      return [last, ...rest];
+    });
+  };
+
+  // مدیریت Swipe روان بدون تداخل با Dragهای سنگین Framer Motion
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX.current - touchEndX;
+
+    if (Math.abs(diff) > 40) {
+      if (diff > 0) {
+        isRtl ? handlePrev() : handleNext();
+      } else {
+        isRtl ? handleNext() : handlePrev();
+      }
+    }
+    touchStartX.current = null;
+  };
+
+  const featuresList = [
+    { label: t("featScratch"), icon: "/icons/scratch.png" },
+    { label: t("featStain"), icon: "/icons/stain.png" },
+    { label: t("featImpact"), icon: "/icons/impact.png" },
+    { label: t("featImpermeable"), icon: "/icons/layerbarrier.png" },
+    { label: t("featAntibacterial"), icon: "/icons/antibacterial.png" },
+    { label: t("featEasyClean"), icon: "/icons/easyclean.png" },
+  ];
 
   return (
-    <html
-      lang={locale}
-      dir={dir}
-      className={`${vazirmatn.variable} ${inter.variable}`}
-    >
-      <body className="antialiased font-sans flex flex-col min-h-screen">
-        <NextIntlClientProvider messages={messages}>
-          <Header />
-          <div className="flex-1">{children}</div>
-          <Footer />
-        </NextIntlClientProvider>
-      </body>
-    </html>
+    <section className="py-16 sm:py-24 bg-background border-b border-border/40 select-none overflow-hidden">
+      <div className="container mx-auto px-6 sm:px-12">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-12 gap-4 max-w-4xl mx-auto">
+          <div>
+            <span className="text-[11px] sm:text-xs uppercase tracking-widest text-primary font-mono block mb-1">
+              {t("tagline")}
+            </span>
+            <h3 className="text-2xl sm:text-3xl font-light text-foreground">
+              {t("title")}
+            </h3>
+          </div>
+
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handlePrev}
+              className="rounded-none border-border hover:bg-muted h-9 w-9 sm:h-10 sm:w-10 transition-colors"
+              aria-label="Previous Card"
+            >
+              <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 rtl:rotate-0 ltr:rotate-180" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleNext}
+              className="rounded-none border-border hover:bg-muted h-9 w-9 sm:h-10 sm:w-10 transition-colors"
+              aria-label="Next Card"
+            >
+              <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5 rtl:rotate-0 ltr:rotate-180" />
+            </Button>
+          </div>
+        </div>
+
+        <div
+          className="relative w-full max-w-4xl mx-auto h-[600px] sm:h-[500px] flex items-center justify-center"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          <AnimatePresence mode="popLayout" initial={false}>
+            {cards.slice(0, 3).map((card, index) => {
+              const isFront = index === 0;
+
+              return (
+                <motion.div
+                  key={card.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.9, y: 30 }}
+                  animate={{
+                    y: index * 22,
+                    scale: 1 - index * 0.05,
+                    opacity: 1 - index * 0.18,
+                    x: isRtl ? index * -6 : index * 6,
+                    zIndex: cards.length - index,
+                    filter:
+                      index === 0
+                        ? "brightness(100%)"
+                        : `brightness(${95 - index * 10}%)`,
+                  }}
+                  exit={{
+                    x: isRtl ? -350 : 350,
+                    opacity: 0,
+                    scale: 0.85,
+                  }}
+                  transition={{
+                    duration: 0.4,
+                    ease: [0.16, 1, 0.3, 1],
+                  }}
+                  className={`absolute inset-0 w-full bg-card border border-border/80 shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-12 min-h-[500px] sm:min-h-[440px] rounded-none origin-bottom ${
+                    !isFront && "pointer-events-none"
+                  }`}
+                >
+                  <div className="relative md:col-span-5 h-44 md:h-auto bg-muted overflow-hidden">
+                    <Image
+                      src={card.imageUrl}
+                      alt={t(card.titleKey as any)}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 400px"
+                      className="object-cover"
+                      priority={isFront}
+                    />
+                    <div className="absolute top-3 start-3 bg-background/90 backdrop-blur-md px-2.5 py-1 border border-border/50 text-[10px] font-mono tracking-widest uppercase text-foreground">
+                      0{card.id} / 0{CARDS_DATA.length}
+                    </div>
+                  </div>
+
+                  <div className="md:col-span-7 p-6 sm:p-8 flex flex-col justify-between bg-card">
+                    {card.type === "features" ? (
+                      <div className="space-y-4 my-auto">
+                        <div>
+                          <span className="text-[11px] uppercase tracking-widest font-mono text-primary font-semibold block mb-1">
+                            {t(card.categoryKey as any)}
+                          </span>
+                          <h4 className="text-lg sm:text-xl font-light text-foreground">
+                            {t(card.titleKey as any)}
+                          </h4>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2.5 pt-3 border-t border-border/40">
+                          {featuresList.map((item, idx) => (
+                            <div
+                              key={idx}
+                              className="p-2.5 bg-muted/20 border border-border/40 flex items-center gap-2.5 group hover:border-primary/50 transition-colors h-14"
+                            >
+                              <div className="relative h-6 w-6 shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
+                                <Image
+                                  src={item.icon}
+                                  alt={item.label}
+                                  fill
+                                  className="object-contain dark:invert"
+                                />
+                              </div>
+                              <span className="text-[11px] sm:text-xs font-light text-foreground leading-tight line-clamp-2">
+                                {item.label}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-4 my-auto">
+                        <span className="text-[11px] uppercase tracking-widest text-primary font-semibold block">
+                          {t(card.categoryKey as any)}
+                        </span>
+                        <h4 className="text-lg sm:text-2xl font-light text-foreground leading-snug">
+                          {t(card.titleKey as any)}
+                        </h4>
+                        <p className="text-xs sm:text-sm text-muted-foreground font-light leading-relaxed">
+                          {t(card.descKey as any)}
+                        </p>
+
+                        <div className="pt-4 border-t border-border/40 flex items-center justify-between">
+                          <Button
+                            asChild
+                            variant="link"
+                            className="p-0 h-auto text-xs tracking-wider uppercase text-foreground hover:text-primary gap-2"
+                          >
+                            <Link href={card.link || "#"}>
+                              <span>{t(card.ctaKey as any)}</span>
+                              <ArrowUpRight className="h-4 w-4" />
+                            </Link>
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </div>
+      </div>
+    </section>
   );
-}
-</file>
-
-<file path="src/app/globals.css">
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
-
-@custom-variant dark (&:is(.dark *));
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-vazirmatn), var(--font-inter), system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-vazirmatn), var(--font-inter), sans-serif;
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
-}
-
-:root {
-  --background: oklch(0.99 0 0);
-  --foreground: oklch(0.15 0.01 15);
-
-  /* Brand Color: #9B0737 (Burgundy / Crimson) */
-  --primary: oklch(0.38 0.18 15);
-  --primary-foreground: oklch(0.99 0 0);
-
-  /* Secondary & Accents */
-  --secondary: oklch(0.96 0.01 15);
-  --secondary-foreground: oklch(0.25 0.12 15);
-  --muted: oklch(0.96 0.005 15);
-  --muted-foreground: oklch(0.5 0.02 15);
-  --accent: oklch(0.94 0.02 15);
-  --accent-foreground: oklch(0.38 0.18 15);
-
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.15 0.01 15);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0.01 15);
-  --border: oklch(0.91 0.01 15);
-  --input: oklch(0.91 0.01 15);
-  --ring: oklch(0.38 0.18 15);
-  --radius: 0.5rem;
-}
-
-.dark {
-  --background: oklch(0.12 0.01 15);
-  --foreground: oklch(0.98 0 0);
-
-  --primary: oklch(0.48 0.2 15);
-  --primary-foreground: oklch(0.99 0 0);
-
-  --secondary: oklch(0.2 0.03 15);
-  --secondary-foreground: oklch(0.98 0 0);
-  --muted: oklch(0.2 0.02 15);
-  --muted-foreground: oklch(0.65 0.01 15);
-  --accent: oklch(0.25 0.04 15);
-  --accent-foreground: oklch(0.98 0 0);
-
-  --card: oklch(0.16 0.01 15);
-  --card-foreground: oklch(0.98 0 0);
-  --popover: oklch(0.16 0.01 15);
-  --popover-foreground: oklch(0.98 0 0);
-  --border: oklch(0.25 0.02 15);
-  --input: oklch(0.25 0.02 15);
-  --ring: oklch(0.48 0.2 15);
-}
-
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-  html {
-    @apply font-sans;
-  }
-}
+};
 </file>
 
 <file path="src/components/shared/header.tsx">
@@ -4164,6 +4069,119 @@ const nextConfig: NextConfig = {
 export default withPayload(withNextIntl(nextConfig));
 </file>
 
+<file path="src/app/globals.css">
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-vazirmatn), var(--font-inter), system-ui, sans-serif;
+  --font-mono: var(--font-inter), monospace;
+  --font-heading: var(--font-vazirmatn), var(--font-inter), sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  --background: oklch(0.99 0 0);
+  --foreground: oklch(0.15 0.01 15);
+
+  /* Brand Color: #9B0737 (Burgundy / Crimson) */
+  --primary: oklch(0.38 0.18 15);
+  --primary-foreground: oklch(0.99 0 0);
+
+  /* Secondary & Accents */
+  --secondary: oklch(0.96 0.01 15);
+  --secondary-foreground: oklch(0.25 0.12 15);
+  --muted: oklch(0.96 0.005 15);
+  --muted-foreground: oklch(0.5 0.02 15);
+  --accent: oklch(0.94 0.02 15);
+  --accent-foreground: oklch(0.38 0.18 15);
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.15 0.01 15);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.15 0.01 15);
+  --border: oklch(0.91 0.01 15);
+  --input: oklch(0.91 0.01 15);
+  --ring: oklch(0.38 0.18 15);
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: oklch(0.12 0.01 15);
+  --foreground: oklch(0.98 0 0);
+
+  --primary: oklch(0.48 0.2 15);
+  --primary-foreground: oklch(0.99 0 0);
+
+  --secondary: oklch(0.2 0.03 15);
+  --secondary-foreground: oklch(0.98 0 0);
+  --muted: oklch(0.2 0.02 15);
+  --muted-foreground: oklch(0.65 0.01 15);
+  --accent: oklch(0.25 0.04 15);
+  --accent-foreground: oklch(0.98 0 0);
+
+  --card: oklch(0.16 0.01 15);
+  --card-foreground: oklch(0.98 0 0);
+  --popover: oklch(0.16 0.01 15);
+  --popover-foreground: oklch(0.98 0 0);
+  --border: oklch(0.25 0.02 15);
+  --input: oklch(0.25 0.02 15);
+  --ring: oklch(0.48 0.2 15);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+</file>
+
 <file path="package.json">
 {
   "name": "persisquartz",
@@ -4212,6 +4230,76 @@ export default withPayload(withNextIntl(nextConfig));
 }
 </file>
 
+<file path="src/app/[locale]/layout.tsx">
+// src/app/[locale]/layout.tsx
+import type { Metadata } from "next";
+import localFont from "next/font/local";
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages } from "next-intl/server";
+import { routing } from "@/i18n/routing";
+import { notFound } from "next/navigation";
+import { Header } from "@/components/shared/header";
+import { Footer } from "@/components/shared/footer";
+import "../globals.css";
+
+const vazirmatn = localFont({
+  src: [
+    { path: "../assets/Vazir-Medium.woff2", weight: "400", style: "normal" },
+    { path: "../assets/Vazir-Bold.woff2", weight: "700", style: "normal" },
+  ],
+  variable: "--font-vazirmatn",
+  display: "swap",
+});
+
+const inter = localFont({
+  src: [
+    { path: "../assets/Inter-Regular.woff2", weight: "400", style: "normal" },
+    { path: "../assets/Inter-Bold.woff2", weight: "700", style: "normal" },
+  ],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+export const metadata: Metadata = {
+  title: "Persis Quartz",
+  description:
+    "تولیدکننده سطوح کوارتز مهندسی‌شده با استانداردهای جهانی؛ تلفیقی از استحکام بی‌نظیر و زیبایی معماری.",
+};
+
+export default async function RootLayout({
+  children,
+  params,
+}: Readonly<{
+  children: React.ReactNode;
+  params: Promise<{ locale: string }>;
+}>) {
+  const { locale } = await params;
+
+  if (!routing.locales.includes(locale as any)) {
+    notFound();
+  }
+
+  const messages = await getMessages();
+  const dir = locale === "en" ? "ltr" : "rtl";
+
+  return (
+    <html
+      lang={locale}
+      dir={dir}
+      className={`${vazirmatn.variable} ${inter.variable}`}
+    >
+      <body className="antialiased font-sans flex flex-col min-h-screen">
+        <NextIntlClientProvider messages={messages}>
+          <Header />
+          <div className="flex-1">{children}</div>
+          <Footer />
+        </NextIntlClientProvider>
+      </body>
+    </html>
+  );
+}
+</file>
+
 <file path="src/app/[locale]/page.tsx">
 // src/app/[locale]/page.tsx
 import { HeroBanner } from "@/components/home/hero-banner";
@@ -4221,13 +4309,21 @@ import { InteractiveTools } from "@/components/home/interactive-tools";
 import { MOCK_PRODUCTS } from "@/lib/fake-products";
 import { useLocale } from "next-intl";
 import { InfoCardsStack } from "@/components/home/info-cards-stack";
+import { getHeroBanners } from "@/lib/payload/hero";
 
-export default function HomePage() {
-  const locale = useLocale() as "fa" | "en";
+export default async function HomePage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+
+  // دریافت اسلایدهای هیرو به صورت متناسب با زبان فعلی کاربر از پیلود
+  const heroSlides = await getHeroBanners(locale);
 
   const productsForUi = MOCK_PRODUCTS.map((p) => ({
     id: p.id,
-    title: p.title[locale] || p.title.fa,
+    title: p.title[locale as "fa" | "en"] || p.title.fa,
     code: p.code,
     category: p.category,
     color: p.color,
@@ -4237,7 +4333,8 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-background font-sans">
-      <HeroBanner />
+      {/* پاس دادن داده‌های پیلود به کامپوننت هیرو */}
+      <HeroBanner slides={heroSlides as any} />
       <BrandIntro />
       <ProductShowcase products={productsForUi} />
       <InfoCardsStack />
@@ -4273,7 +4370,8 @@ export default function HomePage() {
   },
   "Footer": {
     "description": "تولیدکننده سطوح کوارتز مهندسی‌شده با استانداردهای جهانی؛ تلفیقی از استحکام بی‌نظیر و زیبایی معماری.",
-    "address": "تهران، شهرک صنعتی شمس‌آباد، بلوار بوستان",
+    "address": "شهرکرد، قطب صنعتی، فاز ۳، اندیشه ۶، پلاک ۳۶۹",
+    "phone": "۰۳۸-۳۲۲۸۱۷۵۲",
     "email": "info@persisquartz.com",
     "productsTitle": "کالکشن‌ها",
     "monocolorSeries": "سری تک‌رنگ (Monocolor)",
@@ -4387,7 +4485,8 @@ export default function HomePage() {
   },
   "Footer": {
     "description": "شركة مصنعة لأسطح الكوارتز الهندسي بملامح فاخرة؛ تجمع بين الصلابة الاستثنائية والجمال المعماري.",
-    "address": "طهران، مدينة شمس آباد الصناعية",
+    "address": "شهركرد، المنطقة الصناعية، المرحلة ۳، شارع أنديشه ۶، رقم ۳۶۹، إيران",
+    "phone": "+98 38 3228 1752",
     "email": "info@persisquartz.com",
     "productsTitle": "المجموعات",
     "monocolorSeries": "سلسلة أحادية اللون",
@@ -4506,7 +4605,8 @@ export default function HomePage() {
   },
   "Footer": {
     "description": "Manufacturer of premium engineered quartz surfaces; blending unmatched durability with architectural aesthetics.",
-    "address": "Shamsabad Ind. Zone, Tehran, Iran",
+    "address": "No. 369, Andisheh 6, Phase 3, Industrial Zone, Shahrekord, Iran",
+    "phone": "+98 38 3228 1752",
     "email": "info@persisquartz.com",
     "productsTitle": "Collections",
     "monocolorSeries": "Monocolor Series",

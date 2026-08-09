@@ -57,7 +57,7 @@ export const Footer: React.FC = () => {
             <p className="text-sm text-neutral-400 leading-relaxed max-w-sm font-light">
               {t("description")}
             </p>
-            <div className="text-xs text-neutral-500 font-mono space-y-2">
+            <div className="text-xs text-neutral-500 space-y-2">
               <p className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-neutral-400 shrink-0" />
                 <span>{t("address")}</span>
