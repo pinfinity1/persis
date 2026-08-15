@@ -7,6 +7,7 @@ import { routing } from "@/i18n/routing";
 import { notFound } from "next/navigation";
 import { Header } from "@/components/shared/header";
 import { Footer } from "@/components/shared/footer";
+import { getCategoriesService } from "@/services/product.service";
 import "../globals.css";
 
 const vazirmatn = localFont({
@@ -47,17 +48,18 @@ export default async function RootLayout({
   }
 
   const messages = await getMessages();
-  const dir = locale === "en" ? "ltr" : "rtl";
+  // دریافت مستقیم دسته‌بندی‌های پویا از دیتابیس
+  const categories = await getCategoriesService(locale as "fa" | "en" | "ar");
 
   return (
     <html
       lang={locale}
-      dir={dir}
+      dir={locale === "en" ? "ltr" : "rtl"}
       className={`${vazirmatn.variable} ${inter.variable}`}
     >
       <body className="antialiased font-sans flex flex-col min-h-screen">
         <NextIntlClientProvider messages={messages}>
-          <Header />
+          <Header categories={categories} />
           <div className="flex-1">{children}</div>
           <Footer />
         </NextIntlClientProvider>

@@ -113,5 +113,25 @@
     "countryError": "Please specify your country or region.",
     "phoneError": "Please enter a valid phone number.",
     "messageError": "Please provide project details."
+  },
+  "ProductsFilter": {
+    "title": "Filter Products",
+    "reset": "Reset",
+    "collections": "Collections",
+    "all": "All Stone Codes",
+    "monocolor": "Monocolor Series",
+    "veined": "Veined Series",
+    "calacatta": "Calacatta Series",
+    "colorFamily": "Color Family",
+    "white": "White",
+    "black": "Black",
+    "grey": "Grey",
+    "beige": "Beige"
+  },
+  "ProductsGrid": {
+    "showingCount": "Showing {count} of {total} slab codes",
+    "noProductsFound": "No products match your criteria.",
+    "tryResettingFilters": "Please adjust or reset your selected filters.",
+    "onDemand": "On Demand"
   }
 }

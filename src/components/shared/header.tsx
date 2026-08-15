@@ -23,8 +23,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import type { CategoryItem } from "@/services/product.service";
 
-export const Header: React.FC = () => {
+interface HeaderProps {
+  categories?: CategoryItem[];
+}
+
+export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
   const t = useTranslations("Header");
   const locale = useLocale();
   const router = useRouter();
@@ -40,7 +45,6 @@ export const Header: React.FC = () => {
   const isHomePage = pathname === "/" || pathname === `/${locale}`;
   const isRtl = locale === "fa" || locale === "ar";
 
-  // قفل کردن اسکرول صفحه هنگام باز بودن کشوی موبایل
   useEffect(() => {
     if (isMobileMenuOpen) {
       document.body.style.overflow = "hidden";
@@ -52,7 +56,6 @@ export const Header: React.FC = () => {
     };
   }, [isMobileMenuOpen]);
 
-  // سنجش اسکرول با IntersectionObserver و useRef
   useEffect(() => {
     if (!isHomePage) {
       setIsScrolled(true);
@@ -64,14 +67,9 @@ export const Header: React.FC = () => {
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        // اگر المان بالای صفحه دیده می‌شود => isScrolled = false (هدر شفاف)
-        // اگر المان بالای صفحه از دید خارج شد => isScrolled = true (هدر کدر/تیره)
         setIsScrolled(!entry.isIntersecting);
       },
-      {
-        root: null,
-        threshold: 0,
-      },
+      { root: null, threshold: 0 },
     );
 
     observer.observe(sentinelEl);
@@ -102,7 +100,6 @@ export const Header: React.FC = () => {
 
   return (
     <>
-      {/* المان مرزی سنجش اسکرول - قرارگیری در بالای جریان DOM */}
       {isHomePage && (
         <div
           ref={sentinelRef}
@@ -123,7 +120,7 @@ export const Header: React.FC = () => {
           {/* ۱. لوگو */}
           <Logo variant="full" className="w-36 sm:w-44" />
 
-          {/* ۲. منوی دسکتاپ */}
+          {/* ۲. منوی دسکتاپ (دینامیک) */}
           <nav className="hidden lg:flex items-center gap-1">
             <DropdownMenu dir={isRtl ? "rtl" : "ltr"}>
               <DropdownMenuTrigger
@@ -139,56 +136,22 @@ export const Header: React.FC = () => {
                 align="start"
                 className="w-[560px] p-5 grid grid-cols-3 gap-4 border border-border/40 shadow-xl bg-popover"
               >
-                <Link
-                  href="/products?cat=monocolor"
-                  className="group p-2.5 rounded-md hover:bg-muted/60 transition-colors flex flex-col justify-between"
-                >
-                  <div>
-                    <span className="text-[10px] font-mono tracking-wider text-muted-foreground block mb-1">
-                      01
-                    </span>
-                    <h5 className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
-                      {t("monocolorSeries")}
-                    </h5>
-                    <p className="text-[11px] text-muted-foreground font-light leading-relaxed mt-1.5">
-                      {t("monocolorDesc")}
-                    </p>
-                  </div>
-                </Link>
-
-                <Link
-                  href="/products?cat=veined-effect"
-                  className="group p-2.5 rounded-md hover:bg-muted/60 transition-colors flex flex-col justify-between border-x border-border/30 px-3"
-                >
-                  <div>
-                    <span className="text-[10px] font-mono tracking-wider text-muted-foreground block mb-1">
-                      02
-                    </span>
-                    <h5 className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
-                      {t("veinedEffectSeries")}
-                    </h5>
-                    <p className="text-[11px] text-muted-foreground font-light leading-relaxed mt-1.5">
-                      {t("veinedEffectDesc")}
-                    </p>
-                  </div>
-                </Link>
-
-                <Link
-                  href="/products?cat=calacatta"
-                  className="group p-2.5 rounded-md hover:bg-muted/60 transition-colors flex flex-col justify-between"
-                >
-                  <div>
-                    <span className="text-[10px] font-mono tracking-wider text-muted-foreground block mb-1">
-                      03
-                    </span>
-                    <h5 className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
-                      {t("calacattaSeries")}
-                    </h5>
-                    <p className="text-[11px] text-muted-foreground font-light leading-relaxed mt-1.5">
-                      {t("calacattaDesc")}
-                    </p>
-                  </div>
-                </Link>
+                {categories.map((cat, idx) => (
+                  <Link
+                    key={cat.id || idx}
+                    href={`/products?category=${cat.slug}`}
+                    className="group p-2.5 rounded-md hover:bg-muted/60 transition-colors flex flex-col justify-between"
+                  >
+                    <div>
+                      <span className="text-[10px] font-mono tracking-wider text-muted-foreground block mb-1">
+                        0{idx + 1}
+                      </span>
+                      <h5 className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
+                        {cat.title}
+                      </h5>
+                    </div>
+                  </Link>
+                ))}
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -314,7 +277,6 @@ export const Header: React.FC = () => {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* دکمه منوی همبرگری موبایل */}
             <button
               onClick={() => setIsMobileMenuOpen(true)}
               className={cn(
@@ -331,7 +293,7 @@ export const Header: React.FC = () => {
         </div>
       </header>
 
-      {/* ۴. کشوی موبایل */}
+      {/* ۴. کشوی موبایل (دینامیک) */}
       <div
         className={cn(
           "fixed inset-0 z-50 lg:hidden transition-all duration-300",
@@ -385,32 +347,17 @@ export const Header: React.FC = () => {
 
                 {isMobileProductsOpen && (
                   <div className="flex flex-col gap-3 pt-3 ps-4 text-sm font-light text-muted-foreground">
-                    <Link
-                      href="/products?cat=monocolor"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center justify-between py-1 hover:text-primary transition-colors"
-                    >
-                      <span>{t("monocolorSeries")}</span>
-                      <ArrowIcon className="h-3.5 w-3.5 opacity-40" />
-                    </Link>
-
-                    <Link
-                      href="/products?cat=veined-effect"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center justify-between py-1 hover:text-primary transition-colors"
-                    >
-                      <span>{t("veinedEffectSeries")}</span>
-                      <ArrowIcon className="h-3.5 w-3.5 opacity-40" />
-                    </Link>
-
-                    <Link
-                      href="/products?cat=calacatta"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center justify-between py-1 hover:text-primary transition-colors"
-                    >
-                      <span>{t("calacattaSeries")}</span>
-                      <ArrowIcon className="h-3.5 w-3.5 opacity-40" />
-                    </Link>
+                    {categories.map((cat) => (
+                      <Link
+                        key={cat.id}
+                        href={`/products?category=${cat.slug}`}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center justify-between py-1 hover:text-primary transition-colors"
+                      >
+                        <span>{cat.title}</span>
+                        <ArrowIcon className="h-3.5 w-3.5 opacity-40" />
+                      </Link>
+                    ))}
                   </div>
                 )}
               </div>

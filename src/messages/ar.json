@@ -113,5 +113,25 @@
     "countryError": "يرجى تحديد الدولة أو المنطقة.",
     "phoneError": "يرجى إدخال رقم هاتف صحيح.",
     "messageError": "يرجى كتابة تفاصيل المشروع."
+  },
+  "ProductsFilter": {
+    "title": "تصفية المنتجات",
+    "reset": "إعادة ضبط",
+    "collections": "المجموعات",
+    "all": "جميع أكواد الحجر",
+    "monocolor": "سلسلة أحادية اللون",
+    "veined": "سلسلة التموجات",
+    "calacatta": "سلسلة كالاكاتا",
+    "colorFamily": "درجات الألوان",
+    "white": "أبيض",
+    "black": "أسود",
+    "grey": "رمادي",
+    "beige": "بيج"
+  },
+  "ProductsGrid": {
+    "showingCount": "عرض {count} من إجمالي {total} لوح كوارتز",
+    "noProductsFound": "لم يتم العثور على منتجات تطابق اختياراتك.",
+    "tryResettingFilters": "يرجى تعديل أو إعادة ضبط الفلاتر المحددة.",
+    "onDemand": "إنتاج حسب الطلب"
   }
 }

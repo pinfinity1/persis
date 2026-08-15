@@ -108,5 +108,32 @@
     "countryError": "لطفاً کشور یا شهر را وارد کنید.",
     "phoneError": "شماره تماس معتبر وارد کنید.",
     "messageError": "توضیحات پروژه را وارد کنید."
+  },
+  "ProductsFilter": {
+    "title": "فیلتر محصولات",
+    "reset": "پاک‌سازی",
+    "collections": "کالکشن‌ها",
+    "all": "همه کدهای سنگ",
+    "monocolor": "سری تک‌رنگ",
+    "veined": "سری رگه‌دار",
+    "calacatta": "سری کالاکاتا",
+    "colorFamily": "طیف رنگی",
+    "white": "سفید",
+    "black": "مشکی",
+    "grey": "طوسی",
+    "beige": "کرم / بژ"
+  },
+  "ProductsGrid": {
+    "showingCount": "نمایش {count} کد از مجموع {total} اسلب",
+    "noProductsFound": "محصولی با این مشخصات یافت نشد.",
+    "tryResettingFilters": "لطفاً فیلترهای انتخابی را تغییر داده یا پاک‌سازی کنید.",
+    "onDemand": "تولید سفارشی"
+  },
+  "ProductDetail": {
+    "thicknesses": "ضخامت‌های استاندارد اسلب (Available Thicknesses)",
+    "finishes": "پرداخت سطح (Finishes)",
+    "requestSample": "درخواست نمونه کالا (Request a Sample)",
+    "findDealer": "یافتن نمایندگی (Find a Dealer)",
+    "downloadSpecs": "دانلود مشخصات فنی (Download Specs)"
   }
 }
