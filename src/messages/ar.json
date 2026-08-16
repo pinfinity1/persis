@@ -5,6 +5,7 @@
   "Header": {
     "products": "المنتجات",
     "collections": "المجموعات",
+    "viewAllProducts": "عرض جميع الألواح",
     "monocolorSeries": "سلسلة أحادية اللون",
     "monocolorDesc": "أسطح نقية، حديثة وموحدة بالكامل",
     "veinedEffectSeries": "سلسلة التموجات",
@@ -119,19 +120,21 @@
     "reset": "إعادة ضبط",
     "collections": "المجموعات",
     "all": "جميع أكواد الحجر",
-    "monocolor": "سلسلة أحادية اللون",
-    "veined": "سلسلة التموجات",
-    "calacatta": "سلسلة كالاكاتا",
     "colorFamily": "درجات الألوان",
-    "white": "أبيض",
-    "black": "أسود",
-    "grey": "رمادي",
-    "beige": "بيج"
+    "veinPattern": "نمط التعريقات",
+    "viewResults": "عرض النتائج"
   },
   "ProductsGrid": {
     "showingCount": "عرض {count} من إجمالي {total} لوح كوارتز",
     "noProductsFound": "لم يتم العثور على منتجات تطابق اختياراتك.",
     "tryResettingFilters": "يرجى تعديل أو إعادة ضبط الفلاتر المحددة.",
     "onDemand": "إنتاج حسب الطلب"
+  },
+  "ProductDetail": {
+    "thicknesses": "السماكات القياسية المتوفرة",
+    "finishes": "معالجة وتشطيب السطح",
+    "requestSample": "طلب عينة منتج",
+    "findDealer": "البحث عن موزع",
+    "downloadSpecs": "تحميل المواصفات الفنية"
   }
 }

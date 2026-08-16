@@ -3,6 +3,7 @@ import {
   getProductsService,
   getCategoriesService,
   getColorsService,
+  getVeinPatternsService,
 } from "@/services/product.service";
 import ProductGridClient from "@/components/products/product-grid-client";
 import { ProductFiltersClient } from "@/components/products/product-filters-client";
@@ -37,23 +38,31 @@ export default async function ProductsPage({
   const rawCategory = sParams.category || sParams.cat;
   const category = typeof rawCategory === "string" ? rawCategory : undefined;
   const color = typeof sParams.color === "string" ? sParams.color : undefined;
+  const vein_pattern =
+    typeof sParams.vein_pattern === "string" ? sParams.vein_pattern : undefined;
   const search =
     typeof sParams.search === "string" ? sParams.search : undefined;
 
-  // فراخوانی هم‌زمان لیست محصولات و داده‌های فیلتر پویا از دیتابیس
-  const [{ data: initialProducts, meta: initialMeta }, categories, colors] =
-    await Promise.all([
-      getProductsService({
-        locale: currentLocale,
-        page: 1,
-        limit: 9,
-        category,
-        color,
-        search,
-      }),
-      getCategoriesService(currentLocale),
-      getColorsService(currentLocale),
-    ]);
+  // فراخوانی هم‌زمان دسته‌بندی‌ها، رنگ‌ها و الگوهای رگه از پایگاه‌داده
+  const [
+    { data: initialProducts, meta: initialMeta },
+    categories,
+    colors,
+    veinPatterns,
+  ] = await Promise.all([
+    getProductsService({
+      locale: currentLocale,
+      page: 1,
+      limit: 9,
+      category,
+      color,
+      vein_pattern,
+      search,
+    }),
+    getCategoriesService(currentLocale),
+    getColorsService(currentLocale),
+    getVeinPatternsService(currentLocale),
+  ]);
 
   return (
     <main className="container mx-auto px-4 sm:px-12 py-24 sm:py-28 min-h-screen">
@@ -76,7 +85,11 @@ export default async function ProductsPage({
 
       <div className="flex flex-col md:flex-row gap-8 items-start">
         <aside className="w-full md:w-64 shrink-0">
-          <ProductFiltersClient categories={categories} colors={colors} />
+          <ProductFiltersClient
+            categories={categories}
+            colors={colors}
+            veinPatterns={veinPatterns}
+          />
         </aside>
 
         <section className="flex-1 w-full">
@@ -86,6 +99,7 @@ export default async function ProductsPage({
               initialMeta={initialMeta}
               category={category}
               color={color}
+              search={search}
             />
           </Suspense>
         </section>

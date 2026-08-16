@@ -1,3 +1,4 @@
+// src/app/api/admin/import-products/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getPayload } from "payload";
 import configPromise from "@/payload.config";
@@ -74,8 +75,8 @@ export async function POST(req: NextRequest) {
 
       const item = parseResult.data;
 
-      // یافتن یا ایجاد دسته‌بندی
-      let categoryId = categoryMap.get(item.category_slug);
+      // بررسی دسته‌بندی
+      const categoryId = categoryMap.get(item.category_slug);
       if (!categoryId) {
         errors.push(
           `ردیف ${rowNum}: دسته‌بندی با اسلاگ "${item.category_slug}" یافت نشد. لطفاً ابتدا اکسل دسته‌بندی‌ها را آپلود کنید.`,
@@ -83,7 +84,7 @@ export async function POST(req: NextRequest) {
         continue;
       }
 
-      // یافتن یا ایجاد طیف رنگی
+      // طیف رنگی
       let colorId = colorMap.get(item.color_slug);
       if (!colorId) {
         const newColor = await payload.create({
@@ -143,7 +144,8 @@ export async function POST(req: NextRequest) {
 
       if (existing.docs.length > 0) {
         const productId = existing.docs[0].id;
-        // آپدیت فارسی
+
+        // ۱. بروزرسانی زبان فارسی (fa)
         await payload.update({
           collection: "products",
           id: productId,
@@ -152,9 +154,12 @@ export async function POST(req: NextRequest) {
             ...baseData,
             title: item.title_fa,
             description: item.description_fa,
+            meta_title: item.meta_title_fa,
+            meta_description: item.meta_description_fa,
           },
         });
-        // آپدیت انگلیسی
+
+        // ۲. بروزرسانی زبان انگلیسی (en)
         await payload.update({
           collection: "products",
           id: productId,
@@ -162,9 +167,12 @@ export async function POST(req: NextRequest) {
           data: {
             title: item.title_en,
             description: item.description_en,
+            meta_title: item.meta_title_en,
+            meta_description: item.meta_description_en,
           },
         });
-        // آپدیت عربی
+
+        // ۳. بروزرسانی زبان عربی (ar)
         await payload.update({
           collection: "products",
           id: productId,
@@ -172,11 +180,14 @@ export async function POST(req: NextRequest) {
           data: {
             title: item.title_ar,
             description: item.description_ar,
+            meta_title: item.meta_title_ar,
+            meta_description: item.meta_description_ar,
           },
         });
+
         updatedCount++;
       } else {
-        // ایجاد جدید
+        // ۱. ایجاد اولیه با زبان فارسی (fa)
         const createdDoc = await payload.create({
           collection: "products",
           locale: "fa",
@@ -184,9 +195,12 @@ export async function POST(req: NextRequest) {
             ...baseData,
             title: item.title_fa,
             description: item.description_fa,
+            meta_title: item.meta_title_fa,
+            meta_description: item.meta_description_fa,
           },
         });
-        // انگلیسی
+
+        // ۲. افزودن مقادیر انگلیسی (en)
         await payload.update({
           collection: "products",
           id: createdDoc.id,
@@ -194,9 +208,12 @@ export async function POST(req: NextRequest) {
           data: {
             title: item.title_en,
             description: item.description_en,
+            meta_title: item.meta_title_en,
+            meta_description: item.meta_description_en,
           },
         });
-        // عربی
+
+        // ۳. افزودن مقادیر عربی (ar)
         await payload.update({
           collection: "products",
           id: createdDoc.id,
@@ -204,8 +221,11 @@ export async function POST(req: NextRequest) {
           data: {
             title: item.title_ar,
             description: item.description_ar,
+            meta_title: item.meta_title_ar,
+            meta_description: item.meta_description_ar,
           },
         });
+
         createdCount++;
       }
     }

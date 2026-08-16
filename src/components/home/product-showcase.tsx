@@ -1,3 +1,4 @@
+// src/components/home/product-showcase.tsx
 "use client";
 
 import React, { useCallback } from "react";
@@ -10,11 +11,11 @@ import { ProductCard } from "@/components/products/product-card";
 import type { ProductItem } from "@/services/product.service";
 
 interface ProductShowcaseProps {
-  products: any[];
+  products: ProductItem[];
 }
 
 export const ProductShowcase: React.FC<ProductShowcaseProps> = ({
-  products,
+  products = [],
 }) => {
   const t = useTranslations("FeaturedProducts");
   const locale = useLocale();
@@ -42,6 +43,10 @@ export const ProductShowcase: React.FC<ProductShowcaseProps> = ({
   }, [emblaApi]);
 
   const displayProducts = products.slice(0, 8);
+
+  if (displayProducts.length === 0) {
+    return null;
+  }
 
   return (
     <section className="py-16 sm:py-24 bg-background border-b border-border/40 overflow-hidden">
@@ -99,28 +104,14 @@ export const ProductShowcase: React.FC<ProductShowcaseProps> = ({
           className="overflow-hidden cursor-grab active:cursor-grabbing"
         >
           <div className="flex gap-4 sm:gap-6">
-            {displayProducts.map((product) => {
-              // ساخت شیء استاندارد ProductItem برای کامپوننت یکپارچه ProductCard
-              const formattedProduct: ProductItem = {
-                id: product.id,
-                title: product.title,
-                slug: product.slug,
-                code: product.code,
-                category: product.category,
-                color_family: product.color,
-                is_in_stock: "in_stock",
-                thumbnail: { url: product.imageUrl, alt: product.title },
-              };
-
-              return (
-                <div
-                  key={product.id}
-                  className="flex-[0_0_80%] sm:flex-[0_0_300px] lg:flex-[0_0_320px] min-w-0"
-                >
-                  <ProductCard product={formattedProduct} />
-                </div>
-              );
-            })}
+            {displayProducts.map((product) => (
+              <div
+                key={product.id}
+                className="flex-[0_0_80%] sm:flex-[0_0_300px] lg:flex-[0_0_320px] min-w-0"
+              >
+                <ProductCard product={product} />
+              </div>
+            ))}
           </div>
         </div>
       </div>

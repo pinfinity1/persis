@@ -1,3 +1,4 @@
+// src/payload/collections/Products.ts
 import { CollectionConfig } from "payload";
 
 export const Products: CollectionConfig = {
@@ -18,7 +19,7 @@ export const Products: CollectionConfig = {
       name: "title",
       type: "text",
       required: true,
-      localized: true, // نام مدل چندزبانه (فارسی و انگلیسی)
+      localized: true,
       admin: {
         description: "نام مدل سنگ (مثلاً: مه البرز / Alborz Mist)",
       },
@@ -42,7 +43,6 @@ export const Products: CollectionConfig = {
         description: "کد اختصاصی سنگ (مثلاً: PQ-202)",
       },
     },
-    // ۱. دسته‌بندی اصلی (سری‌ها)
     {
       name: "category",
       type: "relationship",
@@ -50,7 +50,6 @@ export const Products: CollectionConfig = {
       required: true,
       admin: { description: "سری/دسته‌بندی سنگ (تک‌رنگ، رگه‌دار، کالاکاتا)" },
     },
-    // ۲. طیف رنگی (دینامیک)
     {
       name: "color_family",
       type: "relationship",
@@ -58,7 +57,6 @@ export const Products: CollectionConfig = {
       required: true,
       admin: { description: "طیف رنگی اصلی سنگ" },
     },
-    // ۳. الگوی رگه (دینامیک - اختیاری برای سنگ‌های رگه‌دار)
     {
       name: "vein_pattern",
       type: "relationship",
@@ -67,7 +65,6 @@ export const Products: CollectionConfig = {
         description: "الگوی رگه (مثلاً رگه نازک، رگه ضخیم، ابر و بادی)",
       },
     },
-    // ۴. وضعیت تأمین B2B
     {
       name: "is_in_stock",
       type: "select",
@@ -109,7 +106,6 @@ export const Products: CollectionConfig = {
         },
       ],
     },
-    // ۵. ضخامت‌های استاندارد با گام‌های ۱ میلی‌متری (۱۰mm تا ۳۰mm)
     {
       name: "available_thicknesses",
       type: "select",
@@ -145,7 +141,6 @@ export const Products: CollectionConfig = {
       defaultValue: false,
       admin: { description: "امکان سفارش تولید با ضخامت خاص سفارشی" },
     },
-    // ۶. پرداخت‌های سطح پیش‌بینی‌شده برای آینده
     {
       name: "finishes",
       type: "select",
@@ -158,7 +153,6 @@ export const Products: CollectionConfig = {
       ],
       defaultValue: ["polished"],
     },
-    // ۷. ابعاد اسلب (ارتباط دینامیک با کلکشن Dimensions)
     {
       name: "dimensions",
       type: "relationship",
@@ -173,6 +167,18 @@ export const Products: CollectionConfig = {
       type: "textarea",
       localized: true,
       admin: { description: "توضیحات معمارانه و سئومحور سنگ" },
+    },
+    {
+      name: "meta_title",
+      type: "text",
+      localized: true,
+      admin: { description: "عنوان متای سئو گوگل" },
+    },
+    {
+      name: "meta_description",
+      type: "textarea",
+      localized: true,
+      admin: { description: "توضیحات متای سئو گوگل" },
     },
   ],
 };

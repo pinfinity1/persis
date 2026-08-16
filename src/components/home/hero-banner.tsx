@@ -38,8 +38,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ slides = [] }) => {
 
   const mediaUrls = useMemo(() => {
     const desktopPoster =
-      getMediaUrl(currentSlide?.desktopPoster) ||
-      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2000&auto=format&fit=crop";
+      getMediaUrl(currentSlide?.desktopPoster) || "/PersisQuartz-Red.png";
     const mobilePoster =
       getMediaUrl(currentSlide?.mobilePoster) || desktopPoster;
     const desktopVideo = getMediaUrl(currentSlide?.desktopVideo);

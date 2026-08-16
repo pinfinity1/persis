@@ -3,10 +3,9 @@ import { HeroBanner } from "@/components/home/hero-banner";
 import { BrandIntro } from "@/components/home/brand-intro";
 import { ProductShowcase } from "@/components/home/product-showcase";
 import { InteractiveTools } from "@/components/home/interactive-tools";
-import { MOCK_PRODUCTS } from "@/lib/fake-products";
-import { useLocale } from "next-intl";
 import { InfoCardsStack } from "@/components/home/info-cards-stack";
 import { getHeroBanners } from "@/lib/payload/hero";
+import { getProductsService } from "@/services/product.service";
 
 export default async function HomePage({
   params,
@@ -14,26 +13,23 @@ export default async function HomePage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  const currentLocale = locale as "fa" | "en" | "ar";
 
-  // دریافت اسلایدهای هیرو به صورت متناسب با زبان فعلی کاربر از پیلود
-  const heroSlides = await getHeroBanners(locale);
-
-  const productsForUi = MOCK_PRODUCTS.map((p) => ({
-    id: p.id,
-    title: p.title[locale as "fa" | "en"] || p.title.fa,
-    code: p.code,
-    category: p.category,
-    color: p.color,
-    imageUrl: p.imageUrl,
-    slug: p.slug,
-  }));
+  // فراخوانی همزمان بنرها و محصولات فعال از پیلود
+  const [heroSlides, { data: products }] = await Promise.all([
+    getHeroBanners(currentLocale),
+    getProductsService({
+      locale: currentLocale,
+      page: 1,
+      limit: 8,
+    }),
+  ]);
 
   return (
     <main className="min-h-screen bg-background font-sans">
-      {/* پاس دادن داده‌های پیلود به کامپوننت هیرو */}
       <HeroBanner slides={heroSlides as any} />
       <BrandIntro />
-      <ProductShowcase products={productsForUi} />
+      <ProductShowcase products={products} />
       <InfoCardsStack />
       <InteractiveTools />
     </main>

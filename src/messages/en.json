@@ -5,6 +5,7 @@
   "Header": {
     "products": "Products",
     "collections": "Collections",
+    "viewAllProducts": "View All Slabs",
     "monocolorSeries": "Monocolor Series",
     "monocolorDesc": "Seamless, modern, and pure solid tones",
     "veinedEffectSeries": "Veined Series",
@@ -119,19 +120,21 @@
     "reset": "Reset",
     "collections": "Collections",
     "all": "All Stone Codes",
-    "monocolor": "Monocolor Series",
-    "veined": "Veined Series",
-    "calacatta": "Calacatta Series",
     "colorFamily": "Color Family",
-    "white": "White",
-    "black": "Black",
-    "grey": "Grey",
-    "beige": "Beige"
+    "veinPattern": "Vein Pattern",
+    "viewResults": "View Results"
   },
   "ProductsGrid": {
     "showingCount": "Showing {count} of {total} slab codes",
     "noProductsFound": "No products match your criteria.",
     "tryResettingFilters": "Please adjust or reset your selected filters.",
     "onDemand": "On Demand"
+  },
+  "ProductDetail": {
+    "thicknesses": "Available Thicknesses",
+    "finishes": "Surface Finishes",
+    "requestSample": "Request a Sample",
+    "findDealer": "Find a Dealer",
+    "downloadSpecs": "Download Technical Specs"
   }
 }

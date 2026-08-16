@@ -5,6 +5,7 @@
   "Header": {
     "products": "محصولات",
     "collections": "کالکشن‌ها",
+    "viewAllProducts": "مشاهده تمام اسلب‌ها",
     "monocolorSeries": "سری تک‌رنگ",
     "monocolorDesc": "سطوح یکدست، مدرن و خالص سفید و مشکی",
     "veinedEffectSeries": "سری رگه‌دار",
@@ -114,14 +115,9 @@
     "reset": "پاک‌سازی",
     "collections": "کالکشن‌ها",
     "all": "همه کدهای سنگ",
-    "monocolor": "سری تک‌رنگ",
-    "veined": "سری رگه‌دار",
-    "calacatta": "سری کالاکاتا",
     "colorFamily": "طیف رنگی",
-    "white": "سفید",
-    "black": "مشکی",
-    "grey": "طوسی",
-    "beige": "کرم / بژ"
+    "veinPattern": "الگوی رگه",
+    "viewResults": "مشاهده نتایج"
   },
   "ProductsGrid": {
     "showingCount": "نمایش {count} کد از مجموع {total} اسلب",

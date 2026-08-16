@@ -28,17 +28,27 @@ export async function generateMetadata({
     return { title: "Product Not Found | Persis Quartz" };
   }
 
+  const metaTitle =
+    product.meta_title || `${product.title} (${product.code}) | Persis Quartz`;
+  const metaDescription =
+    product.meta_description ||
+    product.description ||
+    `اسلب سنگ کوارتز کد ${product.code}`;
+
+  const imageFallback =
+    typeof product.thumbnail === "object" && product.thumbnail?.url
+      ? product.thumbnail.url
+      : typeof product.thumbnail === "string"
+        ? product.thumbnail
+        : "/PersisQuartz-Red.png";
+
   return {
-    title: `${product.title} (${product.code}) | Persis Quartz`,
-    description: product.description || `اسلب سنگ کوارتز کد ${product.code}`,
+    title: metaTitle,
+    description: metaDescription,
     openGraph: {
-      title: `${product.title} - ${product.code}`,
-      description: product.description,
-      images: [
-        typeof product.thumbnail === "object"
-          ? product.thumbnail.url
-          : product.thumbnail,
-      ],
+      title: metaTitle,
+      description: metaDescription,
+      images: [imageFallback],
     },
   };
 }
@@ -60,7 +70,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
       ? product.thumbnail.url
       : typeof product.thumbnail === "string"
         ? product.thumbnail
-        : "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=800&auto=format&fit=crop";
+        : "/PersisQuartz-Red.png";
 
   const categoryTitle = extractCategoryTitle(product.category);
 
@@ -120,7 +130,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
               <label className="text-xs uppercase font-mono tracking-wider text-foreground block">
                 {t("thicknesses")}:
               </label>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 {(
                   product.available_thicknesses || ["12mm", "20mm", "30mm"]
                 ).map((thick) => (
@@ -138,7 +148,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
               <label className="text-xs uppercase font-mono tracking-wider text-foreground block">
                 {t("finishes")}:
               </label>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 {(product.finishes || ["polished", "honed"]).map((fin) => (
                   <span
                     key={fin}
@@ -151,7 +161,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             </div>
           </div>
 
-          {/* اکشن‌های اصلی با پشتیبانی کامل ترجمه */}
+          {/* اکشن‌ها */}
           <div className="space-y-3 pt-2">
             <Button
               asChild

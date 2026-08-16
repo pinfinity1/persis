@@ -12,6 +12,7 @@ interface ProductGridProps {
   initialMeta: ProductMeta;
   category?: string;
   color?: string;
+  search?: string;
 }
 
 export const ProductGridClient: React.FC<ProductGridProps> = ({
@@ -19,6 +20,7 @@ export const ProductGridClient: React.FC<ProductGridProps> = ({
   initialMeta,
   category,
   color,
+  search,
 }) => {
   const t = useTranslations("ProductsGrid");
   const locale = useLocale() as "fa" | "en" | "ar";
@@ -47,6 +49,7 @@ export const ProductGridClient: React.FC<ProductGridProps> = ({
         limit: 9,
         category,
         color,
+        search, // <-- ارسال مقدار جستجو در pagination
       });
 
       setProducts((prev) => [...prev, ...res.data]);
@@ -56,7 +59,7 @@ export const ProductGridClient: React.FC<ProductGridProps> = ({
     } finally {
       setIsLoadingMore(false);
     }
-  }, [isLoadingMore, meta, locale, category, color]);
+  }, [isLoadingMore, meta, locale, category, color, search]);
 
   useEffect(() => {
     const el = observerRef.current;

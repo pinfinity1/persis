@@ -8,6 +8,7 @@ export interface GetProductsParams {
   limit?: number;
   category?: string;
   color?: string;
+  vein_pattern?: string;
   sort?: string;
   search?: string;
 }
@@ -32,6 +33,12 @@ export interface ColorItem {
   hex_code?: string;
 }
 
+export interface VeinPatternItem {
+  id: string;
+  title: string;
+  slug: string;
+}
+
 export interface GalleryItem {
   image: { url: string; alt?: string } | string;
   caption?: string;
@@ -44,6 +51,7 @@ export interface ProductItem {
   code: string;
   category: CategoryItem | string;
   color_family: ColorItem | string;
+  vein_pattern?: VeinPatternItem | string;
   is_in_stock: "in_stock" | "on_demand" | "discontinued";
   thumbnail: { url: string; alt?: string } | string;
   gallery?: GalleryItem[];
@@ -51,6 +59,8 @@ export interface ProductItem {
   finishes?: string[];
   dimensions?: string;
   description?: string;
+  meta_title?: string;
+  meta_description?: string;
   specsSheetUrl?: string;
 }
 
@@ -76,6 +86,7 @@ export async function getProductsService({
   limit = 9,
   category,
   color,
+  vein_pattern,
   sort = "-createdAt",
   search,
 }: GetProductsParams): Promise<{ data: ProductItem[]; meta: ProductMeta }> {
@@ -89,6 +100,10 @@ export async function getProductsService({
 
     if (color) {
       where["color_family.slug"] = { equals: color };
+    }
+
+    if (vein_pattern) {
+      where["vein_pattern.slug"] = { equals: vein_pattern };
     }
 
     if (search) {
@@ -194,6 +209,28 @@ export async function getColorsService(
     }));
   } catch (error) {
     console.error("Error fetching colors from Payload CMS:", error);
+    return [];
+  }
+}
+
+export async function getVeinPatternsService(
+  locale: "fa" | "en" | "ar",
+): Promise<VeinPatternItem[]> {
+  try {
+    const payload = await getPayload({ config: configPromise });
+    const response = await payload.find({
+      collection: "vein-patterns",
+      locale,
+      limit: 100,
+    });
+
+    return response.docs.map((doc: any) => ({
+      id: doc.id,
+      title: doc.title,
+      slug: doc.slug,
+    }));
+  } catch (error) {
+    console.error("Error fetching vein patterns from Payload CMS:", error);
     return [];
   }
 }

@@ -11,10 +11,11 @@ import {
   Menu,
   X,
   PhoneCall,
-  Search,
   ChevronDown,
   ArrowLeft,
   ArrowRight,
+  ArrowUpRight,
+  Layers,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -90,7 +91,7 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
   ] as const;
 
   const navLinkStyle = cn(
-    "text-sm font-medium transition-colors hover:opacity-80 py-2 px-3 rounded-md",
+    "text-xs uppercase tracking-wider font-medium transition-colors hover:opacity-80 py-2 px-3 rounded-md",
     isHomePage && !isScrolled
       ? "text-white hover:bg-white/10"
       : "text-foreground hover:bg-accent/50",
@@ -120,8 +121,9 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
           {/* ۱. لوگو */}
           <Logo variant="full" className="w-36 sm:w-44" />
 
-          {/* ۲. منوی دسکتاپ (دینامیک) */}
+          {/* ۲. منوی دسکتاپ (مگامنو دسته‌بندی‌ها) */}
           <nav className="hidden lg:flex items-center gap-1">
+            {/* دراپ‌داون دسته‌بندی‌ها */}
             <DropdownMenu dir={isRtl ? "rtl" : "ltr"}>
               <DropdownMenuTrigger
                 className={cn(
@@ -134,27 +136,51 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="start"
-                className="w-[560px] p-5 grid grid-cols-3 gap-4 border border-border/40 shadow-xl bg-popover"
+                className="w-[620px] p-6 border border-border/50 shadow-2xl bg-popover rounded-none space-y-4"
               >
-                {categories.map((cat, idx) => (
+                {/* هدر مگامنو */}
+                <div className="flex items-center justify-between pb-3 border-b border-border/40">
+                  <div className="flex items-center gap-2">
+                    <Layers className="h-4 w-4 text-primary" />
+                    <span className="text-xs uppercase tracking-widest text-foreground font-semibold">
+                      {t("collections")}
+                    </span>
+                  </div>
                   <Link
-                    key={cat.id || idx}
-                    href={`/products?category=${cat.slug}`}
-                    className="group p-2.5 rounded-md hover:bg-muted/60 transition-colors flex flex-col justify-between"
+                    href="/products"
+                    className="text-[11px] uppercase tracking-wider text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
                   >
-                    <div>
-                      <span className="text-[10px] font-mono tracking-wider text-muted-foreground block mb-1">
-                        0{idx + 1}
-                      </span>
-                      <h5 className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
-                        {cat.title}
-                      </h5>
-                    </div>
+                    <span>{t("viewAllProducts")}</span>
+                    <ArrowUpRight className="h-3.5 w-3.5" />
                   </Link>
-                ))}
+                </div>
+
+                {/* کارت‌های کالکشن */}
+                <div className="grid grid-cols-3 gap-3">
+                  {categories.map((cat, idx) => (
+                    <Link
+                      key={cat.id || idx}
+                      href={`/products?category=${cat.slug}`}
+                      className="group p-3.5 border border-border/40 hover:border-primary/60 bg-card/50 hover:bg-card transition-all flex flex-col justify-between min-h-[110px]"
+                    >
+                      <div>
+                        <span className="text-[10px] text-primary block mb-1.5 font-bold">
+                          0{idx + 1}
+                        </span>
+                        <h5 className="text-xs font-medium text-foreground group-hover:text-primary transition-colors leading-snug">
+                          {cat.title}
+                        </h5>
+                      </div>
+                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60 group-hover:text-foreground transition-colors pt-2 block">
+                        Explore &rarr;
+                      </span>
+                    </Link>
+                  ))}
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
 
+            {/* کاربردها */}
             <DropdownMenu dir={isRtl ? "rtl" : "ltr"}>
               <DropdownMenuTrigger
                 className={cn(
@@ -167,13 +193,13 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="start"
-                className="w-72 p-3 bg-popover border border-border/40 shadow-xl space-y-1"
+                className="w-72 p-3 bg-popover border border-border/40 shadow-xl space-y-1 rounded-none"
               >
                 <Link
                   href="/applications/kitchen"
-                  className="flex flex-col gap-1 p-3 rounded-md hover:bg-muted/70 transition-colors"
+                  className="flex flex-col gap-1 p-3 rounded-none hover:bg-muted/70 transition-colors"
                 >
-                  <span className="text-xs font-semibold text-foreground">
+                  <span className="text-xs font-medium text-foreground">
                     {t("kitchenCountertops")}
                   </span>
                 </Link>
@@ -182,9 +208,9 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
 
                 <Link
                   href="/applications/bathroom"
-                  className="flex flex-col gap-1 p-3 rounded-md hover:bg-muted/70 transition-colors"
+                  className="flex flex-col gap-1 p-3 rounded-none hover:bg-muted/70 transition-colors"
                 >
-                  <span className="text-xs font-semibold text-foreground">
+                  <span className="text-xs font-medium text-foreground">
                     {t("vanitiesAndBathrooms")}
                   </span>
                 </Link>
@@ -208,22 +234,8 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
             </Link>
           </nav>
 
-          {/* ۳. دکمه‌های اکشن */}
+          {/* ۳. دکمه‌های اکشن (سرچ حذف شد) */}
           <div className="flex items-center gap-2 sm:gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              className={cn(
-                "hover:text-foreground",
-                isHomePage &&
-                  !isScrolled &&
-                  "text-white hover:bg-white/10 hover:text-white",
-              )}
-              aria-label="Search"
-            >
-              <Search className="h-4 w-4" />
-            </Button>
-
             <Button
               asChild
               variant="ghost"
@@ -241,13 +253,14 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
               </Link>
             </Button>
 
+            {/* سوئیچر زبان */}
             <DropdownMenu dir={isRtl ? "rtl" : "ltr"}>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
                   size="sm"
                   className={cn(
-                    "gap-1 px-2 font-mono text-xs outline-none hidden sm:inline-flex",
+                    "gap-1 px-2 text-xs outline-none hidden sm:inline-flex rounded-none",
                     isHomePage &&
                       !isScrolled &&
                       "text-white hover:bg-white/10 hover:text-white",
@@ -258,7 +271,10 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
                   <ChevronDown className="h-3 w-3 opacity-50" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="min-w-[120px]">
+              <DropdownMenuContent
+                align="end"
+                className="min-w-[120px] rounded-none"
+              >
                 {languages.map((lang) => (
                   <DropdownMenuItem
                     key={lang.code}
@@ -269,7 +285,7 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
                     )}
                   >
                     {lang.label}
-                    <span className="uppercase font-mono text-[10px] text-muted-foreground">
+                    <span className="uppercase text-[10px] text-muted-foreground">
                       {lang.code}
                     </span>
                   </DropdownMenuItem>
@@ -277,10 +293,11 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
               </DropdownMenuContent>
             </DropdownMenu>
 
+            {/* دکمه منوی موبایل */}
             <button
               onClick={() => setIsMobileMenuOpen(true)}
               className={cn(
-                "lg:hidden p-2 focus:outline-none transition-colors rounded-md",
+                "lg:hidden p-2 focus:outline-none transition-colors rounded-none",
                 isHomePage && !isScrolled
                   ? "text-white hover:bg-white/10"
                   : "text-foreground hover:bg-accent",
@@ -293,7 +310,7 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
         </div>
       </header>
 
-      {/* ۴. کشوی موبایل (دینامیک) */}
+      {/* ۴. کشوی موبایل */}
       <div
         className={cn(
           "fixed inset-0 z-50 lg:hidden transition-all duration-300",
@@ -323,7 +340,7 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
               <Logo variant="full" className="w-32" />
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                className="p-2 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
                 aria-label="Close Mobile Menu"
               >
                 <X className="h-5 w-5" />
@@ -331,6 +348,7 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
             </div>
 
             <nav className="space-y-4">
+              {/* بخش محصولات در موبایل */}
               <div className="border-b border-border/50 pb-3">
                 <button
                   onClick={() => setIsMobileProductsOpen(!isMobileProductsOpen)}
@@ -346,7 +364,16 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
                 </button>
 
                 {isMobileProductsOpen && (
-                  <div className="flex flex-col gap-3 pt-3 ps-4 text-sm font-light text-muted-foreground">
+                  <div className="flex flex-col gap-2.5 pt-3 ps-4 text-sm font-light text-muted-foreground">
+                    <Link
+                      href="/products"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center justify-between py-1 font-medium text-foreground hover:text-primary transition-colors border-b border-border/30 pb-2 mb-1"
+                    >
+                      <span>{t("viewAllProducts")}</span>
+                      <ArrowIcon className="h-3.5 w-3.5 opacity-60 text-primary" />
+                    </Link>
+
                     {categories.map((cat) => (
                       <Link
                         key={cat.id}
@@ -362,6 +389,7 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
                 )}
               </div>
 
+              {/* کاربردها در موبایل */}
               <div className="border-b border-border/50 pb-3">
                 <button
                   onClick={() => setIsMobileAppsOpen(!isMobileAppsOpen)}
@@ -442,7 +470,7 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
           </div>
 
           <div className="pt-6 border-t border-border/60 space-y-3 mt-6">
-            <span className="text-[11px] uppercase tracking-widest text-muted-foreground font-mono block">
+            <span className="text-[11px] uppercase tracking-widest text-muted-foreground block">
               زبان / Language
             </span>
             <div className="flex items-center gap-2">
@@ -454,7 +482,7 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
                     setIsMobileMenuOpen(false);
                   }}
                   className={cn(
-                    "px-3 py-1.5 text-xs font-medium border transition-colors rounded-sm",
+                    "px-3 py-1.5 text-xs font-medium border transition-colors rounded-none",
                     locale === lang.code
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-border text-muted-foreground hover:bg-muted",

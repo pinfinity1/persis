@@ -29,8 +29,7 @@ const CARDS_DATA: CardItem[] = [
     categoryKey: "card1Category",
     titleKey: "card1Title",
     descKey: "",
-    imageUrl:
-      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1000&auto=format&fit=crop",
+    imageUrl: "/PersisQuartz-Red.png",
   },
   {
     id: 2,
@@ -40,8 +39,7 @@ const CARDS_DATA: CardItem[] = [
     descKey: "card2Desc",
     ctaKey: "card2Cta",
     link: "/care-and-maintenance",
-    imageUrl:
-      "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=1000&auto=format&fit=crop",
+    imageUrl: "/PersisQuartz-Red.png",
   },
   {
     id: 3,
@@ -51,8 +49,7 @@ const CARDS_DATA: CardItem[] = [
     descKey: "card3Desc",
     ctaKey: "card3Cta",
     link: "/catalogs",
-    imageUrl:
-      "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=1000&auto=format&fit=crop",
+    imageUrl: "/PersisQuartz-Red.png",
   },
   {
     id: 4,
@@ -62,8 +59,7 @@ const CARDS_DATA: CardItem[] = [
     descKey: "card4Desc",
     ctaKey: "card4Cta",
     link: "/contact?type=sample",
-    imageUrl:
-      "https://images.unsplash.com/photo-1615529182904-14819c35db37?q=80&w=1000&auto=format&fit=crop",
+    imageUrl: "/PersisQuartz-Red.png",
   },
 ];
 

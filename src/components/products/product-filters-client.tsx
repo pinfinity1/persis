@@ -5,17 +5,23 @@ import { usePathname, useRouter } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { RotateCcw, SlidersHorizontal, X } from "lucide-react";
-import type { CategoryItem, ColorItem } from "@/services/product.service";
+import { RotateCcw, SlidersHorizontal, X, Check } from "lucide-react";
+import type {
+  CategoryItem,
+  ColorItem,
+  VeinPatternItem,
+} from "@/services/product.service";
 
 interface ProductFiltersClientProps {
   categories?: CategoryItem[];
   colors?: ColorItem[];
+  veinPatterns?: VeinPatternItem[];
 }
 
 export const ProductFiltersClient: React.FC<ProductFiltersClientProps> = ({
   categories = [],
   colors = [],
+  veinPatterns = [],
 }) => {
   const t = useTranslations("ProductsFilter");
   const router = useRouter();
@@ -27,8 +33,12 @@ export const ProductFiltersClient: React.FC<ProductFiltersClientProps> = ({
   const currentCategory =
     searchParams.get("category") || searchParams.get("cat") || "";
   const currentColor = searchParams.get("color") || "";
+  const currentVeinPattern = searchParams.get("vein_pattern") || "";
 
-  const activeFiltersCount = (currentCategory ? 1 : 0) + (currentColor ? 1 : 0);
+  const activeFiltersCount =
+    (currentCategory ? 1 : 0) +
+    (currentColor ? 1 : 0) +
+    (currentVeinPattern ? 1 : 0);
 
   const updateFilters = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -72,17 +82,14 @@ export const ProductFiltersClient: React.FC<ProductFiltersClientProps> = ({
         )}
       </div>
 
-      {/* ۱. فیلتر پویا دسته‌بندی‌ها (سری‌ها) */}
+      {/* ۱. فیلتر دسته‌بندی‌ها (سری‌ها) */}
       <div className="space-y-3">
         <label className="text-xs uppercase tracking-widest text-primary font-semibold block">
           {t("collections")}
         </label>
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <button
-            onClick={() => {
-              updateFilters("category", "");
-              setIsMobileOpen(false);
-            }}
+            onClick={() => updateFilters("category", "")}
             className={`w-full text-start text-xs py-2.5 px-3 border transition-colors ${
               currentCategory === ""
                 ? "border-primary bg-primary/10 text-primary font-medium"
@@ -95,10 +102,7 @@ export const ProductFiltersClient: React.FC<ProductFiltersClientProps> = ({
           {categories.map((cat) => (
             <button
               key={cat.id}
-              onClick={() => {
-                updateFilters("category", cat.slug);
-                setIsMobileOpen(false);
-              }}
+              onClick={() => updateFilters("category", cat.slug)}
               className={`w-full text-start text-xs py-2.5 px-3 border transition-colors ${
                 currentCategory === cat.slug
                   ? "border-primary bg-primary/10 text-primary font-medium"
@@ -111,7 +115,7 @@ export const ProductFiltersClient: React.FC<ProductFiltersClientProps> = ({
         </div>
       </div>
 
-      {/* ۲. فیلتر پویا طیف رنگی */}
+      {/* ۲. فیلتر طیف رنگی */}
       {colors.length > 0 && (
         <div className="space-y-3">
           <label className="text-xs uppercase tracking-widest text-primary font-semibold block">
@@ -121,13 +125,12 @@ export const ProductFiltersClient: React.FC<ProductFiltersClientProps> = ({
             {colors.map((color) => (
               <button
                 key={color.id}
-                onClick={() => {
+                onClick={() =>
                   updateFilters(
                     "color",
                     currentColor === color.slug ? "" : color.slug,
-                  );
-                  setIsMobileOpen(false);
-                }}
+                  )
+                }
                 className={`text-xs py-2.5 px-2 border flex items-center justify-center gap-2 transition-colors ${
                   currentColor === color.slug
                     ? "border-primary bg-primary text-primary-foreground font-medium"
@@ -143,6 +146,39 @@ export const ProductFiltersClient: React.FC<ProductFiltersClientProps> = ({
                 <span>{color.title}</span>
               </button>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* ۳. فیلتر الگوهای رگه (Vein Patterns) */}
+      {veinPatterns.length > 0 && (
+        <div className="space-y-3">
+          <label className="text-xs uppercase tracking-widest text-primary font-semibold block">
+            {t("veinPattern")}
+          </label>
+          <div className="space-y-1.5">
+            {veinPatterns.map((pattern) => {
+              const isSelected = currentVeinPattern === pattern.slug;
+              return (
+                <button
+                  key={pattern.id}
+                  onClick={() =>
+                    updateFilters(
+                      "vein_pattern",
+                      isSelected ? "" : pattern.slug,
+                    )
+                  }
+                  className={`w-full text-start text-xs py-2.5 px-3 border transition-colors flex items-center justify-between ${
+                    isSelected
+                      ? "border-primary bg-primary/10 text-primary font-medium"
+                      : "border-border/40 hover:border-border text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <span>{pattern.title}</span>
+                  {isSelected && <Check className="h-3.5 w-3.5 text-primary" />}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
@@ -171,10 +207,11 @@ export const ProductFiltersClient: React.FC<ProductFiltersClientProps> = ({
 
       {isMobileOpen && (
         <div className="fixed inset-0 z-50 md:hidden flex flex-col justify-end bg-black/60 backdrop-blur-sm animate-in fade-in-0 duration-200">
-          <div className="bg-background border-t border-border/60 p-6 max-h-[85vh] overflow-y-auto space-y-6">
-            <div className="flex items-center justify-between pb-2 border-b border-border/40">
-              <span className="text-xs uppercase tracking-widest text-primary">
-                Filters
+          <div className="bg-background border-t border-border/60 p-6 max-h-[85vh] flex flex-col justify-between">
+            {/* هدر کشو */}
+            <div className="flex items-center justify-between pb-3 border-b border-border/40 mb-4 shrink-0">
+              <span className="text-xs uppercase tracking-widest text-primary font-semibold">
+                {t("title")}
               </span>
               <button
                 onClick={() => setIsMobileOpen(false)}
@@ -183,7 +220,21 @@ export const ProductFiltersClient: React.FC<ProductFiltersClientProps> = ({
                 <X className="h-5 w-5" />
               </button>
             </div>
-            {filterContent}
+
+            {/* محتوای اسکرول‌شونده */}
+            <div className="overflow-y-auto pr-1 flex-1 mb-4 space-y-6">
+              {filterContent}
+            </div>
+
+            {/* دکمه مشاهده نتایج در انتهای موبایل */}
+            <div className="pt-3 border-t border-border/40 shrink-0">
+              <Button
+                onClick={() => setIsMobileOpen(false)}
+                className="w-full h-12 rounded-none bg-primary text-primary-foreground hover:bg-primary/90 text-xs uppercase tracking-wider font-medium"
+              >
+                {t("viewResults")}
+              </Button>
+            </div>
           </div>
         </div>
       )}
