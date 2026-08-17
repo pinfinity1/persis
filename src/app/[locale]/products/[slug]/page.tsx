@@ -1,12 +1,15 @@
 import React from "react";
 import { notFound } from "next/navigation";
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import { Link } from "@/i18n/routing";
 import { getTranslations } from "next-intl/server";
 import {
   getProductBySlugService,
   extractCategoryTitle,
   extractCategorySlug,
+  getAllDimensionsService,
+  getAllThicknessesService,
+  getAllFinishesService,
 } from "@/services/product.service";
 import { ProductGallery } from "@/components/products/product-gallery";
 import { ProductConfigurator } from "@/components/products/product-configurator";
@@ -59,13 +62,19 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   const { locale, slug } = await params;
   const currentLocale = locale as "fa" | "en" | "ar";
 
-  const product = await getProductBySlugService(slug, currentLocale);
-  const t = await getTranslations({ locale, namespace: "ProductDetail" });
+  const [product, allDimensions, allThicknesses, allFinishes] =
+    await Promise.all([
+      getProductBySlugService(slug, currentLocale),
+      getAllDimensionsService(),
+      getAllThicknessesService(),
+      getAllFinishesService(currentLocale),
+    ]);
 
   if (!product) {
     notFound();
   }
 
+  const t = await getTranslations({ locale, namespace: "ProductDetail" });
   const categoryTitle = extractCategoryTitle(product.category);
   const categorySlug = extractCategorySlug(product.category);
 
@@ -100,7 +109,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* ۱. ناوبری و Breadcrumb بدون فونت مونو */}
+      {/* ۱. ناوبری و Breadcrumb */}
       <nav className="flex items-center gap-2 text-xs text-muted-foreground pb-3 border-b border-border/30">
         <Link href="/" className="hover:text-foreground transition-colors">
           {t("home")}
@@ -127,7 +136,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         <span className="text-primary font-medium">{product.title}</span>
       </nav>
 
-      {/* ۲. گالری عمودی و فرم انتخاب مشخصات */}
+      {/* ۲. گالری و کانفیگوراتور داینامیک */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start">
         <div className="lg:col-span-6">
           <ProductGallery
@@ -142,12 +151,19 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
           <ProductConfigurator
             product={product}
             categoryTitle={categoryTitle}
+            globalThicknesses={allThicknesses}
+            globalFinishes={allFinishes}
           />
         </div>
       </div>
 
-      {/* ۳. مشخصات فنی استاندارد (Technical Details) داینامیک */}
-      <ProductSpecsMatrix locale={locale} product={product} />
+      {/* ۳. مشخصات مهندسی سراسری */}
+      <ProductSpecsMatrix
+        locale={locale}
+        dimensions={allDimensions}
+        thicknesses={allThicknesses}
+        finishes={allFinishes.map((f) => f.title)}
+      />
     </main>
   );
 }

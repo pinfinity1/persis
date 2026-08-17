@@ -2,66 +2,56 @@ import React from "react";
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import {
-  Layers,
   Maximize2,
+  Layers,
   Sparkles,
   Utensils,
   Bath,
   Building2,
 } from "lucide-react";
-import type { ProductItem } from "@/services/product.service";
 
 interface ProductSpecsMatrixProps {
   locale: string;
-  product: ProductItem;
+  dimensions?: string[];
+  thicknesses?: string[];
+  finishes?: string[];
 }
 
 export async function ProductSpecsMatrix({
   locale,
-  product,
+  dimensions = [],
+  thicknesses = [],
+  finishes = [],
 }: ProductSpecsMatrixProps) {
   const tDetail = await getTranslations({ locale, namespace: "ProductDetail" });
   const tInfo = await getTranslations({ locale, namespace: "InfoCards" });
 
-  // خواندن ۱۰۰٪ داینامیک بدون هیچ‌گونه مقدار ثابت. در صورت نبود دیتا خط تیره (—) نمایش داده می‌شود
-  const dimensionsVal =
-    product.dimensions &&
-    Array.isArray(product.dimensions) &&
-    product.dimensions.length > 0
-      ? product.dimensions
-          .map((d: any) => (typeof d === "object" ? d.title : d))
-          .join(" | ")
-      : "—";
-
-  const thicknessesVal =
-    product.available_thicknesses && product.available_thicknesses.length > 0
-      ? product.available_thicknesses.join(" | ")
-      : "—";
-
-  const finishesVal =
-    product.finishes && product.finishes.length > 0
-      ? product.finishes.map((f) => f.toUpperCase()).join(" | ")
-      : "—";
+  const sortedThicknesses = [...thicknesses].sort(
+    (a, b) => parseInt(a, 10) - parseInt(b, 10),
+  );
 
   const techDetails = [
     {
       icon: Maximize2,
       title: tDetail("specDimensionsTitle"),
-      desc: dimensionsVal,
+      desc: dimensions.length > 0 ? dimensions.join("   |   ") : "—",
+      isLtr: true,
     },
     {
       icon: Layers,
       title: tDetail("specThicknessTitle"),
-      desc: thicknessesVal,
+      desc:
+        sortedThicknesses.length > 0 ? sortedThicknesses.join("   |   ") : "—",
+      isLtr: true,
     },
     {
       icon: Sparkles,
       title: tDetail("specFinishesTitle"),
-      desc: finishesVal,
+      desc: finishes.length > 0 ? finishes.join("   |   ") : "—",
+      isLtr: false,
     },
   ];
 
-  // ویژگی‌های ۶گانه دقیقاً مطابق و هماهنگ با صفحه اصلی (info-cards-stack.tsx)
   const featuresList = [
     { label: tInfo("featScratch"), icon: "/icons/scratch.png" },
     { label: tInfo("featStain"), icon: "/icons/stain.png" },
@@ -91,7 +81,6 @@ export async function ProductSpecsMatrix({
 
   return (
     <div className="space-y-16 pt-12 border-t border-border/40">
-      {/* بخش اول: Technical Details (ابعاد، ضخامت، فینیش) */}
       <div className="space-y-6">
         <div className="space-y-1">
           <span className="text-xs uppercase tracking-widest text-primary font-bold block">
@@ -113,11 +102,16 @@ export async function ProductSpecsMatrix({
                 <div className="p-2.5 bg-muted/40 w-fit border border-border/40 text-primary">
                   <Icon className="h-4 w-4" />
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground">
                     {item.title}
                   </h3>
-                  <p className="text-sm font-mono text-primary font-medium mt-1">
+                  <p
+                    dir={item.isLtr ? "ltr" : undefined}
+                    className={`text-sm text-primary font-medium tracking-wide ${
+                      item.isLtr ? "text-start" : ""
+                    }`}
+                  >
                     {item.desc}
                   </p>
                 </div>
@@ -127,7 +121,6 @@ export async function ProductSpecsMatrix({
         </div>
       </div>
 
-      {/* بخش دوم: ویژگی‌های کلیدی (سینک شده با InfoCardsStack) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {featuresList.map((item, idx) => (
           <div
@@ -149,7 +142,6 @@ export async function ProductSpecsMatrix({
         ))}
       </div>
 
-      {/* بخش سوم: کاربردهای پیشنهادی معماری */}
       <div className="space-y-6">
         <div className="flex items-center gap-3">
           <span className="h-px w-6 bg-primary" />

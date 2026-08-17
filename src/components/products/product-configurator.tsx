@@ -4,36 +4,40 @@ import React, { useState, useEffect } from "react";
 import { Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { Box, MapPin, FileText, Share2, Check, Clock } from "lucide-react";
+import { Box, MapPin, FileText, Share2, Check } from "lucide-react";
 import type { ProductItem } from "@/services/product.service";
 
 interface ProductConfiguratorProps {
   product: ProductItem;
   categoryTitle: string;
+  globalThicknesses?: string[];
+  globalFinishes?: { title: string; slug: string }[];
 }
 
 export function ProductConfigurator({
   product,
   categoryTitle,
+  globalThicknesses = [],
+  globalFinishes = [],
 }: ProductConfiguratorProps) {
   const t = useTranslations("ProductDetail");
 
-  // صد در صد داینامیک: فقط خواندن از دیتابیس بدون هیچ‌گونه مقدار ثابت
-  const thicknesses = product.available_thicknesses || [];
-  const finishes = product.finishes || [];
-
   const [selectedThickness, setSelectedThickness] = useState(
-    thicknesses[0] || "",
+    globalThicknesses[0] || "",
   );
-  const [selectedFinish, setSelectedFinish] = useState(finishes[0] || "");
+  const [selectedFinish, setSelectedFinish] = useState(
+    globalFinishes[0]?.slug || "",
+  );
   const [copied, setCopied] = useState(false);
 
-  // اطمینان از هماهنگی State اولیه با دیتای دریافتی
   useEffect(() => {
-    if (thicknesses.length > 0 && !selectedThickness)
-      setSelectedThickness(thicknesses[0]);
-    if (finishes.length > 0 && !selectedFinish) setSelectedFinish(finishes[0]);
-  }, [thicknesses, finishes, selectedThickness, selectedFinish]);
+    if (globalThicknesses.length > 0 && !selectedThickness) {
+      setSelectedThickness(globalThicknesses[0]);
+    }
+    if (globalFinishes.length > 0 && !selectedFinish) {
+      setSelectedFinish(globalFinishes[0].slug);
+    }
+  }, [globalThicknesses, globalFinishes, selectedThickness, selectedFinish]);
 
   const sampleUrl = `/contact?type=sample&code=${encodeURIComponent(
     product.code || "",
@@ -49,11 +53,9 @@ export function ProductConfigurator({
     }
   };
 
-  const isStockAvailable = product.is_in_stock === "in_stock";
-
   return (
     <div className="space-y-8">
-      {/* هدر، کد سنگ و اشتراک‌گذاری */}
+      {/* هدر سنگ */}
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
@@ -91,30 +93,24 @@ export function ProductConfigurator({
         </h1>
       </div>
 
-      {/* معرفی کانسپت سنگ */}
       {product.description && (
         <p className="text-sm font-light text-muted-foreground leading-relaxed">
           {product.description}
         </p>
       )}
 
-      {/* انتخابگر ضخامت و فینیش سطح (رندر کاندیشنال بر اساس وجود دیتا) */}
-      {(thicknesses.length > 0 || finishes.length > 0) && (
+      {/* انتخابگرهای سراسری ضخامت و پرداخت */}
+      {(globalThicknesses.length > 0 || globalFinishes.length > 0) && (
         <div className="space-y-5 border-y border-border/50 py-6 bg-card/30 p-4">
-          {/* ضخامت */}
-          {thicknesses.length > 0 && (
+          {globalThicknesses.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-foreground font-medium">
                   {t("thickness")}
                 </span>
-                <span className="text-primary font-bold">
-                  {selectedThickness}
-                </span>
               </div>
-
               <div className="flex items-center gap-2 flex-wrap">
-                {thicknesses.map((th) => (
+                {globalThicknesses.map((th) => (
                   <button
                     key={th}
                     type="button"
@@ -132,32 +128,29 @@ export function ProductConfigurator({
             </div>
           )}
 
-          {/* نوع فینیش */}
-          {finishes.length > 0 && (
+          {globalFinishes.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-foreground font-medium">
                   {t("finish")}
                 </span>
-                <span className="text-primary font-bold uppercase">
-                  {selectedFinish}
-                </span>
               </div>
-
               <div className="flex items-center gap-2 flex-wrap">
-                {finishes.map((fn) => (
+                {globalFinishes.map((fn) => (
                   <button
-                    key={fn}
+                    key={fn.slug}
                     type="button"
-                    onClick={() => setSelectedFinish(fn)}
+                    onClick={() => setSelectedFinish(fn.slug)}
                     className={`py-2 px-4 text-xs uppercase border transition-all text-center flex items-center gap-1.5 cursor-pointer ${
-                      selectedFinish === fn
+                      selectedFinish === fn.slug
                         ? "border-primary bg-primary text-primary-foreground font-bold shadow-sm"
                         : "border-border/60 bg-card hover:border-border text-foreground"
                     }`}
                   >
-                    <span>{fn}</span>
-                    {selectedFinish === fn && <Check className="h-3 w-3" />}
+                    <span>{fn.title}</span>
+                    {selectedFinish === fn.slug && (
+                      <Check className="h-3 w-3" />
+                    )}
                   </button>
                 ))}
               </div>

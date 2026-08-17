@@ -8,15 +8,10 @@ export async function GET() {
       slug: "dover",
       category_slug: "monocolor",
       color_slug: "white",
+      vein_pattern_slug: "solid",
       title_fa: "داور",
       title_en: "Dover",
       title_ar: "دوفر",
-      vein_pattern_slug: "solid",
-      dimension_slugs: "320x75,320x92",
-      thicknesses: "12mm,20mm,30mm",
-      custom_thickness_available: "true",
-      finishes: "polished,honed",
-      is_in_stock: "in_stock",
       description_fa:
         "الهام‌گرفته از صخره‌های گچی سپید داور انگلستان؛ سفید یکدست، خالص و بدون تخلخل با بالاترین درخشش نوری مناسب آشپزخانه‌ها و فضاهای مینیمال مدرن.",
       description_en:
@@ -39,15 +34,10 @@ export async function GET() {
       slug: "eclipse",
       category_slug: "monocolor",
       color_slug: "black",
+      vein_pattern_slug: "solid",
       title_fa: "اکلیپس",
       title_en: "Eclipse",
       title_ar: "إكليبس",
-      vein_pattern_slug: "solid",
-      dimension_slugs: "320x75,320x92",
-      thicknesses: "12mm,20mm,30mm",
-      custom_thickness_available: "true",
-      finishes: "polished,honed",
-      is_in_stock: "in_stock",
       description_fa:
         "مشکی عمیق، مخملی و خالص؛ تجلی تاریکی مطلق خورشیدگرفتگی در معماری مدرن با سطحی کاملاً متراکم و مقاوم در برابر لکه.",
       description_en:
@@ -70,15 +60,10 @@ export async function GET() {
       slug: "aland",
       category_slug: "veined-effect",
       color_slug: "white",
+      vein_pattern_slug: "cloudy",
       title_fa: "الند",
       title_en: "Aland",
       title_ar: "ألاند",
-      vein_pattern_slug: "cloudy",
-      dimension_slugs: "320x75,320x92",
-      thicknesses: "12mm,20mm,30mm",
-      custom_thickness_available: "true",
-      finishes: "polished,honed",
-      is_in_stock: "in_stock",
       description_fa:
         "الهام‌گرفته از نخستین پرتوهای سیمین بامداد؛ سپید با سایه‌روشن‌های ابر و بادی نرم و مه‌آلود که جلوه‌ای روشن و سیال به فضا می‌بخشد.",
       description_en:
@@ -101,15 +86,10 @@ export async function GET() {
       slug: "caspian",
       category_slug: "veined-effect",
       color_slug: "black",
+      vein_pattern_slug: "cloudy",
       title_fa: "کاسپین",
       title_en: "Caspian",
       title_ar: "كاسبيان",
-      vein_pattern_slug: "cloudy",
-      dimension_slugs: "320x75,320x92",
-      thicknesses: "12mm,20mm,30mm",
-      custom_thickness_available: "true",
-      finishes: "polished,honed",
-      is_in_stock: "in_stock",
       description_fa:
         "مشکی رمزآلود با امواج و هاله‌های ابر و بادی دودی؛ تداعی‌گر خروش شبانه و عمق بی‌پایان کهن‌ترین دریای زمین.",
       description_en:
@@ -132,15 +112,10 @@ export async function GET() {
       slug: "arctic",
       category_slug: "calacatta",
       color_slug: "white",
+      vein_pattern_slug: "subtle-vein",
       title_fa: "آرکتیک",
       title_en: "Arctic",
       title_ar: "آركتيك",
-      vein_pattern_slug: "subtle-vein",
-      dimension_slugs: "320x75,320x92",
-      thicknesses: "12mm,20mm,30mm",
-      custom_thickness_available: "true",
-      finishes: "polished,honed",
-      is_in_stock: "in_stock",
       description_fa:
         "سفید یخی و درخشان با رگه‌های نازک و ظریف مشکی؛ تلاقی کنتراست مینیمال و خطوط ظریف کالاکاتا در پهنه‌ای ابدی از نور.",
       description_en:
@@ -165,15 +140,10 @@ export async function GET() {
       slug: "zarshouran",
       category_slug: "calacatta",
       color_slug: "white",
+      vein_pattern_slug: "subtle-vein",
       title_fa: "زرشوران",
       title_en: "Zarshouran",
       title_ar: "زرشوران",
-      vein_pattern_slug: "subtle-vein",
-      dimension_slugs: "320x75,320x92",
-      thicknesses: "12mm,20mm,30mm",
-      custom_thickness_available: "true",
-      finishes: "polished,honed",
-      is_in_stock: "in_stock",
       description_fa:
         "زمینه سپید شاهانه با رگه‌های مویی و درخشان طلایی؛ الهام‌گرفته از شکوه کهن رگه‌های زرین معادن زرشوران.",
       description_en:
@@ -198,15 +168,10 @@ export async function GET() {
       slug: "hengam",
       category_slug: "calacatta",
       color_slug: "grey",
+      vein_pattern_slug: "subtle-vein",
       title_fa: "هنگام",
       title_en: "Hengam",
       title_ar: "هنغام",
-      vein_pattern_slug: "subtle-vein",
-      dimension_slugs: "320x75,320x92",
-      thicknesses: "12mm,20mm,30mm",
-      custom_thickness_available: "true",
-      finishes: "polished,honed",
-      is_in_stock: "in_stock",
       description_fa:
         "طوسی نقره‌ای و باوقار با رگه‌های نازک و درخشان سپید؛ تداعی‌گر انعکاس تلالو مهتاب بر آب‌های صخره‌ای جزیره هنگام.",
       description_en:
@@ -231,15 +196,10 @@ export async function GET() {
       slug: "zagros",
       category_slug: "calacatta",
       color_slug: "black",
+      vein_pattern_slug: "subtle-vein",
       title_fa: "زاگرس",
       title_en: "Zagros",
       title_ar: "زاغروس",
-      vein_pattern_slug: "subtle-vein",
-      dimension_slugs: "320x75,320x92",
-      thicknesses: "12mm,20mm,30mm",
-      custom_thickness_available: "true",
-      finishes: "polished,honed",
-      is_in_stock: "in_stock",
       description_fa:
         "مشکی عمیق و پرابهت با خطوط رگه نازک سفید و برفی؛ الهام‌گرفته از شکاف‌های صخره‌ای و ستیغ‌های برفی رشته‌کوه زاگرس.",
       description_en:
@@ -280,63 +240,33 @@ export async function GET() {
       "نام ستون (Header)": "category_slug",
       وضعیت: "اجباری",
       توضیح:
-        "یکی از اسلاگ‌های تعریف شده دسته‌بندی‌ها (monocolor, veined-effect, calacatta).",
+        "یکی از اسلاگ‌های تعریف شده دسته‌بندی‌ها. باید از قبل در پنل ادمین (بخش Categories) تعریف شده باشد.",
       "نمونه مقدار مجاز": "monocolor یا veined-effect یا calacatta",
     },
     {
       "نام ستون (Header)": "color_slug",
       وضعیت: "اجباری",
-      توضیح: "طیف رنگی پایه سنگ جهت فیلتر شدن در کاتالوگ سایت.",
+      توضیح:
+        "اسلاگ طیف رنگی سنگ. باید از قبل در پنل ادمین (بخش Colors) تعریف شده باشد.",
       "نمونه مقدار مجاز": "white یا black یا grey",
-    },
-    {
-      "نام ستون (Header)": "title_fa / title_en / title_ar",
-      وضعیت: "اجباری",
-      توضیح: "نام مدل سنگ به ۳ زبان فارسی، انگلیسی و عربی.",
-      "نمونه مقدار مجاز": "داور / Dover / دوفر",
     },
     {
       "نام ستون (Header)": "vein_pattern_slug",
       وضعیت: "اختیاری",
       توضیح:
-        "نوع بافت رگه‌ها (solid برای ساده، cloudy برای ابروبادی، subtle-vein برای رگه نازک).",
+        "اسلاگ الگوی رگه‌ها جهت فیلتر کاتالوگ. در صورت استفاده باید در پنل ادمین (بخش Vein Patterns) وجود داشته باشد.",
       "نمونه مقدار مجاز": "solid یا cloudy یا subtle-vein",
     },
     {
-      "نام ستون (Header)": "dimension_slugs",
-      وضعیت: "اختیاری",
-      توضیح: "ابعاد اسلب (جداشده با کاما).",
-      "نمونه مقدار مجاز": "320x75,320x92",
-    },
-    {
-      "نام ستون (Header)": "thicknesses",
+      "نام ستون (Header)": "title_fa / title_en / title_ar",
       وضعیت: "اجباری",
-      توضیح: "ضخامت‌های استاندارد تولیدی (جداشده با کاما).",
-      "نمونه مقدار مجاز": "12mm,20mm,30mm",
-    },
-    {
-      "نام ستون (Header)": "custom_thickness_available",
-      وضعیت: "اجباری",
-      توضیح: "امکان سفارش تولید با ضخامت دلخواه پروژه.",
-      "نمونه مقدار مجاز": "true یا false",
-    },
-    {
-      "نام ستون (Header)": "finishes",
-      وضعیت: "اجباری",
-      توضیح: "نوع پرداخت سطح سنگ (جداشده با کاما).",
-      "نمونه مقدار مجاز": "polished,honed",
-    },
-    {
-      "نام ستون (Header)": "is_in_stock",
-      وضعیت: "اجباری",
-      توضیح:
-        "وضعیت موجودی کالا (in_stock موجود، on_demand سفارشی، discontinued توقف تولید).",
-      "نمونه مقدار مجاز": "in_stock",
+      توضیح: "نام مدل سنگ به تفکیک ۳ زبان فارسی، انگلیسی و عربی.",
+      "نمونه مقدار مجاز": "داور / Dover / دوفر",
     },
     {
       "نام ستون (Header)": "description_fa / description_en / description_ar",
       وضعیت: "اجباری",
-      توضیح: "متن معرفی و کانسپت سنگ به ۳ زبان.",
+      توضیح: "متن کانسپت و معرفی معمارانه سنگ به ۳ زبان.",
       "نمونه مقدار مجاز": "الهام‌گرفته از صخره‌های...",
     },
     {
@@ -349,14 +279,21 @@ export async function GET() {
       "نام ستون (Header)":
         "meta_description_fa / meta_description_en / meta_description_ar",
       وضعیت: "اجباری",
-      توضیح: "خلاصه توضیحات گوگل زیر عنوان به ۳ زبان.",
+      توضیح: "خلاصه توضیحات متای سئو گوگل به ۳ زبان.",
       "نمونه مقدار مجاز": "بررسی مشخصات فنی و سفارش سنگ کوارتز...",
     },
     {
-      "نام ستون (Header)": "تصاویر و عکس‌ها",
+      "نام ستون (Header)": "مشخصات سراسری (ابعاد، ضخامت، فینیش)",
+      وضعیت: "سراسری در پنل",
+      توضیح:
+        "ابعاد تولیدی اسلب‌ها، ضخامت‌ها و فینیش‌های قابل عرضه به صورت سراسری از بخش Attributes در پنل ادمین (Dimensions, Thicknesses, Finishes) مدیریت می‌شوند و نیازی به وارد کردن آن‌ها در اکسل نیست.",
+      "نمونه مقدار مجاز": "-",
+    },
+    {
+      "نام ستون (Header)": "تصاویر و اسکن اسلب",
       وضعیت: "در پنل ادمین",
       توضیح:
-        "عکس‌ها در فایل اکسل قرار نمی‌گیرند. پس از آپلود، وارد ویرایش هر محصول در پنل پیلود شده و عکس‌ها را آپلود کنید.",
+        "عکس‌ها در فایل اکسل قرار نمی‌گیرند. پس از آپلود اکسل، وارد ویرایش هر محصول در پنل ادمین شده و اسکن اسلب و گالری را آپلود نمایید.",
       "نمونه مقدار مجاز": "در داشبورد پیلود",
     },
   ];

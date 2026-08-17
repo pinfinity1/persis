@@ -234,3 +234,51 @@ export async function getVeinPatternsService(
     return [];
   }
 }
+
+export async function getAllDimensionsService(): Promise<string[]> {
+  try {
+    const payload = await getPayload({ config: configPromise });
+    const response = await payload.find({
+      collection: "dimensions",
+      limit: 50,
+    });
+    return response.docs.map((d: any) => d.title);
+  } catch (error) {
+    console.error("Error fetching dimensions:", error);
+    return [];
+  }
+}
+
+export async function getAllThicknessesService(): Promise<string[]> {
+  try {
+    const payload = await getPayload({ config: configPromise });
+    const response = await payload.find({
+      collection: "thicknesses" as any,
+      limit: 50,
+    });
+    return response.docs.map((d: any) => d.slug || d.title);
+  } catch (error) {
+    console.error("Error fetching thicknesses:", error);
+    return [];
+  }
+}
+
+export async function getAllFinishesService(
+  locale: "fa" | "en" | "ar",
+): Promise<{ title: string; slug: string }[]> {
+  try {
+    const payload = await getPayload({ config: configPromise });
+    const response = await payload.find({
+      collection: "finishes" as any,
+      locale,
+      limit: 50,
+    });
+    return response.docs.map((d: any) => ({
+      title: d.title,
+      slug: d.slug,
+    }));
+  } catch (error) {
+    console.error("Error fetching finishes:", error);
+    return [];
+  }
+}

@@ -134,9 +134,11 @@ src/
       Categories.ts
       Colors.ts
       Dimensions.ts
+      Finishes.ts
       HeroBanner.ts
       Media.ts
       Products.ts
+      Thicknesses.ts
       Users.ts
       VeinPatterns.ts
   services/
@@ -158,368 +160,57 @@ tsconfig.json
 <files>
 This section contains the contents of the repository's files.
 
-<file path="src/components/products/product-configurator.tsx">
-"use client";
+<file path="src/payload/collections/Finishes.ts">
+import { CollectionConfig } from "payload";
 
-import React, { useState } from "react";
-import { Link } from "@/i18n/routing";
-import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/button";
-import {
-  Box,
-  MapPin,
-  FileText,
-  Share2,
-  Check,
-  CheckCircle2,
-  ShieldCheck,
-  Clock,
-  Sparkles,
-} from "lucide-react";
-import type { ProductItem } from "@/services/product.service";
-
-interface ProductConfiguratorProps {
-  product: ProductItem;
-  categoryTitle: string;
-}
-
-export const ProductConfigurator: React.FC<ProductConfiguratorProps> = ({
-  product,
-  categoryTitle,
-}) => {
-  const t = useTranslations("ProductDetail");
-
-  const thicknesses = product.available_thicknesses?.length
-    ? product.available_thicknesses
-    : ["12mm", "20mm", "30mm"];
-
-  const finishes = product.finishes?.length
-    ? product.finishes
-    : ["polished", "honed"];
-
-  const [selectedThickness, setSelectedThickness] = useState(thicknesses[0]);
-  const [selectedFinish, setSelectedFinish] = useState(finishes[0]);
-  const [copied, setCopied] = useState(false);
-
-  const sampleUrl = `/contact?type=sample&code=${encodeURIComponent(
-    product.code,
-  )}&thickness=${encodeURIComponent(
-    selectedThickness,
-  )}&finish=${encodeURIComponent(selectedFinish)}`;
-
-  const handleShare = async () => {
-    if (typeof window !== "undefined") {
-      await navigator.clipboard.writeText(window.location.href);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
-    }
-  };
-
-  const isStockAvailable = product.is_in_stock === "in_stock";
-
-  return (
-    <div className="space-y-8">
-      {/* ۱. هدر شناسه و وضعیت موجودی */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-mono font-bold tracking-widest text-primary uppercase border border-primary/40 bg-primary/5 px-2.5 py-1">
-              CODE: {product.code}
-            </span>
-            {categoryTitle && (
-              <span className="text-xs font-mono text-muted-foreground uppercase border border-border/50 px-2 py-1">
-                {categoryTitle}
-              </span>
-            )}
-          </div>
-
-          <button
-            onClick={handleShare}
-            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-          >
-            {copied ? (
-              <>
-                <Check className="h-3.5 w-3.5 text-primary" />
-                <span className="text-primary font-medium">{t("copied")}</span>
-              </>
-            ) : (
-              <>
-                <Share2 className="h-3.5 w-3.5" />
-                <span>{t("share")}</span>
-              </>
-            )}
-          </button>
-        </div>
-
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-light text-foreground tracking-tight">
-          {product.title}
-        </h1>
-
-        <div className="flex items-center gap-2 pt-1 text-xs">
-          {isStockAvailable ? (
-            <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              {t("inStock")}
-            </span>
-          ) : (
-            <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-medium">
-              <Clock className="h-3.5 w-3.5" />
-              {t("onDemand")}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* ۲. توضیحات کانسپت و متریال */}
-      {product.description && (
-        <p className="text-sm font-light text-muted-foreground leading-relaxed">
-          {product.description}
-        </p>
-      )}
-
-      {/* ۳. انتخابگر تعاملی متغیرها (ضخامت و فینیش) */}
-      <div className="space-y-6 border-y border-border/50 py-6 bg-card/40 p-4">
-        {/* انتخاب ضخامت */}
-        <div className="space-y-2.5">
-          <div className="flex items-center justify-between">
-            <label className="text-xs uppercase font-mono tracking-wider text-foreground font-semibold">
-              {t("thickness")}
-            </label>
-            <span className="text-xs font-mono text-primary font-bold">
-              {selectedThickness}
-            </span>
-          </div>
-
-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-            {thicknesses.map((th) => (
-              <button
-                key={th}
-                onClick={() => setSelectedThickness(th)}
-                className={`py-2.5 px-3 text-xs font-mono border transition-all text-center ${
-                  selectedThickness === th
-                    ? "border-primary bg-primary text-primary-foreground font-bold shadow-sm"
-                    : "border-border/60 bg-card hover:border-border text-foreground"
-                }`}
-              >
-                {th}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* انتخاب نوع پرداخت و فینیش */}
-        <div className="space-y-2.5">
-          <div className="flex items-center justify-between">
-            <label className="text-xs uppercase font-mono tracking-wider text-foreground font-semibold">
-              {t("finish")}
-            </label>
-            <span className="text-xs font-mono text-primary font-bold uppercase">
-              {selectedFinish}
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {finishes.map((fn) => (
-              <button
-                key={fn}
-                onClick={() => setSelectedFinish(fn)}
-                className={`py-2.5 px-3 text-xs font-mono uppercase border transition-all text-center flex items-center justify-center gap-2 ${
-                  selectedFinish === fn
-                    ? "border-primary bg-primary text-primary-foreground font-bold shadow-sm"
-                    : "border-border/60 bg-card hover:border-border text-foreground"
-                }`}
-              >
-                <span>{fn}</span>
-                {selectedFinish === fn && <Check className="h-3 w-3" />}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ۴. اکشن‌های تبدیل B2B (Conversion CTA) */}
-      <div className="space-y-3 pt-2">
-        <Button
-          asChild
-          size="lg"
-          className="w-full h-14 bg-primary text-primary-foreground hover:bg-primary/90 rounded-none text-xs sm:text-sm tracking-wider uppercase font-semibold shadow-md transition-transform active:scale-[0.99]"
-        >
-          <Link
-            href={sampleUrl}
-            className="flex items-center justify-center gap-3"
-          >
-            <Box className="h-5 w-5" />
-            <div className="text-start">
-              <span>{t("requestSample")}</span>
-              <span className="block text-[10px] font-normal opacity-80 font-sans">
-                {t("requestSampleDesc")}
-              </span>
-            </div>
-          </Link>
-        </Button>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Button
-            asChild
-            variant="outline"
-            className="w-full h-12 border-border/80 hover:bg-muted text-foreground rounded-none text-xs tracking-wider uppercase font-medium"
-          >
-            <Link
-              href="/dealers"
-              className="flex items-center justify-center gap-2"
-            >
-              <MapPin className="h-4 w-4 text-primary" />
-              <span>{t("findDealer")}</span>
-            </Link>
-          </Button>
-
-          <Button
-            asChild
-            variant="outline"
-            className="w-full h-12 border-border/80 hover:bg-muted text-foreground rounded-none text-xs tracking-wider uppercase font-medium"
-          >
-            <a
-              href={product.specsSheetUrl || "/catalogs"}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2"
-            >
-              <FileText className="h-4 w-4 text-muted-foreground" />
-              <span>{t("downloadTds")}</span>
-            </a>
-          </Button>
-        </div>
-      </div>
-
-      {/* ۵. نشان اصالت و کیفیت مهندسی */}
-      <div className="p-4 bg-muted/20 border border-border/40 flex items-center gap-3 text-xs text-muted-foreground">
-        <ShieldCheck className="h-5 w-5 text-primary shrink-0" />
-        <span>
-          تضمین کیفیت ساختاری با متریال برتون (Bretonstone Technology) و ۱۰ سال
-          ضمانت محدود.
-        </span>
-      </div>
-    </div>
-  );
+export const Finishes: CollectionConfig = {
+  slug: "finishes",
+  admin: {
+    useAsTitle: "title",
+    group: "Attributes",
+  },
+  access: { read: () => true },
+  fields: [
+    {
+      name: "title",
+      type: "text",
+      required: true,
+      localized: true, // مثلاً: براق (Polished)
+    },
+    {
+      name: "slug",
+      type: "text",
+      required: true,
+      unique: true, // مثلاً: polished
+    },
+  ],
 };
 </file>
 
-<file path="src/components/products/product-specs-matrix.tsx">
-import React from "react";
-import { getTranslations } from "next-intl/server";
-import {
-  ShieldAlert,
-  Flame,
-  Droplets,
-  Sparkles,
-  Layers,
-  Activity,
-  CheckCircle2,
-  Utensils,
-  Bath,
-  Building2,
-} from "lucide-react";
+<file path="src/payload/collections/Thicknesses.ts">
+import { CollectionConfig } from "payload";
 
-interface ProductSpecsMatrixProps {
-  locale: string;
-}
-
-export async function ProductSpecsMatrix({ locale }: ProductSpecsMatrixProps) {
-  const t = await getTranslations({ locale, namespace: "ProductDetail" });
-
-  const specs = [
+export const Thicknesses: CollectionConfig = {
+  slug: "thicknesses",
+  admin: {
+    useAsTitle: "title",
+    group: "Attributes",
+  },
+  access: { read: () => true },
+  fields: [
     {
-      label: t("specDimension"),
-      value: "320 × 75 cm / 320 × 92 cm / 320 × 160 cm",
-    },
-    { label: t("specComposition"), value: t("specCompositionVal") },
-    { label: t("specHardness"), value: t("specHardnessVal") },
-    { label: t("specAbsorption"), value: t("specAbsorptionVal") },
-    { label: t("specMaintenance"), value: t("specMaintenanceVal") },
-  ];
-
-  const applications = [
-    {
-      title: t("appKitchen"),
-      desc: t("appKitchenDesc"),
-      icon: Utensils,
+      name: "title",
+      type: "text",
+      required: true, // مثلاً: 12mm (1.2 cm) یا 20mm
     },
     {
-      title: t("appVanity"),
-      desc: t("appVanityDesc"),
-      icon: Bath,
+      name: "slug",
+      type: "text",
+      required: true,
+      unique: true, // مثلاً: 12mm یا 20mm
     },
-    {
-      title: t("appCommercial"),
-      desc: t("appCommercialDesc"),
-      icon: Building2,
-    },
-  ];
-
-  return (
-    <div className="space-y-16 pt-12 border-t border-border/40">
-      {/* جدول مشخصات فنی استاندارد */}
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <span className="h-px w-8 bg-primary" />
-          <h2 className="text-xl sm:text-2xl font-light text-foreground uppercase tracking-tight">
-            {t("specsTitle")}
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {specs.map((item, idx) => (
-            <div
-              key={idx}
-              className="p-4 bg-card border border-border/50 flex flex-col justify-between space-y-1.5 hover:border-primary/40 transition-colors"
-            >
-              <span className="text-[11px] font-mono uppercase tracking-widest text-primary">
-                {item.label}
-              </span>
-              <span className="text-sm font-light text-foreground">
-                {item.value}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* کاربری‌های معمارانه (Architectural Applications) */}
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <span className="h-px w-8 bg-primary" />
-          <h2 className="text-xl sm:text-2xl font-light text-foreground uppercase tracking-tight">
-            {t("applicationsTitle")}
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {applications.map((app, idx) => {
-            const Icon = app.icon;
-            return (
-              <div
-                key={idx}
-                className="p-6 bg-card border border-border/50 space-y-4 hover:border-primary/60 transition-all duration-300 group"
-              >
-                <div className="p-3 bg-muted/40 w-fit border border-border/40 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                  <Icon className="h-5 w-5" />
-                </div>
-                <div className="space-y-1.5">
-                  <h3 className="text-base font-medium text-foreground">
-                    {app.title}
-                  </h3>
-                  <p className="text-xs text-muted-foreground font-light leading-relaxed">
-                    {app.desc}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
-}
+  ],
+};
 </file>
 
 <file path="docs/content.md">
@@ -1450,140 +1141,389 @@ export const BrandIntro: React.FC = () => {
 };
 </file>
 
-<file path="src/components/products/product-gallery.tsx">
-"use client";
-
-import React, { useState } from "react";
-import Image from "next/image";
-import type { GalleryItem } from "@/services/product.service";
-import { ZoomIn, Eye, Sparkles, Layers } from "lucide-react";
-import { useTranslations } from "next-intl";
-
-interface ProductGalleryProps {
-  mainThumbnailUrl: string;
-  title: string;
-  code: string;
-  gallery?: GalleryItem[];
+<file path="src/components/products/product-configurator.tsx">
+interface ProductConfiguratorProps {
+  product: ProductItem;
+  categoryTitle: string;
+  globalThicknesses?: string[];
+  globalFinishes?: { title: string; slug: string }[];
 }
 
-export const ProductGallery: React.FC<ProductGalleryProps> = ({
-  mainThumbnailUrl,
-  title,
-  code,
-  gallery = [],
-}) => {
+export function ProductConfigurator({
+  product,
+  categoryTitle,
+  globalThicknesses = [],
+  globalFinishes = [],
+}: ProductConfiguratorProps) {
   const t = useTranslations("ProductDetail");
 
-  const images = [
-    {
-      url: mainThumbnailUrl,
-      caption: `${title} - ${t("fullScan")}`,
-      type: "scan",
-    },
-    ...gallery.map((g, idx) => ({
-      url:
-        typeof g.image === "object" && g.image?.url
-          ? g.image.url
-          : typeof g.image === "string"
-            ? g.image
-            : mainThumbnailUrl,
-      caption: g.caption || `${title} - ${t("textureZoom")} ${idx + 1}`,
-      type: "texture",
-    })),
-  ];
+  const [selectedThickness, setSelectedThickness] = useState(
+    globalThicknesses[0] || "",
+  );
+  const [selectedFinish, setSelectedFinish] = useState(
+    globalFinishes[0]?.slug || "",
+  );
+  const [copied, setCopied] = useState(false);
 
-  const [selectedIdx, setSelectedIdx] = useState(0);
-  const [isZoomed, setIsZoomed] = useState(false);
-  const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
+  useEffect(() => {
+    if (globalThicknesses.length > 0 && !selectedThickness)
+      setSelectedThickness(globalThicknesses[0]);
+    if (globalFinishes.length > 0 && !selectedFinish)
+      setSelectedFinish(globalFinishes[0].slug);
+  }, [globalThicknesses, globalFinishes, selectedThickness, selectedFinish]);
 
-  const activeImage = images[selectedIdx] || images[0];
+  const sampleUrl = `/contact?type=sample&code=${encodeURIComponent(
+    product.code || "",
+  )}&thickness=${encodeURIComponent(
+    selectedThickness || "",
+  )}&finish=${encodeURIComponent(selectedFinish || "")}`;
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isZoomed) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    setMousePos({ x, y });
+  const handleShare = async () => {
+    if (typeof window !== "undefined" && navigator.clipboard) {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
+  const isStockAvailable = product.is_in_stock === "in_stock";
+
   return (
-    <div className="space-y-4 select-none lg:sticky lg:top-28">
-      {/* نمایشگر اصلی اسلب */}
-      <div
-        className="relative aspect-[3/4] w-full bg-muted/40 border border-border/60 overflow-hidden cursor-crosshair group shadow-sm"
-        onMouseEnter={() => setIsZoomed(true)}
-        onMouseLeave={() => setIsZoomed(false)}
-        onMouseMove={handleMouseMove}
-        onClick={() => setIsZoomed((prev) => !prev)}
-      >
-        <Image
-          src={activeImage.url}
-          alt={activeImage.caption}
-          fill
-          priority
-          sizes="(max-width: 1024px) 100vw, 45vw"
-          className="object-cover transition-transform duration-200 ease-out"
-          style={{
-            transformOrigin: `${mousePos.x}% ${mousePos.y}%`,
-            transform: isZoomed ? "scale(2.4)" : "scale(1)",
-          }}
-        />
-
-        {/* واترمارک ابعاد استاندارد */}
-        <div className="absolute top-4 start-4 bg-background/85 backdrop-blur-md px-3 py-1 border border-border/40 text-[11px] font-mono tracking-wider uppercase text-foreground z-10 flex items-center gap-1.5 shadow-sm">
-          <Layers className="h-3.5 w-3.5 text-primary" />
-          <span>320 × 160 cm JUMBO</span>
-        </div>
-
-        {/* راهنمای زوم */}
-        <div className="absolute bottom-4 end-4 bg-background/85 backdrop-blur-md px-3 py-1.5 border border-border/40 text-[11px] font-mono text-foreground flex items-center gap-2 z-10">
-          <ZoomIn className="h-3.5 w-3.5 text-primary" />
-          <span className="hidden sm:inline">
-            {isZoomed ? "100% Texture Detail" : "Hover / Tap to Zoom"}
-          </span>
-        </div>
-
-        {/* کپشن تصویر */}
-        {activeImage.caption && (
-          <div className="absolute bottom-4 start-4 bg-background/85 backdrop-blur-md px-3 py-1.5 border border-border/40 text-[11px] font-mono text-foreground z-10">
-            {activeImage.caption}
+    <div className="space-y-8">
+      {/* هدر سنگ */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold tracking-wider text-primary border border-primary/30 bg-primary/5 px-2.5 py-1">
+              کد {product.code}
+            </span>
+            {categoryTitle && (
+              <span className="text-xs text-muted-foreground border border-border/50 px-2 py-1">
+                {categoryTitle}
+              </span>
+            )}
           </div>
-        )}
+
+          <button
+            type="button"
+            onClick={handleShare}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+          >
+            {copied ? (
+              <>
+                <Check className="h-3.5 w-3.5 text-primary" />
+                <span className="text-primary font-medium">{t("copied")}</span>
+              </>
+            ) : (
+              <>
+                <Share2 className="h-3.5 w-3.5" />
+                <span>{t("share")}</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-light text-foreground tracking-tight">
+          {product.title}
+        </h1>
+
+        <div className="flex items-center gap-2 pt-1 text-xs">
+          {isStockAvailable ? (
+            <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              {t("inStock")}
+            </span>
+          ) : (
+            <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-medium">
+              <Clock className="h-3.5 w-3.5" />
+              {t("onDemand")}
+            </span>
+          )}
+        </div>
       </div>
 
-      {/* تصاویر بندانگشتی (Thumbnails) */}
-      {images.length > 1 && (
-        <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none">
-          {images.map((img, idx) => (
-            <button
-              key={idx}
-              onClick={() => {
-                setSelectedIdx(idx);
-                setIsZoomed(false);
-              }}
-              className={`relative h-20 w-16 sm:h-24 sm:w-20 shrink-0 border transition-all overflow-hidden bg-muted/50 ${
-                selectedIdx === idx
-                  ? "border-primary ring-2 ring-primary/40 opacity-100"
-                  : "border-border/50 opacity-60 hover:opacity-100"
-              }`}
-            >
-              <Image
-                src={img.url}
-                alt={img.caption}
-                fill
-                sizes="100px"
-                className="object-cover"
-              />
-              <span className="absolute bottom-1 end-1 bg-black/70 text-white text-[9px] px-1 font-mono">
-                0{idx + 1}
-              </span>
-            </button>
-          ))}
+      {product.description && (
+        <p className="text-sm font-light text-muted-foreground leading-relaxed">
+          {product.description}
+        </p>
+      )}
+
+      {/* انتخابگرهای سراسری */}
+      {(globalThicknesses.length > 0 || globalFinishes.length > 0) && (
+        <div className="space-y-5 border-y border-border/50 py-6 bg-card/30 p-4">
+          {globalThicknesses.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-foreground font-medium">
+                  {t("thickness")}
+                </span>
+                <span className="text-primary font-bold">
+                  {selectedThickness}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                {globalThicknesses.map((th) => (
+                  <button
+                    key={th}
+                    type="button"
+                    onClick={() => setSelectedThickness(th)}
+                    className={`py-2 px-4 text-xs border transition-all text-center cursor-pointer ${
+                      selectedThickness === th
+                        ? "border-primary bg-primary text-primary-foreground font-bold shadow-sm"
+                        : "border-border/60 bg-card hover:border-border text-foreground"
+                    }`}
+                  >
+                    {th}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {globalFinishes.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-foreground font-medium">
+                  {t("finish")}
+                </span>
+                <span className="text-primary font-bold uppercase">
+                  {globalFinishes.find((f) => f.slug === selectedFinish)
+                    ?.title || selectedFinish}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                {globalFinishes.map((fn) => (
+                  <button
+                    key={fn.slug}
+                    type="button"
+                    onClick={() => setSelectedFinish(fn.slug)}
+                    className={`py-2 px-4 text-xs uppercase border transition-all text-center flex items-center gap-1.5 cursor-pointer ${
+                      selectedFinish === fn.slug
+                        ? "border-primary bg-primary text-primary-foreground font-bold shadow-sm"
+                        : "border-border/60 bg-card hover:border-border text-foreground"
+                    }`}
+                  >
+                    <span>{fn.title}</span>
+                    {selectedFinish === fn.slug && (
+                      <Check className="h-3 w-3" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
+
+      {/* اکشن‌ها */}
+      <div className="space-y-3 pt-2">
+        <Button
+          asChild
+          size="lg"
+          className="w-full h-14 bg-primary text-primary-foreground hover:bg-primary/90 rounded-none text-sm tracking-wider uppercase font-medium shadow-sm"
+        >
+          <Link
+            href={sampleUrl}
+            className="flex items-center justify-center gap-3"
+          >
+            <Box className="h-5 w-5 shrink-0" />
+            <div className="text-start">
+              <span>{t("requestSample")}</span>
+              <span className="block text-[11px] font-light opacity-90">
+                {t("requestSampleDesc")}
+              </span>
+            </div>
+          </Link>
+        </Button>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Button
+            asChild
+            variant="outline"
+            className="w-full h-12 border-border/80 hover:bg-muted text-foreground rounded-none text-xs tracking-wider uppercase"
+          >
+            <Link
+              href="/dealers"
+              className="flex items-center justify-center gap-2"
+            >
+              <MapPin className="h-4 w-4 text-primary shrink-0" />
+              <span>{t("findDealer")}</span>
+            </Link>
+          </Button>
+
+          <Button
+            asChild
+            variant="outline"
+            className="w-full h-12 border-border/80 hover:bg-muted text-foreground rounded-none text-xs tracking-wider uppercase"
+          >
+            <a
+              href="/catalogs"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2"
+            >
+              <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+              <span>{t("downloadSpecs")}</span>
+            </a>
+          </Button>
+        </div>
+      </div>
     </div>
   );
-};
+}
+</file>
+
+<file path="src/components/products/product-specs-matrix.tsx">
+interface ProductSpecsMatrixProps {
+  locale: string;
+  dimensions?: string[];
+  thicknesses?: string[];
+  finishes?: string[];
+}
+
+export async function ProductSpecsMatrix({
+  locale,
+  dimensions = [],
+  thicknesses = [],
+  finishes = [],
+}: ProductSpecsMatrixProps) {
+  const tDetail = await getTranslations({ locale, namespace: "ProductDetail" });
+  const tInfo = await getTranslations({ locale, namespace: "InfoCards" });
+
+  const techDetails = [
+    {
+      icon: Maximize2,
+      title: tDetail("specDimensionsTitle"),
+      desc: dimensions.length > 0 ? dimensions.join(" | ") : "—",
+    },
+    {
+      icon: Layers,
+      title: tDetail("specThicknessTitle"),
+      desc: thicknesses.length > 0 ? thicknesses.join(" | ") : "—",
+    },
+    {
+      icon: Sparkles,
+      title: tDetail("specFinishesTitle"),
+      desc: finishes.length > 0 ? finishes.join(" | ") : "—",
+    },
+  ];
+
+  const featuresList = [
+    { label: tInfo("featScratch"), icon: "/icons/scratch.png" },
+    { label: tInfo("featStain"), icon: "/icons/stain.png" },
+    { label: tInfo("featImpact"), icon: "/icons/impact.png" },
+    { label: tInfo("featImpermeable"), icon: "/icons/layerbarrier.png" },
+    { label: tInfo("featAntibacterial"), icon: "/icons/antibacterial.png" },
+    { label: tInfo("featEasyClean"), icon: "/icons/easyclean.png" },
+  ];
+
+  const applications = [
+    {
+      title: tDetail("appKitchen"),
+      desc: tDetail("appKitchenDesc"),
+      icon: Utensils,
+    },
+    { title: tDetail("appVanity"), desc: tDetail("appVanityDesc"), icon: Bath },
+    {
+      title: tDetail("appCommercial"),
+      desc: tDetail("appCommercialDesc"),
+      icon: Building2,
+    },
+  ];
+
+  return (
+    <div className="space-y-16 pt-12 border-t border-border/40">
+      <div className="space-y-6">
+        <div className="space-y-1">
+          <span className="text-xs uppercase tracking-widest text-primary font-bold block">
+            {tDetail("techTitle")}
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-light text-foreground">
+            {tDetail("techSubtitle")}
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {techDetails.map((item, idx) => {
+            const Icon = item.icon;
+            return (
+              <div
+                key={idx}
+                className="p-5 bg-card border border-border/50 space-y-3 hover:border-primary/50 transition-colors"
+              >
+                <div className="p-2.5 bg-muted/40 w-fit border border-border/40 text-primary">
+                  <Icon className="h-4 w-4" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground">
+                    {item.title}
+                  </h3>
+                  <p className="text-sm font-mono text-primary font-medium mt-1">
+                    {item.desc}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        {featuresList.map((item, idx) => (
+          <div
+            key={idx}
+            className="p-4 bg-muted/20 border border-border/40 flex flex-col items-center text-center gap-3 group hover:border-primary/50 hover:bg-card transition-all"
+          >
+            <div className="relative h-8 w-8 shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
+              <Image
+                src={item.icon}
+                alt={item.label}
+                fill
+                className="object-contain dark:invert"
+              />
+            </div>
+            <span className="text-xs font-light text-foreground leading-snug">
+              {item.label}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <span className="h-px w-6 bg-primary" />
+          <h2 className="text-xl sm:text-2xl font-light text-foreground">
+            {tDetail("applicationsTitle")}
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {applications.map((app, idx) => {
+            const Icon = app.icon;
+            return (
+              <div
+                key={idx}
+                className="p-6 bg-card border border-border/50 space-y-3.5 hover:border-primary/60 transition-all group"
+              >
+                <div className="p-3 bg-muted/40 w-fit border border-border/40 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                  <Icon className="h-5 w-5" />
+                </div>
+                <div className="space-y-1.5">
+                  <h3 className="text-sm font-medium text-foreground">
+                    {app.title}
+                  </h3>
+                  <p className="text-xs text-muted-foreground font-light leading-relaxed">
+                    {app.desc}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
 </file>
 
 <file path="src/components/products/skeleton-loader.tsx">
@@ -2719,10 +2659,6 @@ export const excelProductRowSchema = z.object({
     (val) => (val ? String(val).trim().toLowerCase() : undefined),
     z.string().optional(),
   ),
-  dimension_slugs: z.preprocess(
-    (val) => (val ? String(val).trim() : undefined),
-    z.string().optional(),
-  ),
 
   thicknesses: z.preprocess(
     (val) => (val ? String(val).trim() : "12mm,20mm"),
@@ -3513,162 +3449,6 @@ export const importMap: Record<string, any> = {
 };
 </file>
 
-<file path="src/app/[locale]/products/[slug]/page.tsx">
-import React from "react";
-import { notFound } from "next/navigation";
-import { Metadata } from "next";
-import { Link } from "@/i18n/routing";
-import { getTranslations } from "next-intl/server";
-import {
-  getProductBySlugService,
-  extractCategoryTitle,
-  extractCategorySlug,
-} from "@/services/product.service";
-import { ProductGallery } from "@/components/products/product-gallery";
-import { ProductConfigurator } from "@/components/products/product-configurator";
-import { ProductSpecsMatrix } from "@/components/products/product-specs-matrix";
-import { ChevronRight, ChevronLeft } from "lucide-react";
-
-interface ProductPageProps {
-  params: Promise<{ locale: string; slug: string }>;
-}
-
-export async function generateMetadata({
-  params,
-}: ProductPageProps): Promise<Metadata> {
-  const { locale, slug } = await params;
-  const product = await getProductBySlugService(
-    slug,
-    locale as "fa" | "en" | "ar",
-  );
-
-  if (!product) {
-    return { title: "Product Not Found | Persis Quartz" };
-  }
-
-  const metaTitle =
-    product.meta_title || `${product.title} (${product.code}) | Persis Quartz`;
-  const metaDescription =
-    product.meta_description ||
-    product.description ||
-    `اسلب سنگ کوارتز کد ${product.code}`;
-
-  const imageFallback =
-    typeof product.thumbnail === "object" && product.thumbnail?.url
-      ? product.thumbnail.url
-      : typeof product.thumbnail === "string"
-        ? product.thumbnail
-        : "/PersisQuartz-Red.png";
-
-  return {
-    title: metaTitle,
-    description: metaDescription,
-    openGraph: {
-      title: metaTitle,
-      description: metaDescription,
-      images: [imageFallback],
-    },
-  };
-}
-
-export default async function ProductDetailPage({ params }: ProductPageProps) {
-  const { locale, slug } = await params;
-  const currentLocale = locale as "fa" | "en" | "ar";
-
-  const product = await getProductBySlugService(slug, currentLocale);
-  const t = await getTranslations({ locale, namespace: "ProductDetail" });
-
-  if (!product) {
-    notFound();
-  }
-
-  const categoryTitle = extractCategoryTitle(product.category);
-  const categorySlug = extractCategorySlug(product.category);
-
-  const thumbnailUrl =
-    typeof product.thumbnail === "object" && product.thumbnail?.url
-      ? product.thumbnail.url
-      : typeof product.thumbnail === "string"
-        ? product.thumbnail
-        : "/PersisQuartz-Red.png";
-
-  const isRtl = locale === "fa" || locale === "ar";
-  const BreadcrumbArrow = isRtl ? ChevronLeft : ChevronRight;
-
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: product.title,
-    image: [thumbnailUrl],
-    description: product.description,
-    sku: product.code,
-    category: categoryTitle,
-    brand: {
-      "@type": "Brand",
-      name: "Persis Quartz",
-    },
-  };
-
-  return (
-    <main className="container mx-auto px-4 sm:px-12 py-24 sm:py-28 min-h-screen space-y-14">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-
-      {/* ۱. Breadcrumbs با ساختار منطقی و فونت مونو */}
-      <nav className="flex items-center gap-2 text-xs font-mono text-muted-foreground pb-2 border-b border-border/30">
-        <Link href="/" className="hover:text-foreground transition-colors">
-          {t("home")}
-        </Link>
-        <BreadcrumbArrow className="h-3.5 w-3.5 opacity-50" />
-        <Link
-          href="/products"
-          className="hover:text-foreground transition-colors"
-        >
-          {t("products")}
-        </Link>
-        {categoryTitle && (
-          <>
-            <BreadcrumbArrow className="h-3.5 w-3.5 opacity-50" />
-            <Link
-              href={`/products?category=${categorySlug}`}
-              className="hover:text-foreground transition-colors"
-            >
-              {categoryTitle}
-            </Link>
-          </>
-        )}
-        <BreadcrumbArrow className="h-3.5 w-3.5 opacity-50" />
-        <span className="text-primary font-bold">{product.code}</span>
-      </nav>
-
-      {/* ۲. گالری فوق‌عریض اسلب + کنترلر تعاملی متغیرها */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start">
-        <div className="lg:col-span-6">
-          <ProductGallery
-            mainThumbnailUrl={thumbnailUrl}
-            title={product.title}
-            code={product.code}
-            gallery={product.gallery}
-          />
-        </div>
-
-        <div className="lg:col-span-6">
-          <ProductConfigurator
-            product={product}
-            categoryTitle={categoryTitle}
-          />
-        </div>
-      </div>
-
-      {/* ۳. ماتریس مشخصات فنی و استانداردهای مهندسی */}
-      <ProductSpecsMatrix locale={locale} />
-    </main>
-  );
-}
-</file>
-
 <file path="src/app/[locale]/products/page.tsx">
 import React, { Suspense } from "react";
 import {
@@ -3796,253 +3576,21 @@ export async function GET() {
       title_en: "Dover",
       title_ar: "دوفر",
       vein_pattern_slug: "solid",
-      dimension_slugs: "320x75,320x92",
       thicknesses: "12mm,20mm,30mm",
       custom_thickness_available: "true",
       finishes: "polished,honed",
       is_in_stock: "in_stock",
-      description_fa:
-        "الهام‌گرفته از صخره‌های گچی سپید داور انگلستان؛ سفید یکدست، خالص و بدون تخلخل با بالاترین درخشش نوری مناسب آشپزخانه‌ها و فضاهای مینیمال مدرن.",
-      description_en:
-        "Pure, seamless solid white quartz surface inspired by the iconic White Cliffs of Dover. Engineered for maximum stain resistance and modern architectural spaces.",
-      description_ar:
-        "سطح كوارتز نقي وموحد بالكامل مستوحى من منحدرات دوفر البيضاء الشهيرة. مثالي للمساحات المعمارية الحديثة والمطابخ الفاخرة.",
-      meta_title_fa:
-        "اسلب سنگ کوارتز سفید ساده داور (Dover 1101) | پرسیس کوارتز",
-      meta_title_en: "Dover Pure White Quartz Slab (1101) | Persis Quartz",
-      meta_title_ar: "لوح كوارتز دوفر الأبيض النقي (1101) | برسيس كوارتز",
-      meta_description_fa:
-        "بررسی مشخصات فنی و سفارش سنگ کوارتز سفید یکدست و بدون رگه داور کد 1101. مقاوم در برابر خط و خش و لکه مناسب صفحه کابینت و کانترتاپ.",
-      meta_description_en:
-        "Explore Dover 1101 solid white engineered quartz slab. Non-porous, highly durable surface for modern kitchen islands and vanity tops.",
-      meta_description_ar:
-        "اكتشف مواصفات لوح الكوارتز الأبيض النقي دوفر 1101 غير المسامي والمقاوم للبقع والخدوش لأسطح المطابخ العصرية.",
+      description_fa: "الهام‌گرفته از صخره‌های گچی...",
+      description_en: "Pure, seamless solid white...",
+      description_ar: "سطح كوارتز نقي وموحد...",
+      meta_title_fa: "اسلب سنگ کوارتز سفید ساده داور...",
+      meta_title_en: "Dover Pure White Quartz Slab...",
+      meta_title_ar: "لوح كوارتز دوفر الأبيض النقي...",
+      meta_description_fa: "بررسی مشخصات فنی...",
+      meta_description_en: "Explore Dover 1101...",
+      meta_description_ar: "اكتشف مواصفات لوح...",
     },
-    {
-      code: "1606",
-      slug: "eclipse",
-      category_slug: "monocolor",
-      color_slug: "black",
-      title_fa: "اکلیپس",
-      title_en: "Eclipse",
-      title_ar: "إكليبس",
-      vein_pattern_slug: "solid",
-      dimension_slugs: "320x75,320x92",
-      thicknesses: "12mm,20mm,30mm",
-      custom_thickness_available: "true",
-      finishes: "polished,honed",
-      is_in_stock: "in_stock",
-      description_fa:
-        "مشکی عمیق، مخملی و خالص؛ تجلی تاریکی مطلق خورشیدگرفتگی در معماری مدرن با سطحی کاملاً متراکم و مقاوم در برابر لکه.",
-      description_en:
-        "Deep, velvety, pure black quartz capturing the stark drama of a total solar eclipse. Non-porous surface engineered for high-traffic luxury interiors.",
-      description_ar:
-        "أسود نقي وفاخر مستوحى من ظاهرة كسوف الشمس الكلي، يمنح المساحات المعمارية عمقاً وأناقة لا مثيل لها.",
-      meta_title_fa:
-        "اسلب سنگ کوارتز مشکی ساده اکلیپس (Eclipse 1606) | پرسیس کوارتز",
-      meta_title_en: "Eclipse Solid Black Quartz Slab (1606) | Persis Quartz",
-      meta_title_ar: "لوح كوارتز إكليبس الأسود النقي (1606) | برسيس كوارتز",
-      meta_description_fa:
-        "خرید و مشخصات اسلب کوارتز مشکی خالص اکلیپس کد 1606. سطح یکپارچه، ضد خط و خش و لکه مناسب کانترتاپ و جزیره مدرن.",
-      meta_description_en:
-        "Discover Eclipse 1606 pure solid black quartz slab. Highly durable, non-porous engineered surface for sleek modern spaces.",
-      meta_description_ar:
-        "تصفح مواصفات لوح الكوارتز الأسود الأحادي إكليبس 1606 المقاوم للبقع والخدوش للمطابخ والجزر العصرية.",
-    },
-    {
-      code: "2106",
-      slug: "aland",
-      category_slug: "veined-effect",
-      color_slug: "white",
-      title_fa: "الند",
-      title_en: "Aland",
-      title_ar: "ألاند",
-      vein_pattern_slug: "cloudy",
-      dimension_slugs: "320x75,320x92",
-      thicknesses: "12mm,20mm,30mm",
-      custom_thickness_available: "true",
-      finishes: "polished,honed",
-      is_in_stock: "in_stock",
-      description_fa:
-        "الهام‌گرفته از نخستین پرتوهای سیمین بامداد؛ سپید با سایه‌روشن‌های ابر و بادی نرم و مه‌آلود که جلوه‌ای روشن و سیال به فضا می‌بخشد.",
-      description_en:
-        "Inspired by the first radiant gleam of dawn; soft misty white with gentle cloudy transitions creating a serene, luminous ambiance.",
-      description_ar:
-        "مستوحى من أول خيوط فجر الصباح؛ أبيض سحابي ناعم بتدرجات ضبابية تضفي إشراقاً وسكينة على المكان.",
-      meta_title_fa:
-        "اسلب سنگ کوارتز سفید ابر و بادی الند (Aland 2106) | پرسیس کوارتز",
-      meta_title_en: "Aland Cloudy White Quartz Slab (2106) | Persis Quartz",
-      meta_title_ar: "لوح كوارتز ألاند الأبيض السحابي (2106) | برسيس كوارتز",
-      meta_description_fa:
-        "مشخصات و قیمت سنگ کوارتز سفید ابروبادی الند کد 2106. بافت مه‌آلود و طبیعی با دوام مهندسی‌شده مناسب کانتر و صفحات روشویی.",
-      meta_description_en:
-        "Explore Aland 2106 misty white cloudy quartz surfaces. Non-porous, elegant engineered stone for modern residential design.",
-      meta_description_ar:
-        "اكتشف أسطح كوارتز ألاند 2106 ذات التأثير السحابي الأبيض الناعم المقاومة للبكتيريا والحرارة لأسطح المطابخ.",
-    },
-    {
-      code: "2601",
-      slug: "caspian",
-      category_slug: "veined-effect",
-      color_slug: "black",
-      title_fa: "کاسپین",
-      title_en: "Caspian",
-      title_ar: "كاسبيان",
-      vein_pattern_slug: "cloudy",
-      dimension_slugs: "320x75,320x92",
-      thicknesses: "12mm,20mm,30mm",
-      custom_thickness_available: "true",
-      finishes: "polished,honed",
-      is_in_stock: "in_stock",
-      description_fa:
-        "مشکی رمزآلود با امواج و هاله‌های ابر و بادی دودی؛ تداعی‌گر خروش شبانه و عمق بی‌پایان کهن‌ترین دریای زمین.",
-      description_en:
-        "Mysterious deep black infused with subtle smoky cloudy textures, echoing the midnight depths of the Caspian Sea.",
-      description_ar:
-        "أسود غامض بتدرجات سحابية دخانية هادئة تجسد عمق وأمواج بحر قزوين في هدوء الليل.",
-      meta_title_fa:
-        "اسلب سنگ کوارتز مشکی ابر و بادی کاسپین (Caspian 2601) | پرسیس کوارتز",
-      meta_title_en: "Caspian Cloudy Black Quartz Slab (2601) | Persis Quartz",
-      meta_title_ar: "لوح كوارتز كاسبيان الأسود السحابي (2601) | برسيس كوارتز",
-      meta_description_fa:
-        "خرید اسلب کوارتز مشکی بافت‌دار و ابر و بادی کاسپین کد 2601. بافت مدرن، ضد جذب لکه مناسب دکوراسیون و جزیره لوکس.",
-      meta_description_en:
-        "Discover Caspian 2601 cloudy black quartz slab. Dense, durable, stain-resistant surface for contemporary statement islands.",
-      meta_description_ar:
-        "تسوق أسطح كوارتز كاسبيان 2601 بتأثيرات سحابية سوداء فاخرة ومقاومة عالية للصدمات للمشاريع الراقية.",
-    },
-    {
-      code: "3106",
-      slug: "arctic",
-      category_slug: "calacatta",
-      color_slug: "white",
-      title_fa: "آرکتیک",
-      title_en: "Arctic",
-      title_ar: "آركتيك",
-      vein_pattern_slug: "subtle-vein",
-      dimension_slugs: "320x75,320x92",
-      thicknesses: "12mm,20mm,30mm",
-      custom_thickness_available: "true",
-      finishes: "polished,honed",
-      is_in_stock: "in_stock",
-      description_fa:
-        "سفید یخی و درخشان با رگه‌های نازک و ظریف مشکی؛ تلاقی کنتراست مینیمال و خطوط ظریف کالاکاتا در پهنه‌ای ابدی از نور.",
-      description_en:
-        "Crisp crystalline white background traced with fine, delicate black veins, redefining modern minimalist Calacatta elegance.",
-      description_ar:
-        "أبيض بلوري ناصع بتعريقات سوداء دقيقة وناعمة تمنح تصاميم كالاكاتا لمسة عصرية فائقة النقاء.",
-      meta_title_fa:
-        "اسلب سنگ کوارتز کالاکاتا آرکتیک رگه مشکی (Arctic 3106) | پرسیس کوارتز",
-      meta_title_en:
-        "Arctic Calacatta Fine Black Vein Quartz (3106) | Persis Quartz",
-      meta_title_ar:
-        "لوح كوارتز كالاكاتا آركتيك بتعريقات سوداء دقيقة (3106) | برسيس كوارتز",
-      meta_description_fa:
-        "بررسی و سفارش اسلب کوارتز سفید رگه مشکی آرکتیک کد 3106 طرح کالاکاتا. مقاوم در برابر خط و خش مناسب کانترتاپ معمارانه.",
-      meta_description_en:
-        "Explore Arctic 3106 white quartz with fine black veins. Premium Calacatta design for sophisticated kitchen countertops.",
-      meta_description_ar:
-        "اكتشف لوح الكوارتز كالاكاتا آركتيك 3106 بتعريقات سوداء رفيعة لأسطح المطابخ والجزر المعمارية الفاخرة.",
-    },
-    {
-      code: "3108",
-      slug: "zarshouran",
-      category_slug: "calacatta",
-      color_slug: "white",
-      title_fa: "زرشوران",
-      title_en: "Zarshouran",
-      title_ar: "زرشوران",
-      vein_pattern_slug: "subtle-vein",
-      dimension_slugs: "320x75,320x92",
-      thicknesses: "12mm,20mm,30mm",
-      custom_thickness_available: "true",
-      finishes: "polished,honed",
-      is_in_stock: "in_stock",
-      description_fa:
-        "زمینه سپید شاهانه با رگه‌های مویی و درخشان طلایی؛ الهام‌گرفته از شکوه کهن رگه‌های زرین معادن زرشوران.",
-      description_en:
-        "Opulent white background enriched with delicate golden veins, capturing the prestige and warmth of precious mineral treasures.",
-      description_ar:
-        "خلفية بيضاء ملكية مزدانة بتعريقات ذهبية دقيقة وساحرة تجسد فخامة الذهب وبريق كالاكاتا الكلاسيكي.",
-      meta_title_fa:
-        "اسلب سنگ کوارتز کالاکاتا زرشوران رگه طلایی (Zarshouran 3108) | پرسیس کوارتز",
-      meta_title_en:
-        "Zarshouran Calacatta Gold Fine Vein Quartz (3108) | Persis Quartz",
-      meta_title_ar:
-        "لوح كوارتز كالاكاتا زرشوران بتعريقات ذهبية (3108) | برسيس كوارتز",
-      meta_description_fa:
-        "خرید اسلب کوارتز سفید رگه طلایی زرشوران کد 3108 طرح کالاکاتا. لوکس و نفوذناپذیر مناسب صفحات بین‌کابینتی و کانترتاپ.",
-      meta_description_en:
-        "Discover Zarshouran 3108 white quartz with subtle gold veins. High-performance Calacatta surface for timeless interiors.",
-      meta_description_ar:
-        "تصفح أسطح كوارتز كالاكاتا زرشوران 3108 بتعريقات ذهبية دقيقة ومقاومة عالية للبقع للمطابخ الحديثة.",
-    },
-    {
-      code: "3301",
-      slug: "hengam",
-      category_slug: "calacatta",
-      color_slug: "grey",
-      title_fa: "هنگام",
-      title_en: "Hengam",
-      title_ar: "هنغام",
-      vein_pattern_slug: "subtle-vein",
-      dimension_slugs: "320x75,320x92",
-      thicknesses: "12mm,20mm,30mm",
-      custom_thickness_available: "true",
-      finishes: "polished,honed",
-      is_in_stock: "in_stock",
-      description_fa:
-        "طوسی نقره‌ای و باوقار با رگه‌های نازک و درخشان سپید؛ تداعی‌گر انعکاس تلالو مهتاب بر آب‌های صخره‌ای جزیره هنگام.",
-      description_en:
-        "Sophisticated silver-grey background interlaced with fine white veins, evoking the moonlit shoreline of Hengam Island.",
-      description_ar:
-        "رمادي فضي أنيق تتخلله تعريقات بيضاء دقيقة ومضيئة مستوحاة من انعكاس ضوء القمر على شواطئ جزيرة هنگام.",
-      meta_title_fa:
-        "اسلب سنگ کوارتز طوسی رگه سفید هنگام (Hengam 3301) | پرسیس کوارتز",
-      meta_title_en:
-        "Hengam Grey Fine White Vein Quartz (3301) | Persis Quartz",
-      meta_title_ar:
-        "لوح كوارتز هنغام الرمادي بتعريقات بيضاء (3301) | برسيس كوارتز",
-      meta_description_fa:
-        "مشخصات و قیمت سنگ کوارتز طوسی رگه سفید هنگام کد 3301 طرح کالاکاتا. مقاوم در برابر حرارت و لکه مناسب دکوراسیون و آشپزخانه مدرن.",
-      meta_description_en:
-        "Explore Hengam 3301 grey engineered quartz with subtle white veining. Durable, architectural surface for islands and vanity tops.",
-      meta_description_ar:
-        "اكتشف أسطح كوارتز هنغام 3301 الرمادية بتعريقات بيضاء ناعمة وغير مسامية لأسطح المطابخ العصرية.",
-    },
-    {
-      code: "3601",
-      slug: "zagros",
-      category_slug: "calacatta",
-      color_slug: "black",
-      title_fa: "زاگرس",
-      title_en: "Zagros",
-      title_ar: "زاغروس",
-      vein_pattern_slug: "subtle-vein",
-      dimension_slugs: "320x75,320x92",
-      thicknesses: "12mm,20mm,30mm",
-      custom_thickness_available: "true",
-      finishes: "polished,honed",
-      is_in_stock: "in_stock",
-      description_fa:
-        "مشکی عمیق و پرابهت با خطوط رگه نازک سفید و برفی؛ الهام‌گرفته از شکاف‌های صخره‌ای و ستیغ‌های برفی رشته‌کوه زاگرس.",
-      description_en:
-        "Majestic deep black matrix crossed by crisp white linear veining, capturing the stark beauty of snow-crested Zagros peaks.",
-      description_ar:
-        "أسود عميق ومهيب بتعريقات بيضاء دقيقة تشبه قمم جبال زاغروس المكسوة بالثلوج، يمنح المكان فخامة استثنائية.",
-      meta_title_fa:
-        "اسلب سنگ کوارتز مشکی رگه سفید زاگرس (Zagros 3601) | پرسیس کوارتز",
-      meta_title_en:
-        "Zagros Black Fine White Vein Quartz (3601) | Persis Quartz",
-      meta_title_ar:
-        "لوح كوارتز زاغروس الأسود بتعريقات بيضاء (3601) | برسيس كوارتز",
-      meta_description_fa:
-        "خرید اسلب کوارتز مشکی رگه سفید زاگرس کد 3601 طرح کالاکاتا. کنتراست لوکس، بدون تخلخل و ضد خش مناسب کانترتاپ و جزیره.",
-      meta_description_en:
-        "Discover Zagros 3601 black quartz with sharp white veins. Premium luxury Calacatta stone for high-end residential interiors.",
-      meta_description_ar:
-        "تسوق أسطح كوارتز زاغروس 3601 السوداء بتعريقات بيضاء فاخرة ومقاومة للبقع والحرارة للمشاريع المعمارية.",
-    },
+    // ... سایر نمونه‌ها نیز بدون ستون dimension_slugs خواهند بود.
   ];
 
   const guideData = [
@@ -4050,28 +3598,27 @@ export async function GET() {
       "نام ستون (Header)": "code",
       وضعیت: "اجباری",
       توضیح:
-        "کد اختصاصی سنگ در کاتالوگ (مانند 1101، 1606، 3106). کلید اصلی برای آپدیت خودکار است.",
-      "نمونه مقدار مجاز": "1101 - 2106 - 3108",
+        "کد اختصاصی سنگ در کاتالوگ (مانند 1101). کلید اصلی برای آپدیت خودکار است.",
+      "نمونه مقدار مجاز": "1101",
     },
     {
       "نام ستون (Header)": "slug",
       وضعیت: "اجباری",
-      توضیح:
-        "شناسه انگلیسی محصول برای آدرس URL صفحه (فقط حروف کوچک و خط تیره).",
-      "نمونه مقدار مجاز": "dover یا eclipse یا aland",
+      توضیح: "شناسه انگلیسی محصول برای آدرس URL صفحه.",
+      "نمونه مقدار مجاز": "dover",
     },
     {
       "نام ستون (Header)": "category_slug",
       وضعیت: "اجباری",
-      توضیح:
-        "یکی از اسلاگ‌های تعریف شده دسته‌بندی‌ها (monocolor, veined-effect, calacatta).",
-      "نمونه مقدار مجاز": "monocolor یا veined-effect یا calacatta",
+      توضیح: "اسلاگ دسته‌بندی. باید از قبل در پنل ادمین تعریف شده باشد.",
+      "نمونه مقدار مجاز": "monocolor",
     },
     {
       "نام ستون (Header)": "color_slug",
       وضعیت: "اجباری",
-      توضیح: "طیف رنگی پایه سنگ جهت فیلتر شدن در کاتالوگ سایت.",
-      "نمونه مقدار مجاز": "white یا black یا grey",
+      توضیح:
+        "اسلاگ رنگ سنگ. حتماً باید از قبل در پنل ادمین (Colors) تعریف شده باشد.",
+      "نمونه مقدار مجاز": "white",
     },
     {
       "نام ستون (Header)": "title_fa / title_en / title_ar",
@@ -4083,14 +3630,8 @@ export async function GET() {
       "نام ستون (Header)": "vein_pattern_slug",
       وضعیت: "اختیاری",
       توضیح:
-        "نوع بافت رگه‌ها (solid برای ساده، cloudy برای ابروبادی، subtle-vein برای رگه نازک).",
-      "نمونه مقدار مجاز": "solid یا cloudy یا subtle-vein",
-    },
-    {
-      "نام ستون (Header)": "dimension_slugs",
-      وضعیت: "اختیاری",
-      توضیح: "ابعاد اسلب (جداشده با کاما).",
-      "نمونه مقدار مجاز": "320x75,320x92",
+        "اسلاگ الگوی رگه‌ها. حتماً باید از قبل در پنل ادمین (Vein Patterns) تعریف شده باشد.",
+      "نمونه مقدار مجاز": "solid یا cloudy",
     },
     {
       "نام ستون (Header)": "thicknesses",
@@ -4113,43 +3654,40 @@ export async function GET() {
     {
       "نام ستون (Header)": "is_in_stock",
       وضعیت: "اجباری",
-      توضیح:
-        "وضعیت موجودی کالا (in_stock موجود، on_demand سفارشی، discontinued توقف تولید).",
+      توضیح: "وضعیت موجودی کالا.",
       "نمونه مقدار مجاز": "in_stock",
     },
     {
       "نام ستون (Header)": "description_fa / description_en / description_ar",
       وضعیت: "اجباری",
       توضیح: "متن معرفی و کانسپت سنگ به ۳ زبان.",
-      "نمونه مقدار مجاز": "الهام‌گرفته از صخره‌های...",
+      "نمونه مقدار مجاز": "الهام‌گرفته از...",
     },
     {
       "نام ستون (Header)": "meta_title_fa / meta_title_en / meta_title_ar",
       وضعیت: "اجباری",
       توضیح: "عنوان سئو گوگل صفحه به ۳ زبان.",
-      "نمونه مقدار مجاز": "اسلب سنگ کوارتز سفید ساده داور | پرسیس کوارتز",
+      "نمونه مقدار مجاز": "اسلب سنگ...",
     },
     {
       "نام ستون (Header)":
         "meta_description_fa / meta_description_en / meta_description_ar",
       وضعیت: "اجباری",
       توضیح: "خلاصه توضیحات گوگل زیر عنوان به ۳ زبان.",
-      "نمونه مقدار مجاز": "بررسی مشخصات فنی و سفارش سنگ کوارتز...",
+      "نمونه مقدار مجاز": "بررسی مشخصات...",
     },
     {
-      "نام ستون (Header)": "تصاویر و عکس‌ها",
-      وضعیت: "در پنل ادمین",
+      "نام ستون (Header)": "نکته مهم در مورد ابعاد (Dimensions)",
+      وضعیت: "سراسری",
       توضیح:
-        "عکس‌ها در فایل اکسل قرار نمی‌گیرند. پس از آپلود، وارد ویرایش هر محصول در پنل پیلود شده و عکس‌ها را آپلود کنید.",
-      "نمونه مقدار مجاز": "در داشبورد پیلود",
+        "ابعاد تولیدی اسلب‌ها برای تمام محصولات یکسان است و نیازی به وارد کردن آن در اکسل نیست. ابعاد مستقیماً از بخش Dimensions در ادمین خوانده می‌شود.",
+      "نمونه مقدار مجاز": "-",
     },
   ];
 
   const workbook = XLSX.utils.book_new();
-
   const worksheetData = XLSX.utils.json_to_sheet(sampleData);
   XLSX.utils.book_append_sheet(workbook, worksheetData, "Products Template");
-
   const worksheetGuide = XLSX.utils.json_to_sheet(guideData);
   XLSX.utils.book_append_sheet(
     workbook,
@@ -4172,7 +3710,6 @@ export async function GET() {
 </file>
 
 <file path="src/app/api/admin/import-products/route.ts">
-// src/app/api/admin/import-products/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getPayload } from "payload";
 import configPromise from "@/payload.config";
@@ -4183,7 +3720,6 @@ export async function POST(req: NextRequest) {
   try {
     const payload = await getPayload({ config: configPromise });
 
-    // ۱. بررسی دسترسی ادمین
     const { user } = await payload.auth({ headers: req.headers });
     if (!user) {
       return NextResponse.json(
@@ -4210,12 +3746,11 @@ export async function POST(req: NextRequest) {
     let updatedCount = 0;
     const errors: string[] = [];
 
-    // ۲. بارگذاری کالکشن‌های رابطه‌ای
-    const [categories, colors, veinPatterns, dimensions] = await Promise.all([
+    // ابعاد از اینجا لود نمی‌شوند چون قرار نیست پر شوند
+    const [categories, colors, veinPatterns] = await Promise.all([
       payload.find({ collection: "categories", limit: 500 }),
       payload.find({ collection: "colors", limit: 500 }),
       payload.find({ collection: "vein-patterns", limit: 500 }),
-      payload.find({ collection: "dimensions", limit: 500 }),
     ]);
 
     const categoryMap = new Map(
@@ -4227,11 +3762,7 @@ export async function POST(req: NextRequest) {
     const veinPatternMap = new Map(
       veinPatterns.docs.map((v) => [v.slug.toLowerCase(), v.id]),
     );
-    const dimensionMap = new Map(
-      dimensions.docs.map((d) => [d.slug.toLowerCase(), d.id]),
-    );
 
-    // ۳. پیمایش و پردازش ردیف‌ها
     for (let index = 0; index < rawData.length; index++) {
       const rowNum = index + 2;
       const row = rawData[index];
@@ -4249,38 +3780,31 @@ export async function POST(req: NextRequest) {
 
       const item = parseResult.data;
 
-      // بررسی دسته‌بندی
       const categoryId = categoryMap.get(item.category_slug);
       if (!categoryId) {
         errors.push(
-          `ردیف ${rowNum}: دسته‌بندی با اسلاگ "${item.category_slug}" یافت نشد. لطفاً ابتدا اکسل دسته‌بندی‌ها را آپلود کنید.`,
+          `ردیف ${rowNum} (${item.code}): دسته‌بندی "${item.category_slug}" در دیتابیس یافت نشد.`,
         );
         continue;
       }
 
-      // طیف رنگی
-      let colorId = colorMap.get(item.color_slug);
+      const colorId = colorMap.get(item.color_slug);
       if (!colorId) {
-        const newColor = await payload.create({
-          collection: "colors",
-          data: { title: item.color_slug, slug: item.color_slug },
-        });
-        colorId = newColor.id;
-        colorMap.set(item.color_slug, colorId);
+        errors.push(
+          `ردیف ${rowNum} (${item.code}): رنگ "${item.color_slug}" در دیتابیس یافت نشد.`,
+        );
+        continue;
       }
 
-      // الگوی رگه
-      const veinPatternId = item.vein_pattern_slug
-        ? veinPatternMap.get(item.vein_pattern_slug)
-        : undefined;
-
-      // ابعاد اسلب
-      const dimensionIds: (string | number)[] = [];
-      if (item.dimension_slugs) {
-        item.dimension_slugs.split(",").forEach((s) => {
-          const id = dimensionMap.get(s.trim().toLowerCase());
-          if (id) dimensionIds.push(id);
-        });
+      let veinPatternId = undefined;
+      if (item.vein_pattern_slug) {
+        veinPatternId = veinPatternMap.get(item.vein_pattern_slug);
+        if (!veinPatternId) {
+          errors.push(
+            `ردیف ${rowNum} (${item.code}): الگوی رگه "${item.vein_pattern_slug}" یافت نشد.`,
+          );
+          continue;
+        }
       }
 
       const formattedThicknesses = item.thicknesses
@@ -4309,7 +3833,7 @@ export async function POST(req: NextRequest) {
         category: categoryId,
         color_family: colorId,
         vein_pattern: veinPatternId || null,
-        dimensions: dimensionIds.length > 0 ? dimensionIds : undefined,
+        // dimensions کلاً مقداردهی نمی‌شود تا مستقل بماند
         available_thicknesses: formattedThicknesses,
         custom_thickness_available: item.custom_thickness_available,
         finishes: formattedFinishes,
@@ -4318,8 +3842,6 @@ export async function POST(req: NextRequest) {
 
       if (existing.docs.length > 0) {
         const productId = existing.docs[0].id;
-
-        // ۱. بروزرسانی زبان فارسی (fa)
         await payload.update({
           collection: "products",
           id: productId,
@@ -4332,8 +3854,6 @@ export async function POST(req: NextRequest) {
             meta_description: item.meta_description_fa,
           },
         });
-
-        // ۲. بروزرسانی زبان انگلیسی (en)
         await payload.update({
           collection: "products",
           id: productId,
@@ -4345,8 +3865,6 @@ export async function POST(req: NextRequest) {
             meta_description: item.meta_description_en,
           },
         });
-
-        // ۳. بروزرسانی زبان عربی (ar)
         await payload.update({
           collection: "products",
           id: productId,
@@ -4358,10 +3876,8 @@ export async function POST(req: NextRequest) {
             meta_description: item.meta_description_ar,
           },
         });
-
         updatedCount++;
       } else {
-        // ۱. ایجاد اولیه با زبان فارسی (fa)
         const createdDoc = await payload.create({
           collection: "products",
           locale: "fa",
@@ -4373,8 +3889,6 @@ export async function POST(req: NextRequest) {
             meta_description: item.meta_description_fa,
           },
         });
-
-        // ۲. افزودن مقادیر انگلیسی (en)
         await payload.update({
           collection: "products",
           id: createdDoc.id,
@@ -4386,8 +3900,6 @@ export async function POST(req: NextRequest) {
             meta_description: item.meta_description_en,
           },
         });
-
-        // ۳. افزودن مقادیر عربی (ar)
         await payload.update({
           collection: "products",
           id: createdDoc.id,
@@ -4399,7 +3911,6 @@ export async function POST(req: NextRequest) {
             meta_description: item.meta_description_ar,
           },
         });
-
         createdCount++;
       }
     }
@@ -4414,7 +3925,6 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error: any) {
-    console.error("Products Excel Import Error:", error);
     return NextResponse.json(
       { error: "خطا در پردازش فایل محصولات", details: error.message },
       { status: 500 },
@@ -5121,6 +4631,133 @@ export const ProductFiltersClient: React.FC<ProductFiltersClientProps> = ({
 };
 </file>
 
+<file path="src/components/products/product-gallery.tsx">
+"use client";
+
+import React, { useState } from "react";
+import Image from "next/image";
+import type { GalleryItem } from "@/services/product.service";
+import { ZoomIn } from "lucide-react";
+import { useTranslations } from "next-intl";
+
+interface ProductGalleryProps {
+  mainThumbnailUrl: string;
+  title: string;
+  code: string;
+  gallery?: GalleryItem[];
+}
+
+export function ProductGallery({
+  mainThumbnailUrl,
+  title,
+  code,
+  gallery = [],
+}: ProductGalleryProps) {
+  const t = useTranslations("ProductDetail");
+
+  const images = [
+    { url: mainThumbnailUrl, caption: `${title} (${code})` },
+    ...gallery.map((g) => ({
+      url:
+        typeof g.image === "object" && g.image?.url
+          ? g.image.url
+          : typeof g.image === "string"
+            ? g.image
+            : mainThumbnailUrl,
+      caption: g.caption || title,
+    })),
+  ].filter((img) => Boolean(img.url));
+
+  const [selectedIdx, setSelectedIdx] = useState(0);
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
+
+  const activeImage = images[selectedIdx] || {
+    url: "/PersisQuartz-Red.png",
+    caption: title,
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    // زوم فقط در مانیتورهای دسکتاپ عمل میکند
+    if (!isZoomed || typeof window === "undefined" || window.innerWidth < 1024)
+      return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setMousePos({ x, y });
+  };
+
+  const handleMouseEnter = () => {
+    if (typeof window !== "undefined" && window.innerWidth >= 1024) {
+      setIsZoomed(true);
+    }
+  };
+
+  return (
+    <div className="space-y-4 select-none lg:sticky lg:top-28">
+      {/* فریم اصلی اسلب (نسبت ۳ به ۴) */}
+      <div
+        className="relative aspect-[3/4] w-full bg-card border border-border/60 overflow-hidden shadow-sm lg:cursor-crosshair"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={() => setIsZoomed(false)}
+        onMouseMove={handleMouseMove}
+      >
+        <Image
+          src={activeImage.url}
+          alt={activeImage.caption}
+          fill
+          priority
+          sizes="(max-width: 1024px) 100vw, 50vw"
+          className="object-cover transition-transform duration-150 ease-out"
+          style={{
+            transformOrigin: `${mousePos.x}% ${mousePos.y}%`,
+            transform: isZoomed ? "scale(2.2)" : "scale(1)",
+          }}
+        />
+
+        {/* نشانگر قابلیت زوم فقط برای دسکتاپ */}
+        <div className="hidden lg:flex absolute bottom-4 end-4 bg-background/90 backdrop-blur-md px-2.5 py-1.5 border border-border/50 text-xs text-foreground items-center gap-1.5 shadow-sm">
+          <ZoomIn className="h-3.5 w-3.5 text-primary" />
+          <span>Hover to Zoom</span>
+        </div>
+      </div>
+
+      {/* تصاویر بندانگشتی تنها در صورت وجود بیش از یک تصویر رندر میشوند */}
+      {images.length > 1 && (
+        <div className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-none">
+          {images.map((img, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => {
+                setSelectedIdx(idx);
+                setIsZoomed(false);
+              }}
+              className={`relative h-20 w-16 sm:h-24 sm:w-20 shrink-0 border transition-all overflow-hidden bg-muted/30 cursor-pointer ${
+                selectedIdx === idx
+                  ? "border-primary ring-2 ring-primary/30"
+                  : "border-border/60 opacity-60 hover:opacity-100"
+              }`}
+            >
+              <Image
+                src={img.url}
+                alt={img.caption}
+                fill
+                sizes="80px"
+                className="object-cover"
+              />
+              <span className="absolute bottom-1 end-1 bg-black/70 text-white text-[10px] px-1.5 font-mono">
+                0{idx + 1}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+</file>
+
 <file path="src/components/products/product-grid-client.tsx">
 "use client";
 
@@ -5729,6 +5366,54 @@ export async function getVeinPatternsService(
     return [];
   }
 }
+
+export async function getAllDimensionsService(): Promise<string[]> {
+  try {
+    const payload = await getPayload({ config: configPromise });
+    const response = await payload.find({
+      collection: "dimensions",
+      limit: 50,
+    });
+    return response.docs.map((d: any) => d.title);
+  } catch (error) {
+    console.error("Error fetching dimensions:", error);
+    return [];
+  }
+}
+
+export async function getAllThicknessesService(): Promise<string[]> {
+  try {
+    const payload = await getPayload({ config: configPromise });
+    const response = await payload.find({
+      collection: "thicknesses" as any,
+      limit: 50,
+    });
+    return response.docs.map((d: any) => d.slug || d.title);
+  } catch (error) {
+    console.error("Error fetching thicknesses:", error);
+    return [];
+  }
+}
+
+export async function getAllFinishesService(
+  locale: "fa" | "en" | "ar",
+): Promise<{ title: string; slug: string }[]> {
+  try {
+    const payload = await getPayload({ config: configPromise });
+    const response = await payload.find({
+      collection: "finishes" as any,
+      locale,
+      limit: 50,
+    });
+    return response.docs.map((d: any) => ({
+      title: d.title,
+      slug: d.slug,
+    }));
+  } catch (error) {
+    console.error("Error fetching finishes:", error);
+    return [];
+  }
+}
 </file>
 
 <file path="tsconfig.json">
@@ -5796,6 +5481,98 @@ When generating code for this project, you MUST follow these rules:
 - **Component Function Names:** `PascalCase` (e.g., `export const ProductCard = ...`).
 - **Hooks:** `camelCase.ts` (e.g., `useScroll.ts`).
 - **Utilities & Services:** `camelCase.ts` (e.g., `formatCurrency.ts`).
+</file>
+
+<file path="src/app/[locale]/products/[slug]/page.tsx">
+export default async function ProductDetailPage({ params }: ProductPageProps) {
+  const { locale, slug } = await params;
+  const currentLocale = locale as "fa" | "en" | "ar";
+
+  const [product, allDimensions, allThicknesses, allFinishes] =
+    await Promise.all([
+      getProductBySlugService(slug, currentLocale),
+      getAllDimensionsService(),
+      getAllThicknessesService(),
+      getAllFinishesService(currentLocale),
+    ]);
+
+  if (!product) {
+    notFound();
+  }
+
+  const categoryTitle = extractCategoryTitle(product.category);
+  const categorySlug = extractCategorySlug(product.category);
+
+  const thumbnailUrl =
+    typeof product.thumbnail === "object" && product.thumbnail?.url
+      ? product.thumbnail.url
+      : typeof product.thumbnail === "string"
+        ? product.thumbnail
+        : "/PersisQuartz-Red.png";
+
+  const isRtl = locale === "fa" || locale === "ar";
+  const BreadcrumbArrow = isRtl ? ChevronLeft : ChevronRight;
+
+  return (
+    <main className="container mx-auto px-4 sm:px-12 py-24 sm:py-28 min-h-screen space-y-14">
+      {/* ناوبری */}
+      <nav className="flex items-center gap-2 text-xs text-muted-foreground pb-3 border-b border-border/30">
+        <Link href="/" className="hover:text-foreground transition-colors">
+          {t("home")}
+        </Link>
+        <BreadcrumbArrow className="h-3.5 w-3.5 opacity-40" />
+        <Link
+          href="/products"
+          className="hover:text-foreground transition-colors"
+        >
+          {t("products")}
+        </Link>
+        {categoryTitle && (
+          <>
+            <BreadcrumbArrow className="h-3.5 w-3.5 opacity-40" />
+            <Link
+              href={`/products?category=${categorySlug}`}
+              className="hover:text-foreground transition-colors"
+            >
+              {categoryTitle}
+            </Link>
+          </>
+        )}
+        <BreadcrumbArrow className="h-3.5 w-3.5 opacity-40" />
+        <span className="text-primary font-medium">{product.title}</span>
+      </nav>
+
+      {/* گالری و کانفیگوراتور داینامیک */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start">
+        <div className="lg:col-span-6">
+          <ProductGallery
+            mainThumbnailUrl={thumbnailUrl}
+            title={product.title}
+            code={product.code}
+            gallery={product.gallery}
+          />
+        </div>
+
+        <div className="lg:col-span-6">
+          <ProductConfigurator
+            product={product}
+            categoryTitle={categoryTitle}
+            globalThicknesses={allThicknesses}
+            globalFinishes={allFinishes}
+          />
+        </div>
+      </div>
+
+      {/* مشخصات مهندسی سراسری */}
+      <ProductSpecsMatrix
+        locale={locale}
+        dimensions={allDimensions}
+        thicknesses={allThicknesses}
+        finishes={allFinishes.map((f) => f.title)}
+      />
+    </main>
+  );
+}
 </file>
 
 <file path="src/components/home/product-showcase.tsx">
@@ -6171,6 +5948,8 @@ import { Categories } from "./payload/collections/Categories";
 import { Colors } from "./payload/collections/Colors";
 import { VeinPatterns } from "./payload/collections/VeinPatterns";
 import { Dimensions } from "./payload/collections/Dimensions";
+import { Thicknesses } from "./payload/collections/Thicknesses";
+import { Finishes } from "./payload/collections/Finishes";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -6188,6 +5967,8 @@ export default buildConfig({
     Colors,
     VeinPatterns,
     Dimensions,
+    Thicknesses,
+    Finishes,
     Products,
   ],
 
@@ -7656,40 +7437,30 @@ export default async function HomePage({
   "ProductDetail": {
     "home": "صفحه اصلی",
     "products": "کاتالوگ محصولات",
-    "brandName": "پرسیس کوارتز",
-    "thickness": "ضخامت اسلب",
+    "thickness": "ضخامت",
     "finish": "پرداخت سطح",
     "inStock": "کد فعال در خط تولید",
     "onDemand": "تولید سفارشی پروژه",
-    "discontinued": "آرشیو / توقف تولید",
     "requestSample": "درخواست نمونه اسلب (Sample)",
-    "requestSampleDesc": "ارسال نمونه لمسی سنگ ویژه معماران و سازندگان",
+    "requestSampleDesc": "ارسال نمونه لمسی ویژه معماران و سازندگان",
     "findDealer": "عاملیت‌ها و مراکز فروش",
     "downloadSpecs": "کاتالوگ و مشخصات",
     "share": "اشتراک‌گذاری",
     "copied": "کپی شد!",
-    "dimensions": "ابعاد اسلب",
+    "fullScan": "اسکن کامل اسلب",
+    "textureZoom": "نمای نزدیک بافت",
     "techTitle": "Technical Details",
-    "techSubtitle": "مشخصات فنی و استانداردهای متریال پرسیس کوارتز",
-    "specDimensionsTitle": "ابعاد استاندارد تولید",
-    "specDimensionsVal": "۳۲۰ × ۷۵ سانتیمتر | ۳۲۰ × ۹۲ سانتیمتر",
-    "specThicknessTitle": "ضخامت‌ها",
-    "specThicknessVal": "۱۲ میلیمتر | ۲۰ میلیمتر | ۳۰ میلیمتر (سفارشی)",
-    "specFinishesTitle": "نوع پرداخت سطح",
-    "specFinishesVal": "براق (Polished) | مات (Honed)",
-    "specStructureTitle": "ساختار فیزیکی",
-    "specStructureVal": "متراکم، فاقد تخلخل و نفوذناپذیر در شرایط خلأ",
-    "specSafetyTitle": "بهداشت و سلامت",
-    "specSafetyVal": "سطح آنتی‌باکتریال و مقاوم در برابر لکه و اسیدهای خانگی",
-    "specCareTitle": "نظافت و نگهداری",
-    "specCareVal": "شستشوی آسان با آب گرم و شوینده ملایم بدون نیاز به پولیش",
+    "techSubtitle": "مشخصات فنی و استانداردهای مهندسی",
+    "specDimensionsTitle": "ابعاد اسلب",
+    "specThicknessTitle": "ضخامت استاندارد",
+    "specFinishesTitle": "فینیش و پرداخت",
     "applicationsTitle": "کاربردهای پیشنهادی",
-    "appKitchen": "رویه کابینت و جزیره آشپزخانه",
-    "appKitchenDesc": "مقاومت بالا در برابر سایش، حرارت ظروف و لکه‌های سرسخت غذایی.",
-    "appVanity": "سرویس‌های بهداشتی و روشویی",
-    "appVanityDesc": "نفوذناپذیری کامل در برابر رطوبت مداوم و ممانعت از رشد باکتری و قارچ.",
-    "appCommercial": "پروژه‌های تجاری و درمانی",
-    "appCommercialDesc": "دوام بالا در فضاهای پرتردد، میزهای آزمایشگاهی و المان‌های دکوراتیو."
+    "appKitchen": "رویه کابینت و جزیره",
+    "appKitchenDesc": "مقاومت بالا در برابر سایش، حرارت ظروف و لکه‌های سرسخت.",
+    "appVanity": "روشویی و حمام",
+    "appVanityDesc": "نفوذناپذیری کامل در برابر رطوبت مداوم.",
+    "appCommercial": "پروژه‌های تجاری",
+    "appCommercialDesc": "دوام بالا در فضاهای پرتردد و میزهای آزمایشگاهی."
   }
 }
 </file>
@@ -7828,11 +7599,32 @@ export default async function HomePage({
     "onDemand": "إنتاج حسب الطلب"
   },
   "ProductDetail": {
-    "thicknesses": "السماكات القياسية المتوفرة",
-    "finishes": "معالجة وتشطيب السطح",
+    "home": "الرئيسية",
+    "products": "المنتجات",
+    "thickness": "السماكة",
+    "finish": "معالجة السطح",
+    "inStock": "متوفر",
+    "onDemand": "إنتاج حسب الطلب",
     "requestSample": "طلب عينة منتج",
+    "requestSampleDesc": "إرسال عينات ملموسة للمهندسين المعماريين",
     "findDealer": "البحث عن موزع",
-    "downloadSpecs": "تحميل المواصفات الفنية"
+    "downloadSpecs": "تحميل المواصفات الفنية",
+    "share": "مشاركة",
+    "copied": "تم النسخ!",
+    "fullScan": "مسح كامل للوح",
+    "textureZoom": "تكبير النسيج",
+    "techTitle": "Technical Details",
+    "techSubtitle": "المواصفات الفنية والمعايير الهندسية",
+    "specDimensionsTitle": "الأبعاد",
+    "specThicknessTitle": "السماكات القياسية",
+    "specFinishesTitle": "التشطيبات",
+    "applicationsTitle": "التطبيقات المعمارية",
+    "appKitchen": "أسطح المطابخ والجزر",
+    "appKitchenDesc": "مقاومة عالية للتآكل وحرارة الأواني والبقع الصعبة.",
+    "appVanity": "المغاسل والحمامات",
+    "appVanityDesc": "بنية غير مسامية بالكامل مقاومة للرطوبة المستمرة.",
+    "appCommercial": "المشاريع التجارية",
+    "appCommercialDesc": "متانة استثنائية في الأماكن المزدحمة والمختبرات."
   }
 }
 </file>
@@ -7971,11 +7763,32 @@ export default async function HomePage({
     "onDemand": "On Demand"
   },
   "ProductDetail": {
-    "thicknesses": "Available Thicknesses",
-    "finishes": "Surface Finishes",
+    "home": "Home",
+    "products": "Products",
+    "thickness": "Thickness",
+    "finish": "Finish",
+    "inStock": "In Stock",
+    "onDemand": "On Demand",
     "requestSample": "Request a Sample",
+    "requestSampleDesc": "Get touchable samples for your projects",
     "findDealer": "Find a Dealer",
-    "downloadSpecs": "Download Technical Specs"
+    "downloadSpecs": "Download Specs",
+    "share": "Share",
+    "copied": "Copied!",
+    "fullScan": "Full Slab Scan",
+    "textureZoom": "Texture Zoom",
+    "techTitle": "Technical Details",
+    "techSubtitle": "Engineering Standards & Specifications",
+    "specDimensionsTitle": "Dimensions",
+    "specThicknessTitle": "Thicknesses",
+    "specFinishesTitle": "Surface Finishes",
+    "applicationsTitle": "Architectural Applications",
+    "appKitchen": "Kitchen Countertops",
+    "appKitchenDesc": "High resistance to abrasion, heat, and stubborn stains.",
+    "appVanity": "Vanities & Bathrooms",
+    "appVanityDesc": "Completely non-porous structure against constant moisture.",
+    "appCommercial": "Commercial Projects",
+    "appCommercialDesc": "Extreme durability in high-traffic spaces and clinical labs."
   }
 }
 </file>

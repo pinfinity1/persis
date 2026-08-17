@@ -47,27 +47,7 @@ export const excelProductRowSchema = z.object({
     (val) => (val ? String(val).trim().toLowerCase() : undefined),
     z.string().optional(),
   ),
-  dimension_slugs: z.preprocess(
-    (val) => (val ? String(val).trim() : undefined),
-    z.string().optional(),
-  ),
 
-  thicknesses: z.preprocess(
-    (val) => (val ? String(val).trim() : "12mm,20mm"),
-    z.string().min(2, "ضخامت‌ها الزامی است"),
-  ),
-  custom_thickness_available: z.preprocess((val) => {
-    if (typeof val === "boolean") return val;
-    const s = String(val ?? "")
-      .trim()
-      .toLowerCase();
-    return s === "true" || s === "1" || s === "yes" || s === "بله";
-  }, z.boolean().default(false)),
-
-  finishes: z.preprocess(
-    (val) => (val ? String(val).trim().toLowerCase() : "polished"),
-    z.string().min(2, "فینیش سطح الزامی است"),
-  ),
   is_in_stock: z.preprocess(
     (val) => {
       const s = String(val ?? "")

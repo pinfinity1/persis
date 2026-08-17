@@ -12,6 +12,8 @@ import { Categories } from "./payload/collections/Categories";
 import { Colors } from "./payload/collections/Colors";
 import { VeinPatterns } from "./payload/collections/VeinPatterns";
 import { Dimensions } from "./payload/collections/Dimensions";
+import { Thicknesses } from "./payload/collections/Thicknesses";
+import { Finishes } from "./payload/collections/Finishes";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -29,6 +31,8 @@ export default buildConfig({
     Colors,
     VeinPatterns,
     Dimensions,
+    Thicknesses,
+    Finishes,
     Products,
   ],
 
