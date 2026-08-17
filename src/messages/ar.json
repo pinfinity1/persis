@@ -131,10 +131,31 @@
     "onDemand": "إنتاج حسب الطلب"
   },
   "ProductDetail": {
-    "thicknesses": "السماكات القياسية المتوفرة",
-    "finishes": "معالجة وتشطيب السطح",
+    "home": "الرئيسية",
+    "products": "المنتجات",
+    "thickness": "السماكة",
+    "finish": "معالجة السطح",
+    "inStock": "متوفر",
+    "onDemand": "إنتاج حسب الطلب",
     "requestSample": "طلب عينة منتج",
+    "requestSampleDesc": "إرسال عينات ملموسة للمهندسين المعماريين",
     "findDealer": "البحث عن موزع",
-    "downloadSpecs": "تحميل المواصفات الفنية"
+    "downloadSpecs": "تحميل المواصفات الفنية",
+    "share": "مشاركة",
+    "copied": "تم النسخ!",
+    "fullScan": "مسح كامل للوح",
+    "textureZoom": "تكبير النسيج",
+    "techTitle": "Technical Details",
+    "techSubtitle": "المواصفات الفنية والمعايير الهندسية",
+    "specDimensionsTitle": "الأبعاد",
+    "specThicknessTitle": "السماكات القياسية",
+    "specFinishesTitle": "التشطيبات",
+    "applicationsTitle": "التطبيقات المعمارية",
+    "appKitchen": "أسطح المطابخ والجزر",
+    "appKitchenDesc": "مقاومة عالية للتآكل وحرارة الأواني والبقع الصعبة.",
+    "appVanity": "المغاسل والحمامات",
+    "appVanityDesc": "بنية غير مسامية بالكامل مقاومة للرطوبة المستمرة.",
+    "appCommercial": "المشاريع التجارية",
+    "appCommercialDesc": "متانة استثنائية في الأماكن المزدحمة والمختبرات."
   }
 }

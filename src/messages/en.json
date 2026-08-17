@@ -131,10 +131,31 @@
     "onDemand": "On Demand"
   },
   "ProductDetail": {
-    "thicknesses": "Available Thicknesses",
-    "finishes": "Surface Finishes",
+    "home": "Home",
+    "products": "Products",
+    "thickness": "Thickness",
+    "finish": "Finish",
+    "inStock": "In Stock",
+    "onDemand": "On Demand",
     "requestSample": "Request a Sample",
+    "requestSampleDesc": "Get touchable samples for your projects",
     "findDealer": "Find a Dealer",
-    "downloadSpecs": "Download Technical Specs"
+    "downloadSpecs": "Download Specs",
+    "share": "Share",
+    "copied": "Copied!",
+    "fullScan": "Full Slab Scan",
+    "textureZoom": "Texture Zoom",
+    "techTitle": "Technical Details",
+    "techSubtitle": "Engineering Standards & Specifications",
+    "specDimensionsTitle": "Dimensions",
+    "specThicknessTitle": "Thicknesses",
+    "specFinishesTitle": "Surface Finishes",
+    "applicationsTitle": "Architectural Applications",
+    "appKitchen": "Kitchen Countertops",
+    "appKitchenDesc": "High resistance to abrasion, heat, and stubborn stains.",
+    "appVanity": "Vanities & Bathrooms",
+    "appVanityDesc": "Completely non-porous structure against constant moisture.",
+    "appCommercial": "Commercial Projects",
+    "appCommercialDesc": "Extreme durability in high-traffic spaces and clinical labs."
   }
 }

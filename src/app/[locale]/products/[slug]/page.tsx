@@ -6,10 +6,12 @@ import { getTranslations } from "next-intl/server";
 import {
   getProductBySlugService,
   extractCategoryTitle,
+  extractCategorySlug,
 } from "@/services/product.service";
 import { ProductGallery } from "@/components/products/product-gallery";
-import { Button } from "@/components/ui/button";
-import { Download, MapPin, Box } from "lucide-react";
+import { ProductConfigurator } from "@/components/products/product-configurator";
+import { ProductSpecsMatrix } from "@/components/products/product-specs-matrix";
+import { ChevronRight, ChevronLeft } from "lucide-react";
 
 interface ProductPageProps {
   params: Promise<{ locale: string; slug: string }>;
@@ -55,15 +57,17 @@ export async function generateMetadata({
 
 export default async function ProductDetailPage({ params }: ProductPageProps) {
   const { locale, slug } = await params;
-  const product = await getProductBySlugService(
-    slug,
-    locale as "fa" | "en" | "ar",
-  );
+  const currentLocale = locale as "fa" | "en" | "ar";
+
+  const product = await getProductBySlugService(slug, currentLocale);
   const t = await getTranslations({ locale, namespace: "ProductDetail" });
 
   if (!product) {
     notFound();
   }
+
+  const categoryTitle = extractCategoryTitle(product.category);
+  const categorySlug = extractCategorySlug(product.category);
 
   const thumbnailUrl =
     typeof product.thumbnail === "object" && product.thumbnail?.url
@@ -72,7 +76,8 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         ? product.thumbnail
         : "/PersisQuartz-Red.png";
 
-  const categoryTitle = extractCategoryTitle(product.category);
+  const isRtl = locale === "fa" || locale === "ar";
+  const BreadcrumbArrow = isRtl ? ChevronLeft : ChevronRight;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -81,6 +86,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     image: [thumbnailUrl],
     description: product.description,
     sku: product.code,
+    category: categoryTitle,
     brand: {
       "@type": "Brand",
       name: "Persis Quartz",
@@ -88,128 +94,60 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   };
 
   return (
-    <main className="container mx-auto px-4 sm:px-12 py-24 sm:py-28 min-h-screen space-y-16">
+    <main className="container mx-auto px-4 sm:px-12 py-24 sm:py-28 min-h-screen space-y-14">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+      {/* ۱. ناوبری و Breadcrumb بدون فونت مونو */}
+      <nav className="flex items-center gap-2 text-xs text-muted-foreground pb-3 border-b border-border/30">
+        <Link href="/" className="hover:text-foreground transition-colors">
+          {t("home")}
+        </Link>
+        <BreadcrumbArrow className="h-3.5 w-3.5 opacity-40" />
+        <Link
+          href="/products"
+          className="hover:text-foreground transition-colors"
+        >
+          {t("products")}
+        </Link>
+        {categoryTitle && (
+          <>
+            <BreadcrumbArrow className="h-3.5 w-3.5 opacity-40" />
+            <Link
+              href={`/products?category=${categorySlug}`}
+              className="hover:text-foreground transition-colors"
+            >
+              {categoryTitle}
+            </Link>
+          </>
+        )}
+        <BreadcrumbArrow className="h-3.5 w-3.5 opacity-40" />
+        <span className="text-primary font-medium">{product.title}</span>
+      </nav>
+
+      {/* ۲. گالری عمودی و فرم انتخاب مشخصات */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start">
         <div className="lg:col-span-6">
           <ProductGallery
             mainThumbnailUrl={thumbnailUrl}
             title={product.title}
+            code={product.code}
             gallery={product.gallery}
           />
         </div>
 
-        <div className="lg:col-span-6 space-y-8">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <span className="text-xs font-mono tracking-widest text-primary uppercase border border-primary/30 px-2 py-0.5">
-                {product.code}
-              </span>
-              {categoryTitle && (
-                <span className="text-xs font-mono text-muted-foreground uppercase">
-                  {categoryTitle}
-                </span>
-              )}
-            </div>
-
-            <h1 className="text-3xl sm:text-4xl font-light text-foreground">
-              {product.title}
-            </h1>
-          </div>
-
-          <p className="text-sm font-light text-muted-foreground leading-relaxed">
-            {product.description}
-          </p>
-
-          <div className="space-y-6 border-y border-border/40 py-6">
-            <div className="space-y-2">
-              <label className="text-xs uppercase font-mono tracking-wider text-foreground block">
-                {t("thicknesses")}:
-              </label>
-              <div className="flex items-center gap-2 flex-wrap">
-                {(
-                  product.available_thicknesses || ["12mm", "20mm", "30mm"]
-                ).map((thick) => (
-                  <span
-                    key={thick}
-                    className="text-xs font-mono border border-border px-3 py-1.5 bg-card text-foreground"
-                  >
-                    {thick}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs uppercase font-mono tracking-wider text-foreground block">
-                {t("finishes")}:
-              </label>
-              <div className="flex items-center gap-2 flex-wrap">
-                {(product.finishes || ["polished", "honed"]).map((fin) => (
-                  <span
-                    key={fin}
-                    className="text-xs font-mono uppercase border border-border px-3 py-1.5 bg-card text-foreground"
-                  >
-                    {fin}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* اکشن‌ها */}
-          <div className="space-y-3 pt-2">
-            <Button
-              asChild
-              className="w-full h-12 bg-primary text-primary-foreground hover:bg-primary/90 rounded-none text-xs tracking-wider uppercase font-medium"
-            >
-              <Link
-                href={`/contact?type=sample&code=${product.code}`}
-                className="flex items-center justify-center gap-2"
-              >
-                <Box className="h-4 w-4" />
-                <span>{t("requestSample")}</span>
-              </Link>
-            </Button>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Button
-                asChild
-                variant="outline"
-                className="w-full h-11 border-border hover:bg-muted text-foreground rounded-none text-xs tracking-wider uppercase"
-              >
-                <Link
-                  href="/dealers"
-                  className="flex items-center justify-center gap-2"
-                >
-                  <MapPin className="h-4 w-4 text-primary" />
-                  <span>{t("findDealer")}</span>
-                </Link>
-              </Button>
-
-              <Button
-                asChild
-                variant="outline"
-                className="w-full h-11 border-border hover:bg-muted text-foreground rounded-none text-xs tracking-wider uppercase"
-              >
-                <a
-                  href={product.specsSheetUrl || "/catalogs"}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2"
-                >
-                  <Download className="h-4 w-4 text-muted-foreground" />
-                  <span>{t("downloadSpecs")}</span>
-                </a>
-              </Button>
-            </div>
-          </div>
+        <div className="lg:col-span-6">
+          <ProductConfigurator
+            product={product}
+            categoryTitle={categoryTitle}
+          />
         </div>
       </div>
+
+      {/* ۳. مشخصات فنی استاندارد (Technical Details) داینامیک */}
+      <ProductSpecsMatrix locale={locale} product={product} />
     </main>
   );
 }

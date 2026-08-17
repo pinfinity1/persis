@@ -95,9 +95,11 @@ src/
       product-showcase.tsx
     products/
       product-card.tsx
+      product-configurator.tsx
       product-filters-client.tsx
       product-gallery.tsx
       product-grid-client.tsx
+      product-specs-matrix.tsx
       skeleton-loader.tsx
     shared/
       footer.tsx
@@ -155,6 +157,370 @@ tsconfig.json
 
 <files>
 This section contains the contents of the repository's files.
+
+<file path="src/components/products/product-configurator.tsx">
+"use client";
+
+import React, { useState } from "react";
+import { Link } from "@/i18n/routing";
+import { useTranslations } from "next-intl";
+import { Button } from "@/components/ui/button";
+import {
+  Box,
+  MapPin,
+  FileText,
+  Share2,
+  Check,
+  CheckCircle2,
+  ShieldCheck,
+  Clock,
+  Sparkles,
+} from "lucide-react";
+import type { ProductItem } from "@/services/product.service";
+
+interface ProductConfiguratorProps {
+  product: ProductItem;
+  categoryTitle: string;
+}
+
+export const ProductConfigurator: React.FC<ProductConfiguratorProps> = ({
+  product,
+  categoryTitle,
+}) => {
+  const t = useTranslations("ProductDetail");
+
+  const thicknesses = product.available_thicknesses?.length
+    ? product.available_thicknesses
+    : ["12mm", "20mm", "30mm"];
+
+  const finishes = product.finishes?.length
+    ? product.finishes
+    : ["polished", "honed"];
+
+  const [selectedThickness, setSelectedThickness] = useState(thicknesses[0]);
+  const [selectedFinish, setSelectedFinish] = useState(finishes[0]);
+  const [copied, setCopied] = useState(false);
+
+  const sampleUrl = `/contact?type=sample&code=${encodeURIComponent(
+    product.code,
+  )}&thickness=${encodeURIComponent(
+    selectedThickness,
+  )}&finish=${encodeURIComponent(selectedFinish)}`;
+
+  const handleShare = async () => {
+    if (typeof window !== "undefined") {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    }
+  };
+
+  const isStockAvailable = product.is_in_stock === "in_stock";
+
+  return (
+    <div className="space-y-8">
+      {/* ۱. هدر شناسه و وضعیت موجودی */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono font-bold tracking-widest text-primary uppercase border border-primary/40 bg-primary/5 px-2.5 py-1">
+              CODE: {product.code}
+            </span>
+            {categoryTitle && (
+              <span className="text-xs font-mono text-muted-foreground uppercase border border-border/50 px-2 py-1">
+                {categoryTitle}
+              </span>
+            )}
+          </div>
+
+          <button
+            onClick={handleShare}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {copied ? (
+              <>
+                <Check className="h-3.5 w-3.5 text-primary" />
+                <span className="text-primary font-medium">{t("copied")}</span>
+              </>
+            ) : (
+              <>
+                <Share2 className="h-3.5 w-3.5" />
+                <span>{t("share")}</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-light text-foreground tracking-tight">
+          {product.title}
+        </h1>
+
+        <div className="flex items-center gap-2 pt-1 text-xs">
+          {isStockAvailable ? (
+            <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              {t("inStock")}
+            </span>
+          ) : (
+            <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-medium">
+              <Clock className="h-3.5 w-3.5" />
+              {t("onDemand")}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* ۲. توضیحات کانسپت و متریال */}
+      {product.description && (
+        <p className="text-sm font-light text-muted-foreground leading-relaxed">
+          {product.description}
+        </p>
+      )}
+
+      {/* ۳. انتخابگر تعاملی متغیرها (ضخامت و فینیش) */}
+      <div className="space-y-6 border-y border-border/50 py-6 bg-card/40 p-4">
+        {/* انتخاب ضخامت */}
+        <div className="space-y-2.5">
+          <div className="flex items-center justify-between">
+            <label className="text-xs uppercase font-mono tracking-wider text-foreground font-semibold">
+              {t("thickness")}
+            </label>
+            <span className="text-xs font-mono text-primary font-bold">
+              {selectedThickness}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+            {thicknesses.map((th) => (
+              <button
+                key={th}
+                onClick={() => setSelectedThickness(th)}
+                className={`py-2.5 px-3 text-xs font-mono border transition-all text-center ${
+                  selectedThickness === th
+                    ? "border-primary bg-primary text-primary-foreground font-bold shadow-sm"
+                    : "border-border/60 bg-card hover:border-border text-foreground"
+                }`}
+              >
+                {th}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* انتخاب نوع پرداخت و فینیش */}
+        <div className="space-y-2.5">
+          <div className="flex items-center justify-between">
+            <label className="text-xs uppercase font-mono tracking-wider text-foreground font-semibold">
+              {t("finish")}
+            </label>
+            <span className="text-xs font-mono text-primary font-bold uppercase">
+              {selectedFinish}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {finishes.map((fn) => (
+              <button
+                key={fn}
+                onClick={() => setSelectedFinish(fn)}
+                className={`py-2.5 px-3 text-xs font-mono uppercase border transition-all text-center flex items-center justify-center gap-2 ${
+                  selectedFinish === fn
+                    ? "border-primary bg-primary text-primary-foreground font-bold shadow-sm"
+                    : "border-border/60 bg-card hover:border-border text-foreground"
+                }`}
+              >
+                <span>{fn}</span>
+                {selectedFinish === fn && <Check className="h-3 w-3" />}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ۴. اکشن‌های تبدیل B2B (Conversion CTA) */}
+      <div className="space-y-3 pt-2">
+        <Button
+          asChild
+          size="lg"
+          className="w-full h-14 bg-primary text-primary-foreground hover:bg-primary/90 rounded-none text-xs sm:text-sm tracking-wider uppercase font-semibold shadow-md transition-transform active:scale-[0.99]"
+        >
+          <Link
+            href={sampleUrl}
+            className="flex items-center justify-center gap-3"
+          >
+            <Box className="h-5 w-5" />
+            <div className="text-start">
+              <span>{t("requestSample")}</span>
+              <span className="block text-[10px] font-normal opacity-80 font-sans">
+                {t("requestSampleDesc")}
+              </span>
+            </div>
+          </Link>
+        </Button>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Button
+            asChild
+            variant="outline"
+            className="w-full h-12 border-border/80 hover:bg-muted text-foreground rounded-none text-xs tracking-wider uppercase font-medium"
+          >
+            <Link
+              href="/dealers"
+              className="flex items-center justify-center gap-2"
+            >
+              <MapPin className="h-4 w-4 text-primary" />
+              <span>{t("findDealer")}</span>
+            </Link>
+          </Button>
+
+          <Button
+            asChild
+            variant="outline"
+            className="w-full h-12 border-border/80 hover:bg-muted text-foreground rounded-none text-xs tracking-wider uppercase font-medium"
+          >
+            <a
+              href={product.specsSheetUrl || "/catalogs"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2"
+            >
+              <FileText className="h-4 w-4 text-muted-foreground" />
+              <span>{t("downloadTds")}</span>
+            </a>
+          </Button>
+        </div>
+      </div>
+
+      {/* ۵. نشان اصالت و کیفیت مهندسی */}
+      <div className="p-4 bg-muted/20 border border-border/40 flex items-center gap-3 text-xs text-muted-foreground">
+        <ShieldCheck className="h-5 w-5 text-primary shrink-0" />
+        <span>
+          تضمین کیفیت ساختاری با متریال برتون (Bretonstone Technology) و ۱۰ سال
+          ضمانت محدود.
+        </span>
+      </div>
+    </div>
+  );
+};
+</file>
+
+<file path="src/components/products/product-specs-matrix.tsx">
+import React from "react";
+import { getTranslations } from "next-intl/server";
+import {
+  ShieldAlert,
+  Flame,
+  Droplets,
+  Sparkles,
+  Layers,
+  Activity,
+  CheckCircle2,
+  Utensils,
+  Bath,
+  Building2,
+} from "lucide-react";
+
+interface ProductSpecsMatrixProps {
+  locale: string;
+}
+
+export async function ProductSpecsMatrix({ locale }: ProductSpecsMatrixProps) {
+  const t = await getTranslations({ locale, namespace: "ProductDetail" });
+
+  const specs = [
+    {
+      label: t("specDimension"),
+      value: "320 × 75 cm / 320 × 92 cm / 320 × 160 cm",
+    },
+    { label: t("specComposition"), value: t("specCompositionVal") },
+    { label: t("specHardness"), value: t("specHardnessVal") },
+    { label: t("specAbsorption"), value: t("specAbsorptionVal") },
+    { label: t("specMaintenance"), value: t("specMaintenanceVal") },
+  ];
+
+  const applications = [
+    {
+      title: t("appKitchen"),
+      desc: t("appKitchenDesc"),
+      icon: Utensils,
+    },
+    {
+      title: t("appVanity"),
+      desc: t("appVanityDesc"),
+      icon: Bath,
+    },
+    {
+      title: t("appCommercial"),
+      desc: t("appCommercialDesc"),
+      icon: Building2,
+    },
+  ];
+
+  return (
+    <div className="space-y-16 pt-12 border-t border-border/40">
+      {/* جدول مشخصات فنی استاندارد */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <span className="h-px w-8 bg-primary" />
+          <h2 className="text-xl sm:text-2xl font-light text-foreground uppercase tracking-tight">
+            {t("specsTitle")}
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {specs.map((item, idx) => (
+            <div
+              key={idx}
+              className="p-4 bg-card border border-border/50 flex flex-col justify-between space-y-1.5 hover:border-primary/40 transition-colors"
+            >
+              <span className="text-[11px] font-mono uppercase tracking-widest text-primary">
+                {item.label}
+              </span>
+              <span className="text-sm font-light text-foreground">
+                {item.value}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* کاربری‌های معمارانه (Architectural Applications) */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <span className="h-px w-8 bg-primary" />
+          <h2 className="text-xl sm:text-2xl font-light text-foreground uppercase tracking-tight">
+            {t("applicationsTitle")}
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {applications.map((app, idx) => {
+            const Icon = app.icon;
+            return (
+              <div
+                key={idx}
+                className="p-6 bg-card border border-border/50 space-y-4 hover:border-primary/60 transition-all duration-300 group"
+              >
+                <div className="p-3 bg-muted/40 w-fit border border-border/40 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                  <Icon className="h-5 w-5" />
+                </div>
+                <div className="space-y-1.5">
+                  <h3 className="text-base font-medium text-foreground">
+                    {app.title}
+                  </h3>
+                  <p className="text-xs text-muted-foreground font-light leading-relaxed">
+                    {app.desc}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+</file>
 
 <file path="docs/content.md">
 .۱
@@ -300,322 +666,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => (
 );
 
 export default Layout;
-</file>
-
-<file path="src/app/[locale]/products/[slug]/page.tsx">
-import React from "react";
-import { notFound } from "next/navigation";
-import { Metadata } from "next";
-import { Link } from "@/i18n/routing";
-import { getTranslations } from "next-intl/server";
-import {
-  getProductBySlugService,
-  extractCategoryTitle,
-} from "@/services/product.service";
-import { ProductGallery } from "@/components/products/product-gallery";
-import { Button } from "@/components/ui/button";
-import { Download, MapPin, Box } from "lucide-react";
-
-interface ProductPageProps {
-  params: Promise<{ locale: string; slug: string }>;
-}
-
-export async function generateMetadata({
-  params,
-}: ProductPageProps): Promise<Metadata> {
-  const { locale, slug } = await params;
-  const product = await getProductBySlugService(
-    slug,
-    locale as "fa" | "en" | "ar",
-  );
-
-  if (!product) {
-    return { title: "Product Not Found | Persis Quartz" };
-  }
-
-  const metaTitle =
-    product.meta_title || `${product.title} (${product.code}) | Persis Quartz`;
-  const metaDescription =
-    product.meta_description ||
-    product.description ||
-    `اسلب سنگ کوارتز کد ${product.code}`;
-
-  const imageFallback =
-    typeof product.thumbnail === "object" && product.thumbnail?.url
-      ? product.thumbnail.url
-      : typeof product.thumbnail === "string"
-        ? product.thumbnail
-        : "/PersisQuartz-Red.png";
-
-  return {
-    title: metaTitle,
-    description: metaDescription,
-    openGraph: {
-      title: metaTitle,
-      description: metaDescription,
-      images: [imageFallback],
-    },
-  };
-}
-
-export default async function ProductDetailPage({ params }: ProductPageProps) {
-  const { locale, slug } = await params;
-  const product = await getProductBySlugService(
-    slug,
-    locale as "fa" | "en" | "ar",
-  );
-  const t = await getTranslations({ locale, namespace: "ProductDetail" });
-
-  if (!product) {
-    notFound();
-  }
-
-  const thumbnailUrl =
-    typeof product.thumbnail === "object" && product.thumbnail?.url
-      ? product.thumbnail.url
-      : typeof product.thumbnail === "string"
-        ? product.thumbnail
-        : "/PersisQuartz-Red.png";
-
-  const categoryTitle = extractCategoryTitle(product.category);
-
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: product.title,
-    image: [thumbnailUrl],
-    description: product.description,
-    sku: product.code,
-    brand: {
-      "@type": "Brand",
-      name: "Persis Quartz",
-    },
-  };
-
-  return (
-    <main className="container mx-auto px-4 sm:px-12 py-24 sm:py-28 min-h-screen space-y-16">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-        <div className="lg:col-span-6">
-          <ProductGallery
-            mainThumbnailUrl={thumbnailUrl}
-            title={product.title}
-            gallery={product.gallery}
-          />
-        </div>
-
-        <div className="lg:col-span-6 space-y-8">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <span className="text-xs font-mono tracking-widest text-primary uppercase border border-primary/30 px-2 py-0.5">
-                {product.code}
-              </span>
-              {categoryTitle && (
-                <span className="text-xs font-mono text-muted-foreground uppercase">
-                  {categoryTitle}
-                </span>
-              )}
-            </div>
-
-            <h1 className="text-3xl sm:text-4xl font-light text-foreground">
-              {product.title}
-            </h1>
-          </div>
-
-          <p className="text-sm font-light text-muted-foreground leading-relaxed">
-            {product.description}
-          </p>
-
-          <div className="space-y-6 border-y border-border/40 py-6">
-            <div className="space-y-2">
-              <label className="text-xs uppercase font-mono tracking-wider text-foreground block">
-                {t("thicknesses")}:
-              </label>
-              <div className="flex items-center gap-2 flex-wrap">
-                {(
-                  product.available_thicknesses || ["12mm", "20mm", "30mm"]
-                ).map((thick) => (
-                  <span
-                    key={thick}
-                    className="text-xs font-mono border border-border px-3 py-1.5 bg-card text-foreground"
-                  >
-                    {thick}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs uppercase font-mono tracking-wider text-foreground block">
-                {t("finishes")}:
-              </label>
-              <div className="flex items-center gap-2 flex-wrap">
-                {(product.finishes || ["polished", "honed"]).map((fin) => (
-                  <span
-                    key={fin}
-                    className="text-xs font-mono uppercase border border-border px-3 py-1.5 bg-card text-foreground"
-                  >
-                    {fin}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* اکشن‌ها */}
-          <div className="space-y-3 pt-2">
-            <Button
-              asChild
-              className="w-full h-12 bg-primary text-primary-foreground hover:bg-primary/90 rounded-none text-xs tracking-wider uppercase font-medium"
-            >
-              <Link
-                href={`/contact?type=sample&code=${product.code}`}
-                className="flex items-center justify-center gap-2"
-              >
-                <Box className="h-4 w-4" />
-                <span>{t("requestSample")}</span>
-              </Link>
-            </Button>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Button
-                asChild
-                variant="outline"
-                className="w-full h-11 border-border hover:bg-muted text-foreground rounded-none text-xs tracking-wider uppercase"
-              >
-                <Link
-                  href="/dealers"
-                  className="flex items-center justify-center gap-2"
-                >
-                  <MapPin className="h-4 w-4 text-primary" />
-                  <span>{t("findDealer")}</span>
-                </Link>
-              </Button>
-
-              <Button
-                asChild
-                variant="outline"
-                className="w-full h-11 border-border hover:bg-muted text-foreground rounded-none text-xs tracking-wider uppercase"
-              >
-                <a
-                  href={product.specsSheetUrl || "/catalogs"}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2"
-                >
-                  <Download className="h-4 w-4 text-muted-foreground" />
-                  <span>{t("downloadSpecs")}</span>
-                </a>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-  );
-}
-</file>
-
-<file path="src/app/[locale]/products/page.tsx">
-import React, { Suspense } from "react";
-import {
-  getProductsService,
-  getCategoriesService,
-  getColorsService,
-} from "@/services/product.service";
-import ProductGridClient from "@/components/products/product-grid-client";
-import { ProductFiltersClient } from "@/components/products/product-filters-client";
-import SkeletonLoader from "@/components/products/skeleton-loader";
-
-interface PageProps {
-  params: Promise<{ locale: string }>;
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}
-
-export async function generateMetadata({ params }: PageProps) {
-  const { locale } = await params;
-  return {
-    title:
-      locale === "fa"
-        ? "محصولات و اسلب‌های سنگ کوارتز | پرسیس کوارتز"
-        : "Quartz Stone Products & Slabs | Persis Quartz",
-    description:
-      "مشاهده و بررسی انواع اسلب‌های سنگ کوارتز مهندسی‌شده پرسیس کوارتز در طرح‌ها و کدهای مختلف برای کارهای ساختمانی و معماری.",
-  };
-}
-
-export default async function ProductsPage({
-  params,
-  searchParams,
-}: PageProps) {
-  const { locale } = await params;
-  const sParams = await searchParams;
-
-  const currentLocale = locale as "fa" | "en" | "ar";
-
-  const rawCategory = sParams.category || sParams.cat;
-  const category = typeof rawCategory === "string" ? rawCategory : undefined;
-  const color = typeof sParams.color === "string" ? sParams.color : undefined;
-  const search =
-    typeof sParams.search === "string" ? sParams.search : undefined;
-
-  // فراخوانی هم‌زمان لیست محصولات و داده‌های فیلتر پویا از دیتابیس
-  const [{ data: initialProducts, meta: initialMeta }, categories, colors] =
-    await Promise.all([
-      getProductsService({
-        locale: currentLocale,
-        page: 1,
-        limit: 9,
-        category,
-        color,
-        search,
-      }),
-      getCategoriesService(currentLocale),
-      getColorsService(currentLocale),
-    ]);
-
-  return (
-    <main className="container mx-auto px-4 sm:px-12 py-24 sm:py-28 min-h-screen">
-      <div
-        dir="ltr"
-        className="relative mb-12 pt-4 pb-2 select-none overflow-hidden"
-      >
-        <h1 className="sr-only">اسلب‌های سنگ کوارتز پرسیس کوارتز</h1>
-        <h1 className="text-6xl sm:text-8xl lg:text-9xl font-black text-foreground/[0.04] uppercase tracking-tighter leading-none">
-          COLLECTION
-        </h1>
-
-        <div className="absolute bottom-2 start-0 z-10 flex items-center gap-3">
-          <span className="h-px w-6 bg-primary" />
-          <span className="text-[11px] font-mono tracking-[0.3em] text-primary uppercase">
-            Persis Quartz Catalog
-          </span>
-        </div>
-      </div>
-
-      <div className="flex flex-col md:flex-row gap-8 items-start">
-        <aside className="w-full md:w-64 shrink-0">
-          <ProductFiltersClient categories={categories} colors={colors} />
-        </aside>
-
-        <section className="flex-1 w-full">
-          <Suspense fallback={<SkeletonLoader />}>
-            <ProductGridClient
-              initialProducts={initialProducts}
-              initialMeta={initialMeta}
-              category={category}
-              color={color}
-            />
-          </Suspense>
-        </section>
-      </div>
-    </main>
-  );
-}
 </file>
 
 <file path="src/app/[locale]/loading.tsx">
@@ -833,396 +883,6 @@ export async function GET() {
 }
 </file>
 
-<file path="src/app/api/admin/download-product-template/route.ts">
-import { NextResponse } from "next/server";
-import * as XLSX from "xlsx";
-
-export async function GET() {
-  const sampleData = [
-    {
-      code: "1101",
-      slug: "dover",
-      category_slug: "monocolor",
-      color_slug: "white",
-      title_fa: "داور",
-      title_en: "Dover",
-      title_ar: "دوفر",
-      vein_pattern_slug: "solid",
-      dimension_slugs: "320x75,320x92",
-      thicknesses: "12mm,20mm,30mm",
-      custom_thickness_available: "true",
-      finishes: "polished,honed",
-      is_in_stock: "in_stock",
-      description_fa:
-        "الهام‌گرفته از صخره‌های گچی سپید داور انگلستان؛ سفید یکدست، خالص و بدون تخلخل با بالاترین درخشش نوری مناسب آشپزخانه‌ها و فضاهای مینیمال مدرن.",
-      description_en:
-        "Pure, seamless solid white quartz surface inspired by the iconic White Cliffs of Dover. Engineered for maximum stain resistance and modern architectural spaces.",
-      description_ar:
-        "سطح كوارتز نقي وموحد بالكامل مستوحى من منحدرات دوفر البيضاء الشهيرة. مثالي للمساحات المعمارية الحديثة والمطابخ الفاخرة.",
-      meta_title_fa:
-        "اسلب سنگ کوارتز سفید ساده داور (Dover 1101) | پرسیس کوارتز",
-      meta_title_en: "Dover Pure White Quartz Slab (1101) | Persis Quartz",
-      meta_title_ar: "لوح كوارتز دوفر الأبيض النقي (1101) | برسيس كوارتز",
-      meta_description_fa:
-        "بررسی مشخصات فنی و سفارش سنگ کوارتز سفید یکدست و بدون رگه داور کد 1101. مقاوم در برابر خط و خش و لکه مناسب صفحه کابینت و کانترتاپ.",
-      meta_description_en:
-        "Explore Dover 1101 solid white engineered quartz slab. Non-porous, highly durable surface for modern kitchen islands and vanity tops.",
-      meta_description_ar:
-        "اكتشف مواصفات لوح الكوارتز الأبيض النقي دوفر 1101 غير المسامي والمقاوم للبقع والخدوش لأسطح المطابخ العصرية.",
-    },
-    {
-      code: "1606",
-      slug: "eclipse",
-      category_slug: "monocolor",
-      color_slug: "black",
-      title_fa: "اکلیپس",
-      title_en: "Eclipse",
-      title_ar: "إكليبس",
-      vein_pattern_slug: "solid",
-      dimension_slugs: "320x75,320x92",
-      thicknesses: "12mm,20mm,30mm",
-      custom_thickness_available: "true",
-      finishes: "polished,honed",
-      is_in_stock: "in_stock",
-      description_fa:
-        "مشکی عمیق، مخملی و خالص؛ تجلی تاریکی مطلق خورشیدگرفتگی در معماری مدرن با سطحی کاملاً متراکم و مقاوم در برابر لکه.",
-      description_en:
-        "Deep, velvety, pure black quartz capturing the stark drama of a total solar eclipse. Non-porous surface engineered for high-traffic luxury interiors.",
-      description_ar:
-        "أسود نقي وفاخر مستوحى من ظاهرة كسوف الشمس الكلي، يمنح المساحات المعمارية عمقاً وأناقة لا مثيل لها.",
-      meta_title_fa:
-        "اسلب سنگ کوارتز مشکی ساده اکلیپس (Eclipse 1606) | پرسیس کوارتز",
-      meta_title_en: "Eclipse Solid Black Quartz Slab (1606) | Persis Quartz",
-      meta_title_ar: "لوح كوارتز إكليبس الأسود النقي (1606) | برسيس كوارتز",
-      meta_description_fa:
-        "خرید و مشخصات اسلب کوارتز مشکی خالص اکلیپس کد 1606. سطح یکپارچه، ضد خط و خش و لکه مناسب کانترتاپ و جزیره مدرن.",
-      meta_description_en:
-        "Discover Eclipse 1606 pure solid black quartz slab. Highly durable, non-porous engineered surface for sleek modern spaces.",
-      meta_description_ar:
-        "تصفح مواصفات لوح الكوارتز الأسود الأحادي إكليبس 1606 المقاوم للبقع والخدوش للمطابخ والجزر العصرية.",
-    },
-    {
-      code: "2106",
-      slug: "aland",
-      category_slug: "veined-effect",
-      color_slug: "white",
-      title_fa: "الند",
-      title_en: "Aland",
-      title_ar: "ألاند",
-      vein_pattern_slug: "cloudy",
-      dimension_slugs: "320x75,320x92",
-      thicknesses: "12mm,20mm,30mm",
-      custom_thickness_available: "true",
-      finishes: "polished,honed",
-      is_in_stock: "in_stock",
-      description_fa:
-        "الهام‌گرفته از نخستین پرتوهای سیمین بامداد؛ سپید با سایه‌روشن‌های ابر و بادی نرم و مه‌آلود که جلوه‌ای روشن و سیال به فضا می‌بخشد.",
-      description_en:
-        "Inspired by the first radiant gleam of dawn; soft misty white with gentle cloudy transitions creating a serene, luminous ambiance.",
-      description_ar:
-        "مستوحى من أول خيوط فجر الصباح؛ أبيض سحابي ناعم بتدرجات ضبابية تضفي إشراقاً وسكينة على المكان.",
-      meta_title_fa:
-        "اسلب سنگ کوارتز سفید ابر و بادی الند (Aland 2106) | پرسیس کوارتز",
-      meta_title_en: "Aland Cloudy White Quartz Slab (2106) | Persis Quartz",
-      meta_title_ar: "لوح كوارتز ألاند الأبيض السحابي (2106) | برسيس كوارتز",
-      meta_description_fa:
-        "مشخصات و قیمت سنگ کوارتز سفید ابروبادی الند کد 2106. بافت مه‌آلود و طبیعی با دوام مهندسی‌شده مناسب کانتر و صفحات روشویی.",
-      meta_description_en:
-        "Explore Aland 2106 misty white cloudy quartz surfaces. Non-porous, elegant engineered stone for modern residential design.",
-      meta_description_ar:
-        "اكتشف أسطح كوارتز ألاند 2106 ذات التأثير السحابي الأبيض الناعم المقاومة للبكتيريا والحرارة لأسطح المطابخ.",
-    },
-    {
-      code: "2601",
-      slug: "caspian",
-      category_slug: "veined-effect",
-      color_slug: "black",
-      title_fa: "کاسپین",
-      title_en: "Caspian",
-      title_ar: "كاسبيان",
-      vein_pattern_slug: "cloudy",
-      dimension_slugs: "320x75,320x92",
-      thicknesses: "12mm,20mm,30mm",
-      custom_thickness_available: "true",
-      finishes: "polished,honed",
-      is_in_stock: "in_stock",
-      description_fa:
-        "مشکی رمزآلود با امواج و هاله‌های ابر و بادی دودی؛ تداعی‌گر خروش شبانه و عمق بی‌پایان کهن‌ترین دریای زمین.",
-      description_en:
-        "Mysterious deep black infused with subtle smoky cloudy textures, echoing the midnight depths of the Caspian Sea.",
-      description_ar:
-        "أسود غامض بتدرجات سحابية دخانية هادئة تجسد عمق وأمواج بحر قزوين في هدوء الليل.",
-      meta_title_fa:
-        "اسلب سنگ کوارتز مشکی ابر و بادی کاسپین (Caspian 2601) | پرسیس کوارتز",
-      meta_title_en: "Caspian Cloudy Black Quartz Slab (2601) | Persis Quartz",
-      meta_title_ar: "لوح كوارتز كاسبيان الأسود السحابي (2601) | برسيس كوارتز",
-      meta_description_fa:
-        "خرید اسلب کوارتز مشکی بافت‌دار و ابر و بادی کاسپین کد 2601. بافت مدرن، ضد جذب لکه مناسب دکوراسیون و جزیره لوکس.",
-      meta_description_en:
-        "Discover Caspian 2601 cloudy black quartz slab. Dense, durable, stain-resistant surface for contemporary statement islands.",
-      meta_description_ar:
-        "تسوق أسطح كوارتز كاسبيان 2601 بتأثيرات سحابية سوداء فاخرة ومقاومة عالية للصدمات للمشاريع الراقية.",
-    },
-    {
-      code: "3106",
-      slug: "arctic",
-      category_slug: "calacatta",
-      color_slug: "white",
-      title_fa: "آرکتیک",
-      title_en: "Arctic",
-      title_ar: "آركتيك",
-      vein_pattern_slug: "subtle-vein",
-      dimension_slugs: "320x75,320x92",
-      thicknesses: "12mm,20mm,30mm",
-      custom_thickness_available: "true",
-      finishes: "polished,honed",
-      is_in_stock: "in_stock",
-      description_fa:
-        "سفید یخی و درخشان با رگه‌های نازک و ظریف مشکی؛ تلاقی کنتراست مینیمال و خطوط ظریف کالاکاتا در پهنه‌ای ابدی از نور.",
-      description_en:
-        "Crisp crystalline white background traced with fine, delicate black veins, redefining modern minimalist Calacatta elegance.",
-      description_ar:
-        "أبيض بلوري ناصع بتعريقات سوداء دقيقة وناعمة تمنح تصاميم كالاكاتا لمسة عصرية فائقة النقاء.",
-      meta_title_fa:
-        "اسلب سنگ کوارتز کالاکاتا آرکتیک رگه مشکی (Arctic 3106) | پرسیس کوارتز",
-      meta_title_en:
-        "Arctic Calacatta Fine Black Vein Quartz (3106) | Persis Quartz",
-      meta_title_ar:
-        "لوح كوارتز كالاكاتا آركتيك بتعريقات سوداء دقيقة (3106) | برسيس كوارتز",
-      meta_description_fa:
-        "بررسی و سفارش اسلب کوارتز سفید رگه مشکی آرکتیک کد 3106 طرح کالاکاتا. مقاوم در برابر خط و خش مناسب کانترتاپ معمارانه.",
-      meta_description_en:
-        "Explore Arctic 3106 white quartz with fine black veins. Premium Calacatta design for sophisticated kitchen countertops.",
-      meta_description_ar:
-        "اكتشف لوح الكوارتز كالاكاتا آركتيك 3106 بتعريقات سوداء رفيعة لأسطح المطابخ والجزر المعمارية الفاخرة.",
-    },
-    {
-      code: "3108",
-      slug: "zarshouran",
-      category_slug: "calacatta",
-      color_slug: "white",
-      title_fa: "زرشوران",
-      title_en: "Zarshouran",
-      title_ar: "زرشوران",
-      vein_pattern_slug: "subtle-vein",
-      dimension_slugs: "320x75,320x92",
-      thicknesses: "12mm,20mm,30mm",
-      custom_thickness_available: "true",
-      finishes: "polished,honed",
-      is_in_stock: "in_stock",
-      description_fa:
-        "زمینه سپید شاهانه با رگه‌های مویی و درخشان طلایی؛ الهام‌گرفته از شکوه کهن رگه‌های زرین معادن زرشوران.",
-      description_en:
-        "Opulent white background enriched with delicate golden veins, capturing the prestige and warmth of precious mineral treasures.",
-      description_ar:
-        "خلفية بيضاء ملكية مزدانة بتعريقات ذهبية دقيقة وساحرة تجسد فخامة الذهب وبريق كالاكاتا الكلاسيكي.",
-      meta_title_fa:
-        "اسلب سنگ کوارتز کالاکاتا زرشوران رگه طلایی (Zarshouran 3108) | پرسیس کوارتز",
-      meta_title_en:
-        "Zarshouran Calacatta Gold Fine Vein Quartz (3108) | Persis Quartz",
-      meta_title_ar:
-        "لوح كوارتز كالاكاتا زرشوران بتعريقات ذهبية (3108) | برسيس كوارتز",
-      meta_description_fa:
-        "خرید اسلب کوارتز سفید رگه طلایی زرشوران کد 3108 طرح کالاکاتا. لوکس و نفوذناپذیر مناسب صفحات بین‌کابینتی و کانترتاپ.",
-      meta_description_en:
-        "Discover Zarshouran 3108 white quartz with subtle gold veins. High-performance Calacatta surface for timeless interiors.",
-      meta_description_ar:
-        "تصفح أسطح كوارتز كالاكاتا زرشوران 3108 بتعريقات ذهبية دقيقة ومقاومة عالية للبقع للمطابخ الحديثة.",
-    },
-    {
-      code: "3301",
-      slug: "hengam",
-      category_slug: "calacatta",
-      color_slug: "grey",
-      title_fa: "هنگام",
-      title_en: "Hengam",
-      title_ar: "هنغام",
-      vein_pattern_slug: "subtle-vein",
-      dimension_slugs: "320x75,320x92",
-      thicknesses: "12mm,20mm,30mm",
-      custom_thickness_available: "true",
-      finishes: "polished,honed",
-      is_in_stock: "in_stock",
-      description_fa:
-        "طوسی نقره‌ای و باوقار با رگه‌های نازک و درخشان سپید؛ تداعی‌گر انعکاس تلالو مهتاب بر آب‌های صخره‌ای جزیره هنگام.",
-      description_en:
-        "Sophisticated silver-grey background interlaced with fine white veins, evoking the moonlit shoreline of Hengam Island.",
-      description_ar:
-        "رمادي فضي أنيق تتخلله تعريقات بيضاء دقيقة ومضيئة مستوحاة من انعكاس ضوء القمر على شواطئ جزيرة هنگام.",
-      meta_title_fa:
-        "اسلب سنگ کوارتز طوسی رگه سفید هنگام (Hengam 3301) | پرسیس کوارتز",
-      meta_title_en:
-        "Hengam Grey Fine White Vein Quartz (3301) | Persis Quartz",
-      meta_title_ar:
-        "لوح كوارتز هنغام الرمادي بتعريقات بيضاء (3301) | برسيس كوارتز",
-      meta_description_fa:
-        "مشخصات و قیمت سنگ کوارتز طوسی رگه سفید هنگام کد 3301 طرح کالاکاتا. مقاوم در برابر حرارت و لکه مناسب دکوراسیون و آشپزخانه مدرن.",
-      meta_description_en:
-        "Explore Hengam 3301 grey engineered quartz with subtle white veining. Durable, architectural surface for islands and vanity tops.",
-      meta_description_ar:
-        "اكتشف أسطح كوارتز هنغام 3301 الرمادية بتعريقات بيضاء ناعمة وغير مسامية لأسطح المطابخ العصرية.",
-    },
-    {
-      code: "3601",
-      slug: "zagros",
-      category_slug: "calacatta",
-      color_slug: "black",
-      title_fa: "زاگرس",
-      title_en: "Zagros",
-      title_ar: "زاغروس",
-      vein_pattern_slug: "subtle-vein",
-      dimension_slugs: "320x75,320x92",
-      thicknesses: "12mm,20mm,30mm",
-      custom_thickness_available: "true",
-      finishes: "polished,honed",
-      is_in_stock: "in_stock",
-      description_fa:
-        "مشکی عمیق و پرابهت با خطوط رگه نازک سفید و برفی؛ الهام‌گرفته از شکاف‌های صخره‌ای و ستیغ‌های برفی رشته‌کوه زاگرس.",
-      description_en:
-        "Majestic deep black matrix crossed by crisp white linear veining, capturing the stark beauty of snow-crested Zagros peaks.",
-      description_ar:
-        "أسود عميق ومهيب بتعريقات بيضاء دقيقة تشبه قمم جبال زاغروس المكسوة بالثلوج، يمنح المكان فخامة استثنائية.",
-      meta_title_fa:
-        "اسلب سنگ کوارتز مشکی رگه سفید زاگرس (Zagros 3601) | پرسیس کوارتز",
-      meta_title_en:
-        "Zagros Black Fine White Vein Quartz (3601) | Persis Quartz",
-      meta_title_ar:
-        "لوح كوارتز زاغروس الأسود بتعريقات بيضاء (3601) | برسيس كوارتز",
-      meta_description_fa:
-        "خرید اسلب کوارتز مشکی رگه سفید زاگرس کد 3601 طرح کالاکاتا. کنتراست لوکس، بدون تخلخل و ضد خش مناسب کانترتاپ و جزیره.",
-      meta_description_en:
-        "Discover Zagros 3601 black quartz with sharp white veins. Premium luxury Calacatta stone for high-end residential interiors.",
-      meta_description_ar:
-        "تسوق أسطح كوارتز زاغروس 3601 السوداء بتعريقات بيضاء فاخرة ومقاومة للبقع والحرارة للمشاريع المعمارية.",
-    },
-  ];
-
-  const guideData = [
-    {
-      "نام ستون (Header)": "code",
-      وضعیت: "اجباری",
-      توضیح:
-        "کد اختصاصی سنگ در کاتالوگ (مانند 1101، 1606، 3106). کلید اصلی برای آپدیت خودکار است.",
-      "نمونه مقدار مجاز": "1101 - 2106 - 3108",
-    },
-    {
-      "نام ستون (Header)": "slug",
-      وضعیت: "اجباری",
-      توضیح:
-        "شناسه انگلیسی محصول برای آدرس URL صفحه (فقط حروف کوچک و خط تیره).",
-      "نمونه مقدار مجاز": "dover یا eclipse یا aland",
-    },
-    {
-      "نام ستون (Header)": "category_slug",
-      وضعیت: "اجباری",
-      توضیح:
-        "یکی از اسلاگ‌های تعریف شده دسته‌بندی‌ها (monocolor, veined-effect, calacatta).",
-      "نمونه مقدار مجاز": "monocolor یا veined-effect یا calacatta",
-    },
-    {
-      "نام ستون (Header)": "color_slug",
-      وضعیت: "اجباری",
-      توضیح: "طیف رنگی پایه سنگ جهت فیلتر شدن در کاتالوگ سایت.",
-      "نمونه مقدار مجاز": "white یا black یا grey",
-    },
-    {
-      "نام ستون (Header)": "title_fa / title_en / title_ar",
-      وضعیت: "اجباری",
-      توضیح: "نام مدل سنگ به ۳ زبان فارسی، انگلیسی و عربی.",
-      "نمونه مقدار مجاز": "داور / Dover / دوفر",
-    },
-    {
-      "نام ستون (Header)": "vein_pattern_slug",
-      وضعیت: "اختیاری",
-      توضیح:
-        "نوع بافت رگه‌ها (solid برای ساده، cloudy برای ابروبادی، subtle-vein برای رگه نازک).",
-      "نمونه مقدار مجاز": "solid یا cloudy یا subtle-vein",
-    },
-    {
-      "نام ستون (Header)": "dimension_slugs",
-      وضعیت: "اختیاری",
-      توضیح: "ابعاد اسلب (جداشده با کاما).",
-      "نمونه مقدار مجاز": "320x75,320x92",
-    },
-    {
-      "نام ستون (Header)": "thicknesses",
-      وضعیت: "اجباری",
-      توضیح: "ضخامت‌های استاندارد تولیدی (جداشده با کاما).",
-      "نمونه مقدار مجاز": "12mm,20mm,30mm",
-    },
-    {
-      "نام ستون (Header)": "custom_thickness_available",
-      وضعیت: "اجباری",
-      توضیح: "امکان سفارش تولید با ضخامت دلخواه پروژه.",
-      "نمونه مقدار مجاز": "true یا false",
-    },
-    {
-      "نام ستون (Header)": "finishes",
-      وضعیت: "اجباری",
-      توضیح: "نوع پرداخت سطح سنگ (جداشده با کاما).",
-      "نمونه مقدار مجاز": "polished,honed",
-    },
-    {
-      "نام ستون (Header)": "is_in_stock",
-      وضعیت: "اجباری",
-      توضیح:
-        "وضعیت موجودی کالا (in_stock موجود، on_demand سفارشی، discontinued توقف تولید).",
-      "نمونه مقدار مجاز": "in_stock",
-    },
-    {
-      "نام ستون (Header)": "description_fa / description_en / description_ar",
-      وضعیت: "اجباری",
-      توضیح: "متن معرفی و کانسپت سنگ به ۳ زبان.",
-      "نمونه مقدار مجاز": "الهام‌گرفته از صخره‌های...",
-    },
-    {
-      "نام ستون (Header)": "meta_title_fa / meta_title_en / meta_title_ar",
-      وضعیت: "اجباری",
-      توضیح: "عنوان سئو گوگل صفحه به ۳ زبان.",
-      "نمونه مقدار مجاز": "اسلب سنگ کوارتز سفید ساده داور | پرسیس کوارتز",
-    },
-    {
-      "نام ستون (Header)":
-        "meta_description_fa / meta_description_en / meta_description_ar",
-      وضعیت: "اجباری",
-      توضیح: "خلاصه توضیحات گوگل زیر عنوان به ۳ زبان.",
-      "نمونه مقدار مجاز": "بررسی مشخصات فنی و سفارش سنگ کوارتز...",
-    },
-    {
-      "نام ستون (Header)": "تصاویر و عکس‌ها",
-      وضعیت: "در پنل ادمین",
-      توضیح:
-        "عکس‌ها در فایل اکسل قرار نمی‌گیرند. پس از آپلود، وارد ویرایش هر محصول در پنل پیلود شده و عکس‌ها را آپلود کنید.",
-      "نمونه مقدار مجاز": "در داشبورد پیلود",
-    },
-  ];
-
-  const workbook = XLSX.utils.book_new();
-
-  const worksheetData = XLSX.utils.json_to_sheet(sampleData);
-  XLSX.utils.book_append_sheet(workbook, worksheetData, "Products Template");
-
-  const worksheetGuide = XLSX.utils.json_to_sheet(guideData);
-  XLSX.utils.book_append_sheet(
-    workbook,
-    worksheetGuide,
-    "راهنمای تکمیل (Guide)",
-  );
-
-  const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
-
-  return new NextResponse(buffer, {
-    status: 200,
-    headers: {
-      "Content-Type":
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "Content-Disposition":
-        'attachment; filename="PersisQuartz_Products_Template.xlsx"',
-    },
-  });
-}
-</file>
-
 <file path="src/app/api/admin/import-categories/route.ts">
 import { NextRequest, NextResponse } from "next/server";
 import { getPayload } from "payload";
@@ -1389,258 +1049,6 @@ export async function POST(req: NextRequest) {
     console.error("Categories Excel Import Error:", error);
     return NextResponse.json(
       { error: "خطا در پردازش فایل دسته‌بندی‌ها", details: error.message },
-      { status: 500 },
-    );
-  }
-}
-</file>
-
-<file path="src/app/api/admin/import-products/route.ts">
-// src/app/api/admin/import-products/route.ts
-import { NextRequest, NextResponse } from "next/server";
-import { getPayload } from "payload";
-import configPromise from "@/payload.config";
-import * as XLSX from "xlsx";
-import { excelProductRowSchema } from "@/lib/validations/excel-product-import";
-
-export async function POST(req: NextRequest) {
-  try {
-    const payload = await getPayload({ config: configPromise });
-
-    // ۱. بررسی دسترسی ادمین
-    const { user } = await payload.auth({ headers: req.headers });
-    if (!user) {
-      return NextResponse.json(
-        { error: "عدم دسترسی! لطفاً وارد پنل ادمین شوید." },
-        { status: 401 },
-      );
-    }
-
-    const formData = await req.formData();
-    const file = formData.get("file") as File | null;
-    if (!file) {
-      return NextResponse.json({ error: "فایلی دریافت نشد." }, { status: 400 });
-    }
-
-    const arrayBuffer = await file.arrayBuffer();
-    const workbook = XLSX.read(arrayBuffer, { type: "array" });
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
-    const rawData = XLSX.utils.sheet_to_json<Record<string, any>>(worksheet, {
-      defval: "",
-    });
-
-    let createdCount = 0;
-    let updatedCount = 0;
-    const errors: string[] = [];
-
-    // ۲. بارگذاری کالکشن‌های رابطه‌ای
-    const [categories, colors, veinPatterns, dimensions] = await Promise.all([
-      payload.find({ collection: "categories", limit: 500 }),
-      payload.find({ collection: "colors", limit: 500 }),
-      payload.find({ collection: "vein-patterns", limit: 500 }),
-      payload.find({ collection: "dimensions", limit: 500 }),
-    ]);
-
-    const categoryMap = new Map(
-      categories.docs.map((c) => [c.slug.toLowerCase(), c.id]),
-    );
-    const colorMap = new Map(
-      colors.docs.map((c) => [c.slug.toLowerCase(), c.id]),
-    );
-    const veinPatternMap = new Map(
-      veinPatterns.docs.map((v) => [v.slug.toLowerCase(), v.id]),
-    );
-    const dimensionMap = new Map(
-      dimensions.docs.map((d) => [d.slug.toLowerCase(), d.id]),
-    );
-
-    // ۳. پیمایش و پردازش ردیف‌ها
-    for (let index = 0; index < rawData.length; index++) {
-      const rowNum = index + 2;
-      const row = rawData[index];
-
-      if (!row.code && !row.slug && !row.title_fa) continue;
-
-      const parseResult = excelProductRowSchema.safeParse(row);
-      if (!parseResult.success) {
-        const errorMsgs = parseResult.error.errors
-          .map((e) => e.message)
-          .join(" | ");
-        errors.push(`ردیف ${rowNum}: ${errorMsgs}`);
-        continue;
-      }
-
-      const item = parseResult.data;
-
-      // بررسی دسته‌بندی
-      const categoryId = categoryMap.get(item.category_slug);
-      if (!categoryId) {
-        errors.push(
-          `ردیف ${rowNum}: دسته‌بندی با اسلاگ "${item.category_slug}" یافت نشد. لطفاً ابتدا اکسل دسته‌بندی‌ها را آپلود کنید.`,
-        );
-        continue;
-      }
-
-      // طیف رنگی
-      let colorId = colorMap.get(item.color_slug);
-      if (!colorId) {
-        const newColor = await payload.create({
-          collection: "colors",
-          data: { title: item.color_slug, slug: item.color_slug },
-        });
-        colorId = newColor.id;
-        colorMap.set(item.color_slug, colorId);
-      }
-
-      // الگوی رگه
-      const veinPatternId = item.vein_pattern_slug
-        ? veinPatternMap.get(item.vein_pattern_slug)
-        : undefined;
-
-      // ابعاد اسلب
-      const dimensionIds: (string | number)[] = [];
-      if (item.dimension_slugs) {
-        item.dimension_slugs.split(",").forEach((s) => {
-          const id = dimensionMap.get(s.trim().toLowerCase());
-          if (id) dimensionIds.push(id);
-        });
-      }
-
-      const formattedThicknesses = item.thicknesses
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean);
-      const formattedFinishes = item.finishes
-        .split(",")
-        .map((f) => f.trim().toLowerCase())
-        .filter(Boolean);
-
-      const existing = await payload.find({
-        collection: "products",
-        where: {
-          or: [
-            { code: { equals: item.code } },
-            { slug: { equals: item.slug } },
-          ],
-        },
-        limit: 1,
-      });
-
-      const baseData: any = {
-        code: item.code,
-        slug: item.slug,
-        category: categoryId,
-        color_family: colorId,
-        vein_pattern: veinPatternId || null,
-        dimensions: dimensionIds.length > 0 ? dimensionIds : undefined,
-        available_thicknesses: formattedThicknesses,
-        custom_thickness_available: item.custom_thickness_available,
-        finishes: formattedFinishes,
-        is_in_stock: item.is_in_stock,
-      };
-
-      if (existing.docs.length > 0) {
-        const productId = existing.docs[0].id;
-
-        // ۱. بروزرسانی زبان فارسی (fa)
-        await payload.update({
-          collection: "products",
-          id: productId,
-          locale: "fa",
-          data: {
-            ...baseData,
-            title: item.title_fa,
-            description: item.description_fa,
-            meta_title: item.meta_title_fa,
-            meta_description: item.meta_description_fa,
-          },
-        });
-
-        // ۲. بروزرسانی زبان انگلیسی (en)
-        await payload.update({
-          collection: "products",
-          id: productId,
-          locale: "en",
-          data: {
-            title: item.title_en,
-            description: item.description_en,
-            meta_title: item.meta_title_en,
-            meta_description: item.meta_description_en,
-          },
-        });
-
-        // ۳. بروزرسانی زبان عربی (ar)
-        await payload.update({
-          collection: "products",
-          id: productId,
-          locale: "ar",
-          data: {
-            title: item.title_ar,
-            description: item.description_ar,
-            meta_title: item.meta_title_ar,
-            meta_description: item.meta_description_ar,
-          },
-        });
-
-        updatedCount++;
-      } else {
-        // ۱. ایجاد اولیه با زبان فارسی (fa)
-        const createdDoc = await payload.create({
-          collection: "products",
-          locale: "fa",
-          data: {
-            ...baseData,
-            title: item.title_fa,
-            description: item.description_fa,
-            meta_title: item.meta_title_fa,
-            meta_description: item.meta_description_fa,
-          },
-        });
-
-        // ۲. افزودن مقادیر انگلیسی (en)
-        await payload.update({
-          collection: "products",
-          id: createdDoc.id,
-          locale: "en",
-          data: {
-            title: item.title_en,
-            description: item.description_en,
-            meta_title: item.meta_title_en,
-            meta_description: item.meta_description_en,
-          },
-        });
-
-        // ۳. افزودن مقادیر عربی (ar)
-        await payload.update({
-          collection: "products",
-          id: createdDoc.id,
-          locale: "ar",
-          data: {
-            title: item.title_ar,
-            description: item.description_ar,
-            meta_title: item.meta_title_ar,
-            meta_description: item.meta_description_ar,
-          },
-        });
-
-        createdCount++;
-      }
-    }
-
-    return NextResponse.json({
-      success: true,
-      summary: {
-        createdCount,
-        updatedCount,
-        failedCount: errors.length,
-        errors,
-      },
-    });
-  } catch (error: any) {
-    console.error("Products Excel Import Error:", error);
-    return NextResponse.json(
-      { error: "خطا در پردازش فایل محصولات", details: error.message },
       { status: 500 },
     );
   }
@@ -2042,367 +1450,120 @@ export const BrandIntro: React.FC = () => {
 };
 </file>
 
-<file path="src/components/products/product-card.tsx">
-"use client";
-
-import React from "react";
-import Image from "next/image";
-import { Link } from "@/i18n/routing";
-import { ArrowUpRight } from "lucide-react";
-import { useTranslations } from "next-intl";
-import type { ProductItem } from "@/services/product.service";
-
-interface ProductCardProps {
-  product: ProductItem;
-  className?: string;
-}
-
-export const ProductCard: React.FC<ProductCardProps> = ({
-  product,
-  className = "",
-}) => {
-  const t = useTranslations("ProductsGrid");
-
-  const imageUrl =
-    typeof product.thumbnail === "object" && product.thumbnail?.url
-      ? product.thumbnail.url
-      : typeof product.thumbnail === "string"
-        ? product.thumbnail
-        : "/PersisQuartz-Red.png";
-
-  const isDefaultLogo = imageUrl === "/PersisQuartz-Red.png";
-
-  return (
-    <Link
-      href={`/products/${product.slug}`}
-      className={`group relative flex flex-col bg-card border border-border/50 hover:border-primary/60 transition-all duration-500 overflow-hidden select-none h-full ${className}`}
-    >
-      {/* قاب تصویر عمودی اسلب (نسبت 3:4) */}
-      <div className="relative aspect-[3/4] w-full overflow-hidden bg-muted/40 flex items-center justify-center p-6">
-        <Image
-          src={imageUrl}
-          alt={product.title}
-          fill
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          loading="lazy"
-          className={`${
-            isDefaultLogo
-              ? "object-contain p-8 opacity-70 group-hover:opacity-100 group-hover:scale-105"
-              : "object-cover group-hover:scale-105"
-          } transition-all duration-700 ease-out`}
-        />
-
-        {/* وضعیت تولید سفارشی */}
-        {product.is_in_stock === "on_demand" && (
-          <div className="absolute top-3 start-3 bg-background/90 backdrop-blur-md px-2.5 py-1 border border-border/50 text-[10px] font-mono tracking-widest uppercase text-amber-600 dark:text-amber-400 z-10">
-            {t("onDemand")}
-          </div>
-        )}
-
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-500 pointer-events-none" />
-      </div>
-
-      {/* اطلاعات متنی */}
-      <div className="p-4 sm:p-5 flex items-center justify-between gap-3 border-t border-border/30 flex-1 bg-card">
-        <div className="space-y-0.5">
-          <span className="text-[10px] sm:text-[11px] font-mono font-medium text-muted-foreground tracking-wider block">
-            {product.code}
-          </span>
-          <h4 className="text-sm sm:text-base font-medium text-foreground group-hover:text-primary transition-colors duration-300">
-            {product.title}
-          </h4>
-        </div>
-
-        <div className="hidden sm:flex shrink-0 h-8 w-8 sm:h-9 sm:w-9 border border-primary bg-primary text-primary-foreground items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-          <ArrowUpRight className="h-4 w-4" />
-        </div>
-      </div>
-    </Link>
-  );
-};
-
-export default ProductCard;
-</file>
-
-<file path="src/components/products/product-filters-client.tsx">
-"use client";
-
-import React, { useState, useTransition } from "react";
-import { usePathname, useRouter } from "@/i18n/routing";
-import { useSearchParams } from "next/navigation";
-import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/button";
-import { RotateCcw, SlidersHorizontal, X } from "lucide-react";
-import type { CategoryItem, ColorItem } from "@/services/product.service";
-
-interface ProductFiltersClientProps {
-  categories?: CategoryItem[];
-  colors?: ColorItem[];
-}
-
-export const ProductFiltersClient: React.FC<ProductFiltersClientProps> = ({
-  categories = [],
-  colors = [],
-}) => {
-  const t = useTranslations("ProductsFilter");
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
-
-  const currentCategory =
-    searchParams.get("category") || searchParams.get("cat") || "";
-  const currentColor = searchParams.get("color") || "";
-
-  const activeFiltersCount = (currentCategory ? 1 : 0) + (currentColor ? 1 : 0);
-
-  const updateFilters = (key: string, value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete("cat");
-
-    if (value) {
-      params.set(key, value);
-    } else {
-      params.delete(key);
-    }
-
-    params.delete("page");
-
-    startTransition(() => {
-      router.push(`${pathname}?${params.toString()}`);
-    });
-  };
-
-  const handleReset = () => {
-    startTransition(() => {
-      router.push(pathname);
-    });
-  };
-
-  const filterContent = (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between pb-4 border-b border-border/40">
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground">
-          {t("title")}
-        </h3>
-        {activeFiltersCount > 0 && (
-          <Button
-            variant="ghost"
-            size="xs"
-            onClick={handleReset}
-            className="text-xs text-muted-foreground hover:text-primary gap-1"
-          >
-            <RotateCcw className="h-3 w-3" />
-            <span>{t("reset")}</span>
-          </Button>
-        )}
-      </div>
-
-      {/* ۱. فیلتر پویا دسته‌بندی‌ها (سری‌ها) */}
-      <div className="space-y-3">
-        <label className="text-xs uppercase tracking-widest text-primary font-semibold block">
-          {t("collections")}
-        </label>
-        <div className="space-y-2">
-          <button
-            onClick={() => {
-              updateFilters("category", "");
-              setIsMobileOpen(false);
-            }}
-            className={`w-full text-start text-xs py-2.5 px-3 border transition-colors ${
-              currentCategory === ""
-                ? "border-primary bg-primary/10 text-primary font-medium"
-                : "border-border/40 hover:border-border text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {t("all")}
-          </button>
-
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => {
-                updateFilters("category", cat.slug);
-                setIsMobileOpen(false);
-              }}
-              className={`w-full text-start text-xs py-2.5 px-3 border transition-colors ${
-                currentCategory === cat.slug
-                  ? "border-primary bg-primary/10 text-primary font-medium"
-                  : "border-border/40 hover:border-border text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {cat.title}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ۲. فیلتر پویا طیف رنگی */}
-      {colors.length > 0 && (
-        <div className="space-y-3">
-          <label className="text-xs uppercase tracking-widest text-primary font-semibold block">
-            {t("colorFamily")}
-          </label>
-          <div className="grid grid-cols-2 gap-2">
-            {colors.map((color) => (
-              <button
-                key={color.id}
-                onClick={() => {
-                  updateFilters(
-                    "color",
-                    currentColor === color.slug ? "" : color.slug,
-                  );
-                  setIsMobileOpen(false);
-                }}
-                className={`text-xs py-2.5 px-2 border flex items-center justify-center gap-2 transition-colors ${
-                  currentColor === color.slug
-                    ? "border-primary bg-primary text-primary-foreground font-medium"
-                    : "border-border/40 hover:border-border text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {color.hex_code && (
-                  <span
-                    className="h-3 w-3 rounded-full border border-black/20 shrink-0"
-                    style={{ backgroundColor: color.hex_code }}
-                  />
-                )}
-                <span>{color.title}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
-  return (
-    <>
-      <div className="md:hidden mb-6 flex items-center justify-between">
-        <Button
-          variant="outline"
-          onClick={() => setIsMobileOpen(true)}
-          className="w-full h-11 justify-between text-xs tracking-wider uppercase rounded-none border-border/80 bg-card"
-        >
-          <span className="flex items-center gap-2">
-            <SlidersHorizontal className="h-4 w-4 text-primary" />
-            <span>{t("title")}</span>
-          </span>
-          {activeFiltersCount > 0 && (
-            <span className="h-5 w-5 bg-primary text-primary-foreground text-[10px] flex items-center justify-center">
-              {activeFiltersCount}
-            </span>
-          )}
-        </Button>
-      </div>
-
-      {isMobileOpen && (
-        <div className="fixed inset-0 z-50 md:hidden flex flex-col justify-end bg-black/60 backdrop-blur-sm animate-in fade-in-0 duration-200">
-          <div className="bg-background border-t border-border/60 p-6 max-h-[85vh] overflow-y-auto space-y-6">
-            <div className="flex items-center justify-between pb-2 border-b border-border/40">
-              <span className="text-xs uppercase tracking-widest text-primary">
-                Filters
-              </span>
-              <button
-                onClick={() => setIsMobileOpen(false)}
-                className="p-1 text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            {filterContent}
-          </div>
-        </div>
-      )}
-
-      <div
-        className={`hidden md:block space-y-8 bg-card border border-border/50 p-6 ${
-          isPending ? "opacity-60 transition-opacity" : ""
-        }`}
-      >
-        {filterContent}
-      </div>
-    </>
-  );
-};
-</file>
-
 <file path="src/components/products/product-gallery.tsx">
 "use client";
 
 import React, { useState } from "react";
 import Image from "next/image";
 import type { GalleryItem } from "@/services/product.service";
-import { ZoomIn } from "lucide-react";
+import { ZoomIn, Eye, Sparkles, Layers } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface ProductGalleryProps {
   mainThumbnailUrl: string;
   title: string;
+  code: string;
   gallery?: GalleryItem[];
 }
 
 export const ProductGallery: React.FC<ProductGalleryProps> = ({
   mainThumbnailUrl,
   title,
+  code,
   gallery = [],
 }) => {
+  const t = useTranslations("ProductDetail");
+
   const images = [
-    { url: mainThumbnailUrl, caption: title },
-    ...gallery.map((g) => ({
+    {
+      url: mainThumbnailUrl,
+      caption: `${title} - ${t("fullScan")}`,
+      type: "scan",
+    },
+    ...gallery.map((g, idx) => ({
       url:
         typeof g.image === "object" && g.image?.url
           ? g.image.url
           : typeof g.image === "string"
             ? g.image
             : mainThumbnailUrl,
-      caption: g.caption || title,
+      caption: g.caption || `${title} - ${t("textureZoom")} ${idx + 1}`,
+      type: "texture",
     })),
   ];
 
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
 
   const activeImage = images[selectedIdx] || images[0];
 
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isZoomed) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setMousePos({ x, y });
+  };
+
   return (
-    <div className="space-y-4 select-none">
-      {/* تصویر اصلی با نسبت اسلب واقعی (3:4) و افکت Zoom */}
+    <div className="space-y-4 select-none lg:sticky lg:top-28">
+      {/* نمایشگر اصلی اسلب */}
       <div
-        className="relative aspect-[3/4] w-full bg-muted border border-border/50 overflow-hidden cursor-zoom-in group"
-        onClick={() => setIsZoomed(!isZoomed)}
+        className="relative aspect-[3/4] w-full bg-muted/40 border border-border/60 overflow-hidden cursor-crosshair group shadow-sm"
+        onMouseEnter={() => setIsZoomed(true)}
+        onMouseLeave={() => setIsZoomed(false)}
+        onMouseMove={handleMouseMove}
+        onClick={() => setIsZoomed((prev) => !prev)}
       >
         <Image
           src={activeImage.url}
           alt={activeImage.caption}
           fill
           priority
-          sizes="(max-width: 1024px) 100vw, 50vw"
-          className={`object-cover transition-transform duration-700 ease-out ${
-            isZoomed ? "scale-150" : "group-hover:scale-105"
-          }`}
+          sizes="(max-width: 1024px) 100vw, 45vw"
+          className="object-cover transition-transform duration-200 ease-out"
+          style={{
+            transformOrigin: `${mousePos.x}% ${mousePos.y}%`,
+            transform: isZoomed ? "scale(2.4)" : "scale(1)",
+          }}
         />
 
-        <div className="absolute bottom-4 end-4 bg-background/80 backdrop-blur-md p-2 border border-border/40 text-foreground">
-          <ZoomIn className="h-4 w-4" />
+        {/* واترمارک ابعاد استاندارد */}
+        <div className="absolute top-4 start-4 bg-background/85 backdrop-blur-md px-3 py-1 border border-border/40 text-[11px] font-mono tracking-wider uppercase text-foreground z-10 flex items-center gap-1.5 shadow-sm">
+          <Layers className="h-3.5 w-3.5 text-primary" />
+          <span>320 × 160 cm JUMBO</span>
         </div>
 
+        {/* راهنمای زوم */}
+        <div className="absolute bottom-4 end-4 bg-background/85 backdrop-blur-md px-3 py-1.5 border border-border/40 text-[11px] font-mono text-foreground flex items-center gap-2 z-10">
+          <ZoomIn className="h-3.5 w-3.5 text-primary" />
+          <span className="hidden sm:inline">
+            {isZoomed ? "100% Texture Detail" : "Hover / Tap to Zoom"}
+          </span>
+        </div>
+
+        {/* کپشن تصویر */}
         {activeImage.caption && (
-          <div className="absolute bottom-4 start-4 bg-background/90 backdrop-blur-md px-3 py-1.5 border border-border/40 text-[11px] font-mono text-foreground">
+          <div className="absolute bottom-4 start-4 bg-background/85 backdrop-blur-md px-3 py-1.5 border border-border/40 text-[11px] font-mono text-foreground z-10">
             {activeImage.caption}
           </div>
         )}
       </div>
 
-      {/* تصاویر کوچک (Thumbnails) */}
+      {/* تصاویر بندانگشتی (Thumbnails) */}
       {images.length > 1 && (
-        <div className="flex items-center gap-3 overflow-x-auto pb-2">
+        <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none">
           {images.map((img, idx) => (
             <button
               key={idx}
-              onClick={() => setSelectedIdx(idx)}
-              className={`relative h-20 w-16 shrink-0 border transition-all overflow-hidden ${
+              onClick={() => {
+                setSelectedIdx(idx);
+                setIsZoomed(false);
+              }}
+              className={`relative h-20 w-16 sm:h-24 sm:w-20 shrink-0 border transition-all overflow-hidden bg-muted/50 ${
                 selectedIdx === idx
-                  ? "border-primary ring-1 ring-primary"
+                  ? "border-primary ring-2 ring-primary/40 opacity-100"
                   : "border-border/50 opacity-60 hover:opacity-100"
               }`}
             >
@@ -2410,9 +1571,12 @@ export const ProductGallery: React.FC<ProductGalleryProps> = ({
                 src={img.url}
                 alt={img.caption}
                 fill
-                sizes="80px"
+                sizes="100px"
                 className="object-cover"
               />
+              <span className="absolute bottom-1 end-1 bg-black/70 text-white text-[9px] px-1 font-mono">
+                0{idx + 1}
+              </span>
             </button>
           ))}
         </div>
@@ -2420,134 +1584,6 @@ export const ProductGallery: React.FC<ProductGalleryProps> = ({
     </div>
   );
 };
-</file>
-
-<file path="src/components/products/product-grid-client.tsx">
-"use client";
-
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Loader2 } from "lucide-react";
-import { useTranslations, useLocale } from "next-intl";
-import type { ProductItem, ProductMeta } from "@/services/product.service";
-import { fetchMoreProductsAction } from "@/app/actions/product-actions";
-import { ProductCard } from "@/components/products/product-card";
-
-interface ProductGridProps {
-  initialProducts: ProductItem[];
-  initialMeta: ProductMeta;
-  category?: string;
-  color?: string;
-}
-
-export const ProductGridClient: React.FC<ProductGridProps> = ({
-  initialProducts,
-  initialMeta,
-  category,
-  color,
-}) => {
-  const t = useTranslations("ProductsGrid");
-  const locale = useLocale() as "fa" | "en" | "ar";
-
-  const [products, setProducts] = useState<ProductItem[]>(initialProducts);
-  const [meta, setMeta] = useState<ProductMeta>(initialMeta);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-
-  const observerRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    setProducts(initialProducts);
-    setMeta(initialMeta);
-  }, [initialProducts, initialMeta]);
-
-  const loadMoreProducts = useCallback(async () => {
-    if (isLoadingMore || !meta.has_next_page) return;
-
-    setIsLoadingMore(true);
-    const nextPage = meta.current_page + 1;
-
-    try {
-      const res = await fetchMoreProductsAction({
-        locale,
-        page: nextPage,
-        limit: 9,
-        category,
-        color,
-      });
-
-      setProducts((prev) => [...prev, ...res.data]);
-      setMeta(res.meta);
-    } catch (error) {
-      console.error("Error loading infinite scroll products:", error);
-    } finally {
-      setIsLoadingMore(false);
-    }
-  }, [isLoadingMore, meta, locale, category, color]);
-
-  useEffect(() => {
-    const el = observerRef.current;
-    if (!el || !meta.has_next_page) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && meta.has_next_page && !isLoadingMore) {
-          loadMoreProducts();
-        }
-      },
-      { threshold: 0.2 },
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [meta.has_next_page, isLoadingMore, loadMoreProducts]);
-
-  if (!products || products.length === 0) {
-    return (
-      <div className="p-12 text-center bg-card border border-border/40 space-y-3">
-        <p className="text-sm text-foreground font-medium">
-          {t("noProductsFound")}
-        </p>
-        <p className="text-xs text-muted-foreground font-light">
-          {t("tryResettingFilters")}
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between pb-4 border-b border-border/40">
-        <span className="text-xs font-mono text-muted-foreground uppercase">
-          {t("showingCount", {
-            count: products.length,
-            total: meta.total_items,
-          })}
-        </span>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        {products.map((product, idx) => (
-          <ProductCard key={`${product.id}-${idx}`} product={product} />
-        ))}
-      </div>
-
-      <div ref={observerRef} className="pt-6 flex justify-center">
-        {isLoadingMore && (
-          <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground py-4">
-            <Loader2 className="h-4 w-4 animate-spin text-primary" />
-          </div>
-        )}
-
-        {!meta.has_next_page && products.length > 9 && (
-          <p className="text-[11px] font-mono text-muted-foreground/60 uppercase tracking-widest pt-4">
-            — END OF CATALOG —
-          </p>
-        )}
-      </div>
-    </div>
-  );
-};
-
-export default ProductGridClient;
 </file>
 
 <file path="src/components/products/skeleton-loader.tsx">
@@ -4086,193 +3122,6 @@ export const Media: CollectionConfig = {
 };
 </file>
 
-<file path="src/payload/collections/Products.ts">
-// src/payload/collections/Products.ts
-import { CollectionConfig } from "payload";
-
-export const Products: CollectionConfig = {
-  slug: "products",
-  admin: {
-    useAsTitle: "title",
-    group: "Catalog",
-    defaultColumns: ["title", "code", "category", "is_in_stock", "updatedAt"],
-    components: {
-      beforeListTable: [
-        "@/components/admin/ExcelProductImportControl#ExcelProductImportControl",
-      ],
-    },
-  },
-  access: { read: () => true },
-  fields: [
-    {
-      name: "title",
-      type: "text",
-      required: true,
-      localized: true,
-      admin: {
-        description: "نام مدل سنگ (مثلاً: مه البرز / Alborz Mist)",
-      },
-    },
-    {
-      name: "slug",
-      type: "text",
-      required: true,
-      unique: true,
-      index: true,
-      admin: {
-        description: "اسلاگ سئو برای URL (مثلاً: alborz-mist)",
-      },
-    },
-    {
-      name: "code",
-      type: "text",
-      required: true,
-      index: true,
-      admin: {
-        description: "کد اختصاصی سنگ (مثلاً: PQ-202)",
-      },
-    },
-    {
-      name: "category",
-      type: "relationship",
-      relationTo: "categories",
-      required: true,
-      admin: { description: "سری/دسته‌بندی سنگ (تک‌رنگ، رگه‌دار، کالاکاتا)" },
-    },
-    {
-      name: "color_family",
-      type: "relationship",
-      relationTo: "colors",
-      required: true,
-      admin: { description: "طیف رنگی اصلی سنگ" },
-    },
-    {
-      name: "vein_pattern",
-      type: "relationship",
-      relationTo: "vein-patterns",
-      admin: {
-        description: "الگوی رگه (مثلاً رگه نازک، رگه ضخیم، ابر و بادی)",
-      },
-    },
-    {
-      name: "is_in_stock",
-      type: "select",
-      defaultValue: "in_stock",
-      options: [
-        { label: "موجود در انبار / تحویل فوری (In Stock)", value: "in_stock" },
-        {
-          label: "تولید سفارشی / استعلام زمان (On Demand)",
-          value: "on_demand",
-        },
-        { label: "توقف تولید / آرشیو (Discontinued)", value: "discontinued" },
-      ],
-    },
-    {
-      name: "thumbnail",
-      type: "upload",
-      relationTo: "media",
-      required: false,
-      admin: { description: "تصویر اصلی و تمام‌قد اسلب (Full Slab Scan)" },
-    },
-    {
-      name: "gallery",
-      type: "array",
-      admin: {
-        description: "گالری اسلایدر تصاویر (بافت نزدیک و اجرا در محیط)",
-      },
-      fields: [
-        {
-          name: "image",
-          type: "upload",
-          relationTo: "media",
-          required: true,
-        },
-        {
-          name: "caption",
-          type: "text",
-          localized: true,
-          admin: { description: "توضیح تصویر (مثلاً: اجرا در کانتر آشپزخانه)" },
-        },
-      ],
-    },
-    {
-      name: "available_thicknesses",
-      type: "select",
-      hasMany: true,
-      options: [
-        { label: "10mm (1.0 cm)", value: "10mm" },
-        { label: "11mm (1.1 cm)", value: "11mm" },
-        { label: "12mm (1.2 cm)", value: "12mm" },
-        { label: "13mm (1.3 cm)", value: "13mm" },
-        { label: "14mm (1.4 cm)", value: "14mm" },
-        { label: "15mm (1.5 cm)", value: "15mm" },
-        { label: "16mm (1.6 cm)", value: "16mm" },
-        { label: "17mm (1.7 cm)", value: "17mm" },
-        { label: "18mm (1.8 cm)", value: "18mm" },
-        { label: "19mm (1.9 cm)", value: "19mm" },
-        { label: "20mm (2.0 cm)", value: "20mm" },
-        { label: "21mm (2.1 cm)", value: "21mm" },
-        { label: "22mm (2.2 cm)", value: "22mm" },
-        { label: "23mm (2.3 cm)", value: "23mm" },
-        { label: "24mm (2.4 cm)", value: "24mm" },
-        { label: "25mm (2.5 cm)", value: "25mm" },
-        { label: "26mm (2.6 cm)", value: "26mm" },
-        { label: "27mm (2.7 cm)", value: "27mm" },
-        { label: "28mm (2.8 cm)", value: "28mm" },
-        { label: "29mm (2.9 cm)", value: "29mm" },
-        { label: "30mm (3.0 cm)", value: "30mm" },
-      ],
-      defaultValue: ["12mm", "20mm"],
-    },
-    {
-      name: "custom_thickness_available",
-      type: "checkbox",
-      defaultValue: false,
-      admin: { description: "امکان سفارش تولید با ضخامت خاص سفارشی" },
-    },
-    {
-      name: "finishes",
-      type: "select",
-      hasMany: true,
-      options: [
-        { label: "براق (Polished)", value: "polished" },
-        { label: "مات (Honed / Matt)", value: "honed" },
-        { label: "بافت‌دار (Textured / Suede)", value: "textured" },
-        { label: "چرمی (Leathered)", value: "leathered" },
-      ],
-      defaultValue: ["polished"],
-    },
-    {
-      name: "dimensions",
-      type: "relationship",
-      relationTo: "dimensions",
-      hasMany: true,
-      admin: {
-        description: "ابعاد قابل عرضه اسلب (امکان انتخاب ابعاد جدید در آینده)",
-      },
-    },
-    {
-      name: "description",
-      type: "textarea",
-      localized: true,
-      admin: { description: "توضیحات معمارانه و سئومحور سنگ" },
-    },
-    {
-      name: "meta_title",
-      type: "text",
-      localized: true,
-      admin: { description: "عنوان متای سئو گوگل" },
-    },
-    {
-      name: "meta_description",
-      type: "textarea",
-      localized: true,
-      admin: { description: "توضیحات متای سئو گوگل" },
-    },
-  ],
-};
-</file>
-
 <file path="src/payload/collections/VeinPatterns.ts">
 import { CollectionConfig } from "payload";
 
@@ -4298,210 +3147,6 @@ export const VeinPatterns: CollectionConfig = {
     },
   ],
 };
-</file>
-
-<file path="src/services/product.service.ts">
-import "server-only";
-import { getPayload } from "payload";
-import configPromise from "@/payload.config";
-
-export interface GetProductsParams {
-  locale: "fa" | "en" | "ar";
-  page?: number;
-  limit?: number;
-  category?: string;
-  color?: string;
-  sort?: string;
-  search?: string;
-}
-
-export interface ProductMeta {
-  current_page: number;
-  total_pages: number;
-  total_items: number;
-  has_next_page: boolean;
-}
-
-export interface CategoryItem {
-  id: string;
-  title: string;
-  slug: string;
-}
-
-export interface ColorItem {
-  id: string;
-  title: string;
-  slug: string;
-  hex_code?: string;
-}
-
-export interface GalleryItem {
-  image: { url: string; alt?: string } | string;
-  caption?: string;
-}
-
-export interface ProductItem {
-  id: string;
-  title: string;
-  slug: string;
-  code: string;
-  category: CategoryItem | string;
-  color_family: ColorItem | string;
-  is_in_stock: "in_stock" | "on_demand" | "discontinued";
-  thumbnail: { url: string; alt?: string } | string;
-  gallery?: GalleryItem[];
-  available_thicknesses?: string[];
-  finishes?: string[];
-  dimensions?: string;
-  description?: string;
-  meta_title?: string;
-  meta_description?: string;
-  specsSheetUrl?: string;
-}
-
-export function extractCategorySlug(
-  category: CategoryItem | string | undefined,
-): string {
-  if (!category) return "";
-  if (typeof category === "object") return category.slug || "";
-  return category;
-}
-
-export function extractCategoryTitle(
-  category: CategoryItem | string | undefined,
-): string {
-  if (!category) return "";
-  if (typeof category === "object") return category.title || "";
-  return category;
-}
-
-export async function getProductsService({
-  locale,
-  page = 1,
-  limit = 9,
-  category,
-  color,
-  sort = "-createdAt",
-  search,
-}: GetProductsParams): Promise<{ data: ProductItem[]; meta: ProductMeta }> {
-  try {
-    const payload = await getPayload({ config: configPromise });
-    const where: Record<string, any> = {};
-
-    if (category) {
-      where["category.slug"] = { equals: category };
-    }
-
-    if (color) {
-      where["color_family.slug"] = { equals: color };
-    }
-
-    if (search) {
-      where.or = [{ title: { like: search } }, { code: { like: search } }];
-    }
-
-    const response = await payload.find({
-      collection: "products",
-      locale,
-      page,
-      limit,
-      where,
-      sort,
-      depth: 2,
-    });
-
-    return {
-      data: (response.docs as unknown as ProductItem[]) || [],
-      meta: {
-        current_page: response.page ?? 1,
-        total_pages: response.totalPages ?? 1,
-        total_items: response.totalDocs ?? 0,
-        has_next_page: (response.page ?? 1) < (response.totalPages ?? 1),
-      },
-    };
-  } catch (error) {
-    console.error("Error fetching products from Payload CMS:", error);
-    return {
-      data: [],
-      meta: {
-        current_page: 1,
-        total_pages: 1,
-        total_items: 0,
-        has_next_page: false,
-      },
-    };
-  }
-}
-
-export async function getProductBySlugService(
-  slug: string,
-  locale: "fa" | "en" | "ar",
-): Promise<ProductItem | null> {
-  try {
-    const payload = await getPayload({ config: configPromise });
-    const response = await payload.find({
-      collection: "products",
-      locale,
-      where: { slug: { equals: slug } },
-      limit: 1,
-      depth: 2,
-    });
-
-    if (response.docs && response.docs.length > 0) {
-      return response.docs[0] as unknown as ProductItem;
-    }
-    return null;
-  } catch (error) {
-    console.error("Error fetching product by slug from Payload CMS:", error);
-    return null;
-  }
-}
-
-export async function getCategoriesService(
-  locale: "fa" | "en" | "ar",
-): Promise<CategoryItem[]> {
-  try {
-    const payload = await getPayload({ config: configPromise });
-    const response = await payload.find({
-      collection: "categories",
-      locale,
-      limit: 100,
-      sort: "order",
-    });
-
-    return response.docs.map((doc: any) => ({
-      id: doc.id,
-      title: doc.title,
-      slug: doc.slug,
-    }));
-  } catch (error) {
-    console.error("Error fetching categories from Payload CMS:", error);
-    return [];
-  }
-}
-
-export async function getColorsService(
-  locale: "fa" | "en" | "ar",
-): Promise<ColorItem[]> {
-  try {
-    const payload = await getPayload({ config: configPromise });
-    const response = await payload.find({
-      collection: "colors",
-      locale,
-      limit: 100,
-    });
-
-    return response.docs.map((doc: any) => ({
-      id: doc.id,
-      title: doc.title,
-      slug: doc.slug,
-      hex_code: doc.hex_code,
-    }));
-  } catch (error) {
-    console.error("Error fetching colors from Payload CMS:", error);
-    return [];
-  }
-}
 </file>
 
 <file path="src/types/declarations.d.ts">
@@ -4868,6 +3513,916 @@ export const importMap: Record<string, any> = {
 };
 </file>
 
+<file path="src/app/[locale]/products/[slug]/page.tsx">
+import React from "react";
+import { notFound } from "next/navigation";
+import { Metadata } from "next";
+import { Link } from "@/i18n/routing";
+import { getTranslations } from "next-intl/server";
+import {
+  getProductBySlugService,
+  extractCategoryTitle,
+  extractCategorySlug,
+} from "@/services/product.service";
+import { ProductGallery } from "@/components/products/product-gallery";
+import { ProductConfigurator } from "@/components/products/product-configurator";
+import { ProductSpecsMatrix } from "@/components/products/product-specs-matrix";
+import { ChevronRight, ChevronLeft } from "lucide-react";
+
+interface ProductPageProps {
+  params: Promise<{ locale: string; slug: string }>;
+}
+
+export async function generateMetadata({
+  params,
+}: ProductPageProps): Promise<Metadata> {
+  const { locale, slug } = await params;
+  const product = await getProductBySlugService(
+    slug,
+    locale as "fa" | "en" | "ar",
+  );
+
+  if (!product) {
+    return { title: "Product Not Found | Persis Quartz" };
+  }
+
+  const metaTitle =
+    product.meta_title || `${product.title} (${product.code}) | Persis Quartz`;
+  const metaDescription =
+    product.meta_description ||
+    product.description ||
+    `اسلب سنگ کوارتز کد ${product.code}`;
+
+  const imageFallback =
+    typeof product.thumbnail === "object" && product.thumbnail?.url
+      ? product.thumbnail.url
+      : typeof product.thumbnail === "string"
+        ? product.thumbnail
+        : "/PersisQuartz-Red.png";
+
+  return {
+    title: metaTitle,
+    description: metaDescription,
+    openGraph: {
+      title: metaTitle,
+      description: metaDescription,
+      images: [imageFallback],
+    },
+  };
+}
+
+export default async function ProductDetailPage({ params }: ProductPageProps) {
+  const { locale, slug } = await params;
+  const currentLocale = locale as "fa" | "en" | "ar";
+
+  const product = await getProductBySlugService(slug, currentLocale);
+  const t = await getTranslations({ locale, namespace: "ProductDetail" });
+
+  if (!product) {
+    notFound();
+  }
+
+  const categoryTitle = extractCategoryTitle(product.category);
+  const categorySlug = extractCategorySlug(product.category);
+
+  const thumbnailUrl =
+    typeof product.thumbnail === "object" && product.thumbnail?.url
+      ? product.thumbnail.url
+      : typeof product.thumbnail === "string"
+        ? product.thumbnail
+        : "/PersisQuartz-Red.png";
+
+  const isRtl = locale === "fa" || locale === "ar";
+  const BreadcrumbArrow = isRtl ? ChevronLeft : ChevronRight;
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.title,
+    image: [thumbnailUrl],
+    description: product.description,
+    sku: product.code,
+    category: categoryTitle,
+    brand: {
+      "@type": "Brand",
+      name: "Persis Quartz",
+    },
+  };
+
+  return (
+    <main className="container mx-auto px-4 sm:px-12 py-24 sm:py-28 min-h-screen space-y-14">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
+      {/* ۱. Breadcrumbs با ساختار منطقی و فونت مونو */}
+      <nav className="flex items-center gap-2 text-xs font-mono text-muted-foreground pb-2 border-b border-border/30">
+        <Link href="/" className="hover:text-foreground transition-colors">
+          {t("home")}
+        </Link>
+        <BreadcrumbArrow className="h-3.5 w-3.5 opacity-50" />
+        <Link
+          href="/products"
+          className="hover:text-foreground transition-colors"
+        >
+          {t("products")}
+        </Link>
+        {categoryTitle && (
+          <>
+            <BreadcrumbArrow className="h-3.5 w-3.5 opacity-50" />
+            <Link
+              href={`/products?category=${categorySlug}`}
+              className="hover:text-foreground transition-colors"
+            >
+              {categoryTitle}
+            </Link>
+          </>
+        )}
+        <BreadcrumbArrow className="h-3.5 w-3.5 opacity-50" />
+        <span className="text-primary font-bold">{product.code}</span>
+      </nav>
+
+      {/* ۲. گالری فوق‌عریض اسلب + کنترلر تعاملی متغیرها */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start">
+        <div className="lg:col-span-6">
+          <ProductGallery
+            mainThumbnailUrl={thumbnailUrl}
+            title={product.title}
+            code={product.code}
+            gallery={product.gallery}
+          />
+        </div>
+
+        <div className="lg:col-span-6">
+          <ProductConfigurator
+            product={product}
+            categoryTitle={categoryTitle}
+          />
+        </div>
+      </div>
+
+      {/* ۳. ماتریس مشخصات فنی و استانداردهای مهندسی */}
+      <ProductSpecsMatrix locale={locale} />
+    </main>
+  );
+}
+</file>
+
+<file path="src/app/[locale]/products/page.tsx">
+import React, { Suspense } from "react";
+import {
+  getProductsService,
+  getCategoriesService,
+  getColorsService,
+  getVeinPatternsService,
+} from "@/services/product.service";
+import ProductGridClient from "@/components/products/product-grid-client";
+import { ProductFiltersClient } from "@/components/products/product-filters-client";
+import SkeletonLoader from "@/components/products/skeleton-loader";
+
+interface PageProps {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export async function generateMetadata({ params }: PageProps) {
+  const { locale } = await params;
+  return {
+    title:
+      locale === "fa"
+        ? "محصولات و اسلب‌های سنگ کوارتز | پرسیس کوارتز"
+        : "Quartz Stone Products & Slabs | Persis Quartz",
+    description:
+      "مشاهده و بررسی انواع اسلب‌های سنگ کوارتز مهندسی‌شده پرسیس کوارتز در طرح‌ها و کدهای مختلف برای کارهای ساختمانی و معماری.",
+  };
+}
+
+export default async function ProductsPage({
+  params,
+  searchParams,
+}: PageProps) {
+  const { locale } = await params;
+  const sParams = await searchParams;
+
+  const currentLocale = locale as "fa" | "en" | "ar";
+
+  const rawCategory = sParams.category || sParams.cat;
+  const category = typeof rawCategory === "string" ? rawCategory : undefined;
+  const color = typeof sParams.color === "string" ? sParams.color : undefined;
+  const vein_pattern =
+    typeof sParams.vein_pattern === "string" ? sParams.vein_pattern : undefined;
+  const search =
+    typeof sParams.search === "string" ? sParams.search : undefined;
+
+  // فراخوانی هم‌زمان دسته‌بندی‌ها، رنگ‌ها و الگوهای رگه از پایگاه‌داده
+  const [
+    { data: initialProducts, meta: initialMeta },
+    categories,
+    colors,
+    veinPatterns,
+  ] = await Promise.all([
+    getProductsService({
+      locale: currentLocale,
+      page: 1,
+      limit: 9,
+      category,
+      color,
+      vein_pattern,
+      search,
+    }),
+    getCategoriesService(currentLocale),
+    getColorsService(currentLocale),
+    getVeinPatternsService(currentLocale),
+  ]);
+
+  return (
+    <main className="container mx-auto px-4 sm:px-12 py-24 sm:py-28 min-h-screen">
+      <div
+        dir="ltr"
+        className="relative mb-12 pt-4 pb-2 select-none overflow-hidden"
+      >
+        <h1 className="sr-only">اسلب‌های سنگ کوارتز پرسیس کوارتز</h1>
+        <h1 className="text-6xl sm:text-8xl lg:text-9xl font-black text-foreground/[0.04] uppercase tracking-tighter leading-none">
+          COLLECTION
+        </h1>
+
+        <div className="absolute bottom-2 start-0 z-10 flex items-center gap-3">
+          <span className="h-px w-6 bg-primary" />
+          <span className="text-[11px] font-mono tracking-[0.3em] text-primary uppercase">
+            Persis Quartz Catalog
+          </span>
+        </div>
+      </div>
+
+      <div className="flex flex-col md:flex-row gap-8 items-start">
+        <aside className="w-full md:w-64 shrink-0">
+          <ProductFiltersClient
+            categories={categories}
+            colors={colors}
+            veinPatterns={veinPatterns}
+          />
+        </aside>
+
+        <section className="flex-1 w-full">
+          <Suspense fallback={<SkeletonLoader />}>
+            <ProductGridClient
+              initialProducts={initialProducts}
+              initialMeta={initialMeta}
+              category={category}
+              color={color}
+              search={search}
+            />
+          </Suspense>
+        </section>
+      </div>
+    </main>
+  );
+}
+</file>
+
+<file path="src/app/api/admin/download-product-template/route.ts">
+import { NextResponse } from "next/server";
+import * as XLSX from "xlsx";
+
+export async function GET() {
+  const sampleData = [
+    {
+      code: "1101",
+      slug: "dover",
+      category_slug: "monocolor",
+      color_slug: "white",
+      title_fa: "داور",
+      title_en: "Dover",
+      title_ar: "دوفر",
+      vein_pattern_slug: "solid",
+      dimension_slugs: "320x75,320x92",
+      thicknesses: "12mm,20mm,30mm",
+      custom_thickness_available: "true",
+      finishes: "polished,honed",
+      is_in_stock: "in_stock",
+      description_fa:
+        "الهام‌گرفته از صخره‌های گچی سپید داور انگلستان؛ سفید یکدست، خالص و بدون تخلخل با بالاترین درخشش نوری مناسب آشپزخانه‌ها و فضاهای مینیمال مدرن.",
+      description_en:
+        "Pure, seamless solid white quartz surface inspired by the iconic White Cliffs of Dover. Engineered for maximum stain resistance and modern architectural spaces.",
+      description_ar:
+        "سطح كوارتز نقي وموحد بالكامل مستوحى من منحدرات دوفر البيضاء الشهيرة. مثالي للمساحات المعمارية الحديثة والمطابخ الفاخرة.",
+      meta_title_fa:
+        "اسلب سنگ کوارتز سفید ساده داور (Dover 1101) | پرسیس کوارتز",
+      meta_title_en: "Dover Pure White Quartz Slab (1101) | Persis Quartz",
+      meta_title_ar: "لوح كوارتز دوفر الأبيض النقي (1101) | برسيس كوارتز",
+      meta_description_fa:
+        "بررسی مشخصات فنی و سفارش سنگ کوارتز سفید یکدست و بدون رگه داور کد 1101. مقاوم در برابر خط و خش و لکه مناسب صفحه کابینت و کانترتاپ.",
+      meta_description_en:
+        "Explore Dover 1101 solid white engineered quartz slab. Non-porous, highly durable surface for modern kitchen islands and vanity tops.",
+      meta_description_ar:
+        "اكتشف مواصفات لوح الكوارتز الأبيض النقي دوفر 1101 غير المسامي والمقاوم للبقع والخدوش لأسطح المطابخ العصرية.",
+    },
+    {
+      code: "1606",
+      slug: "eclipse",
+      category_slug: "monocolor",
+      color_slug: "black",
+      title_fa: "اکلیپس",
+      title_en: "Eclipse",
+      title_ar: "إكليبس",
+      vein_pattern_slug: "solid",
+      dimension_slugs: "320x75,320x92",
+      thicknesses: "12mm,20mm,30mm",
+      custom_thickness_available: "true",
+      finishes: "polished,honed",
+      is_in_stock: "in_stock",
+      description_fa:
+        "مشکی عمیق، مخملی و خالص؛ تجلی تاریکی مطلق خورشیدگرفتگی در معماری مدرن با سطحی کاملاً متراکم و مقاوم در برابر لکه.",
+      description_en:
+        "Deep, velvety, pure black quartz capturing the stark drama of a total solar eclipse. Non-porous surface engineered for high-traffic luxury interiors.",
+      description_ar:
+        "أسود نقي وفاخر مستوحى من ظاهرة كسوف الشمس الكلي، يمنح المساحات المعمارية عمقاً وأناقة لا مثيل لها.",
+      meta_title_fa:
+        "اسلب سنگ کوارتز مشکی ساده اکلیپس (Eclipse 1606) | پرسیس کوارتز",
+      meta_title_en: "Eclipse Solid Black Quartz Slab (1606) | Persis Quartz",
+      meta_title_ar: "لوح كوارتز إكليبس الأسود النقي (1606) | برسيس كوارتز",
+      meta_description_fa:
+        "خرید و مشخصات اسلب کوارتز مشکی خالص اکلیپس کد 1606. سطح یکپارچه، ضد خط و خش و لکه مناسب کانترتاپ و جزیره مدرن.",
+      meta_description_en:
+        "Discover Eclipse 1606 pure solid black quartz slab. Highly durable, non-porous engineered surface for sleek modern spaces.",
+      meta_description_ar:
+        "تصفح مواصفات لوح الكوارتز الأسود الأحادي إكليبس 1606 المقاوم للبقع والخدوش للمطابخ والجزر العصرية.",
+    },
+    {
+      code: "2106",
+      slug: "aland",
+      category_slug: "veined-effect",
+      color_slug: "white",
+      title_fa: "الند",
+      title_en: "Aland",
+      title_ar: "ألاند",
+      vein_pattern_slug: "cloudy",
+      dimension_slugs: "320x75,320x92",
+      thicknesses: "12mm,20mm,30mm",
+      custom_thickness_available: "true",
+      finishes: "polished,honed",
+      is_in_stock: "in_stock",
+      description_fa:
+        "الهام‌گرفته از نخستین پرتوهای سیمین بامداد؛ سپید با سایه‌روشن‌های ابر و بادی نرم و مه‌آلود که جلوه‌ای روشن و سیال به فضا می‌بخشد.",
+      description_en:
+        "Inspired by the first radiant gleam of dawn; soft misty white with gentle cloudy transitions creating a serene, luminous ambiance.",
+      description_ar:
+        "مستوحى من أول خيوط فجر الصباح؛ أبيض سحابي ناعم بتدرجات ضبابية تضفي إشراقاً وسكينة على المكان.",
+      meta_title_fa:
+        "اسلب سنگ کوارتز سفید ابر و بادی الند (Aland 2106) | پرسیس کوارتز",
+      meta_title_en: "Aland Cloudy White Quartz Slab (2106) | Persis Quartz",
+      meta_title_ar: "لوح كوارتز ألاند الأبيض السحابي (2106) | برسيس كوارتز",
+      meta_description_fa:
+        "مشخصات و قیمت سنگ کوارتز سفید ابروبادی الند کد 2106. بافت مه‌آلود و طبیعی با دوام مهندسی‌شده مناسب کانتر و صفحات روشویی.",
+      meta_description_en:
+        "Explore Aland 2106 misty white cloudy quartz surfaces. Non-porous, elegant engineered stone for modern residential design.",
+      meta_description_ar:
+        "اكتشف أسطح كوارتز ألاند 2106 ذات التأثير السحابي الأبيض الناعم المقاومة للبكتيريا والحرارة لأسطح المطابخ.",
+    },
+    {
+      code: "2601",
+      slug: "caspian",
+      category_slug: "veined-effect",
+      color_slug: "black",
+      title_fa: "کاسپین",
+      title_en: "Caspian",
+      title_ar: "كاسبيان",
+      vein_pattern_slug: "cloudy",
+      dimension_slugs: "320x75,320x92",
+      thicknesses: "12mm,20mm,30mm",
+      custom_thickness_available: "true",
+      finishes: "polished,honed",
+      is_in_stock: "in_stock",
+      description_fa:
+        "مشکی رمزآلود با امواج و هاله‌های ابر و بادی دودی؛ تداعی‌گر خروش شبانه و عمق بی‌پایان کهن‌ترین دریای زمین.",
+      description_en:
+        "Mysterious deep black infused with subtle smoky cloudy textures, echoing the midnight depths of the Caspian Sea.",
+      description_ar:
+        "أسود غامض بتدرجات سحابية دخانية هادئة تجسد عمق وأمواج بحر قزوين في هدوء الليل.",
+      meta_title_fa:
+        "اسلب سنگ کوارتز مشکی ابر و بادی کاسپین (Caspian 2601) | پرسیس کوارتز",
+      meta_title_en: "Caspian Cloudy Black Quartz Slab (2601) | Persis Quartz",
+      meta_title_ar: "لوح كوارتز كاسبيان الأسود السحابي (2601) | برسيس كوارتز",
+      meta_description_fa:
+        "خرید اسلب کوارتز مشکی بافت‌دار و ابر و بادی کاسپین کد 2601. بافت مدرن، ضد جذب لکه مناسب دکوراسیون و جزیره لوکس.",
+      meta_description_en:
+        "Discover Caspian 2601 cloudy black quartz slab. Dense, durable, stain-resistant surface for contemporary statement islands.",
+      meta_description_ar:
+        "تسوق أسطح كوارتز كاسبيان 2601 بتأثيرات سحابية سوداء فاخرة ومقاومة عالية للصدمات للمشاريع الراقية.",
+    },
+    {
+      code: "3106",
+      slug: "arctic",
+      category_slug: "calacatta",
+      color_slug: "white",
+      title_fa: "آرکتیک",
+      title_en: "Arctic",
+      title_ar: "آركتيك",
+      vein_pattern_slug: "subtle-vein",
+      dimension_slugs: "320x75,320x92",
+      thicknesses: "12mm,20mm,30mm",
+      custom_thickness_available: "true",
+      finishes: "polished,honed",
+      is_in_stock: "in_stock",
+      description_fa:
+        "سفید یخی و درخشان با رگه‌های نازک و ظریف مشکی؛ تلاقی کنتراست مینیمال و خطوط ظریف کالاکاتا در پهنه‌ای ابدی از نور.",
+      description_en:
+        "Crisp crystalline white background traced with fine, delicate black veins, redefining modern minimalist Calacatta elegance.",
+      description_ar:
+        "أبيض بلوري ناصع بتعريقات سوداء دقيقة وناعمة تمنح تصاميم كالاكاتا لمسة عصرية فائقة النقاء.",
+      meta_title_fa:
+        "اسلب سنگ کوارتز کالاکاتا آرکتیک رگه مشکی (Arctic 3106) | پرسیس کوارتز",
+      meta_title_en:
+        "Arctic Calacatta Fine Black Vein Quartz (3106) | Persis Quartz",
+      meta_title_ar:
+        "لوح كوارتز كالاكاتا آركتيك بتعريقات سوداء دقيقة (3106) | برسيس كوارتز",
+      meta_description_fa:
+        "بررسی و سفارش اسلب کوارتز سفید رگه مشکی آرکتیک کد 3106 طرح کالاکاتا. مقاوم در برابر خط و خش مناسب کانترتاپ معمارانه.",
+      meta_description_en:
+        "Explore Arctic 3106 white quartz with fine black veins. Premium Calacatta design for sophisticated kitchen countertops.",
+      meta_description_ar:
+        "اكتشف لوح الكوارتز كالاكاتا آركتيك 3106 بتعريقات سوداء رفيعة لأسطح المطابخ والجزر المعمارية الفاخرة.",
+    },
+    {
+      code: "3108",
+      slug: "zarshouran",
+      category_slug: "calacatta",
+      color_slug: "white",
+      title_fa: "زرشوران",
+      title_en: "Zarshouran",
+      title_ar: "زرشوران",
+      vein_pattern_slug: "subtle-vein",
+      dimension_slugs: "320x75,320x92",
+      thicknesses: "12mm,20mm,30mm",
+      custom_thickness_available: "true",
+      finishes: "polished,honed",
+      is_in_stock: "in_stock",
+      description_fa:
+        "زمینه سپید شاهانه با رگه‌های مویی و درخشان طلایی؛ الهام‌گرفته از شکوه کهن رگه‌های زرین معادن زرشوران.",
+      description_en:
+        "Opulent white background enriched with delicate golden veins, capturing the prestige and warmth of precious mineral treasures.",
+      description_ar:
+        "خلفية بيضاء ملكية مزدانة بتعريقات ذهبية دقيقة وساحرة تجسد فخامة الذهب وبريق كالاكاتا الكلاسيكي.",
+      meta_title_fa:
+        "اسلب سنگ کوارتز کالاکاتا زرشوران رگه طلایی (Zarshouran 3108) | پرسیس کوارتز",
+      meta_title_en:
+        "Zarshouran Calacatta Gold Fine Vein Quartz (3108) | Persis Quartz",
+      meta_title_ar:
+        "لوح كوارتز كالاكاتا زرشوران بتعريقات ذهبية (3108) | برسيس كوارتز",
+      meta_description_fa:
+        "خرید اسلب کوارتز سفید رگه طلایی زرشوران کد 3108 طرح کالاکاتا. لوکس و نفوذناپذیر مناسب صفحات بین‌کابینتی و کانترتاپ.",
+      meta_description_en:
+        "Discover Zarshouran 3108 white quartz with subtle gold veins. High-performance Calacatta surface for timeless interiors.",
+      meta_description_ar:
+        "تصفح أسطح كوارتز كالاكاتا زرشوران 3108 بتعريقات ذهبية دقيقة ومقاومة عالية للبقع للمطابخ الحديثة.",
+    },
+    {
+      code: "3301",
+      slug: "hengam",
+      category_slug: "calacatta",
+      color_slug: "grey",
+      title_fa: "هنگام",
+      title_en: "Hengam",
+      title_ar: "هنغام",
+      vein_pattern_slug: "subtle-vein",
+      dimension_slugs: "320x75,320x92",
+      thicknesses: "12mm,20mm,30mm",
+      custom_thickness_available: "true",
+      finishes: "polished,honed",
+      is_in_stock: "in_stock",
+      description_fa:
+        "طوسی نقره‌ای و باوقار با رگه‌های نازک و درخشان سپید؛ تداعی‌گر انعکاس تلالو مهتاب بر آب‌های صخره‌ای جزیره هنگام.",
+      description_en:
+        "Sophisticated silver-grey background interlaced with fine white veins, evoking the moonlit shoreline of Hengam Island.",
+      description_ar:
+        "رمادي فضي أنيق تتخلله تعريقات بيضاء دقيقة ومضيئة مستوحاة من انعكاس ضوء القمر على شواطئ جزيرة هنگام.",
+      meta_title_fa:
+        "اسلب سنگ کوارتز طوسی رگه سفید هنگام (Hengam 3301) | پرسیس کوارتز",
+      meta_title_en:
+        "Hengam Grey Fine White Vein Quartz (3301) | Persis Quartz",
+      meta_title_ar:
+        "لوح كوارتز هنغام الرمادي بتعريقات بيضاء (3301) | برسيس كوارتز",
+      meta_description_fa:
+        "مشخصات و قیمت سنگ کوارتز طوسی رگه سفید هنگام کد 3301 طرح کالاکاتا. مقاوم در برابر حرارت و لکه مناسب دکوراسیون و آشپزخانه مدرن.",
+      meta_description_en:
+        "Explore Hengam 3301 grey engineered quartz with subtle white veining. Durable, architectural surface for islands and vanity tops.",
+      meta_description_ar:
+        "اكتشف أسطح كوارتز هنغام 3301 الرمادية بتعريقات بيضاء ناعمة وغير مسامية لأسطح المطابخ العصرية.",
+    },
+    {
+      code: "3601",
+      slug: "zagros",
+      category_slug: "calacatta",
+      color_slug: "black",
+      title_fa: "زاگرس",
+      title_en: "Zagros",
+      title_ar: "زاغروس",
+      vein_pattern_slug: "subtle-vein",
+      dimension_slugs: "320x75,320x92",
+      thicknesses: "12mm,20mm,30mm",
+      custom_thickness_available: "true",
+      finishes: "polished,honed",
+      is_in_stock: "in_stock",
+      description_fa:
+        "مشکی عمیق و پرابهت با خطوط رگه نازک سفید و برفی؛ الهام‌گرفته از شکاف‌های صخره‌ای و ستیغ‌های برفی رشته‌کوه زاگرس.",
+      description_en:
+        "Majestic deep black matrix crossed by crisp white linear veining, capturing the stark beauty of snow-crested Zagros peaks.",
+      description_ar:
+        "أسود عميق ومهيب بتعريقات بيضاء دقيقة تشبه قمم جبال زاغروس المكسوة بالثلوج، يمنح المكان فخامة استثنائية.",
+      meta_title_fa:
+        "اسلب سنگ کوارتز مشکی رگه سفید زاگرس (Zagros 3601) | پرسیس کوارتز",
+      meta_title_en:
+        "Zagros Black Fine White Vein Quartz (3601) | Persis Quartz",
+      meta_title_ar:
+        "لوح كوارتز زاغروس الأسود بتعريقات بيضاء (3601) | برسيس كوارتز",
+      meta_description_fa:
+        "خرید اسلب کوارتز مشکی رگه سفید زاگرس کد 3601 طرح کالاکاتا. کنتراست لوکس، بدون تخلخل و ضد خش مناسب کانترتاپ و جزیره.",
+      meta_description_en:
+        "Discover Zagros 3601 black quartz with sharp white veins. Premium luxury Calacatta stone for high-end residential interiors.",
+      meta_description_ar:
+        "تسوق أسطح كوارتز زاغروس 3601 السوداء بتعريقات بيضاء فاخرة ومقاومة للبقع والحرارة للمشاريع المعمارية.",
+    },
+  ];
+
+  const guideData = [
+    {
+      "نام ستون (Header)": "code",
+      وضعیت: "اجباری",
+      توضیح:
+        "کد اختصاصی سنگ در کاتالوگ (مانند 1101، 1606، 3106). کلید اصلی برای آپدیت خودکار است.",
+      "نمونه مقدار مجاز": "1101 - 2106 - 3108",
+    },
+    {
+      "نام ستون (Header)": "slug",
+      وضعیت: "اجباری",
+      توضیح:
+        "شناسه انگلیسی محصول برای آدرس URL صفحه (فقط حروف کوچک و خط تیره).",
+      "نمونه مقدار مجاز": "dover یا eclipse یا aland",
+    },
+    {
+      "نام ستون (Header)": "category_slug",
+      وضعیت: "اجباری",
+      توضیح:
+        "یکی از اسلاگ‌های تعریف شده دسته‌بندی‌ها (monocolor, veined-effect, calacatta).",
+      "نمونه مقدار مجاز": "monocolor یا veined-effect یا calacatta",
+    },
+    {
+      "نام ستون (Header)": "color_slug",
+      وضعیت: "اجباری",
+      توضیح: "طیف رنگی پایه سنگ جهت فیلتر شدن در کاتالوگ سایت.",
+      "نمونه مقدار مجاز": "white یا black یا grey",
+    },
+    {
+      "نام ستون (Header)": "title_fa / title_en / title_ar",
+      وضعیت: "اجباری",
+      توضیح: "نام مدل سنگ به ۳ زبان فارسی، انگلیسی و عربی.",
+      "نمونه مقدار مجاز": "داور / Dover / دوفر",
+    },
+    {
+      "نام ستون (Header)": "vein_pattern_slug",
+      وضعیت: "اختیاری",
+      توضیح:
+        "نوع بافت رگه‌ها (solid برای ساده، cloudy برای ابروبادی، subtle-vein برای رگه نازک).",
+      "نمونه مقدار مجاز": "solid یا cloudy یا subtle-vein",
+    },
+    {
+      "نام ستون (Header)": "dimension_slugs",
+      وضعیت: "اختیاری",
+      توضیح: "ابعاد اسلب (جداشده با کاما).",
+      "نمونه مقدار مجاز": "320x75,320x92",
+    },
+    {
+      "نام ستون (Header)": "thicknesses",
+      وضعیت: "اجباری",
+      توضیح: "ضخامت‌های استاندارد تولیدی (جداشده با کاما).",
+      "نمونه مقدار مجاز": "12mm,20mm,30mm",
+    },
+    {
+      "نام ستون (Header)": "custom_thickness_available",
+      وضعیت: "اجباری",
+      توضیح: "امکان سفارش تولید با ضخامت دلخواه پروژه.",
+      "نمونه مقدار مجاز": "true یا false",
+    },
+    {
+      "نام ستون (Header)": "finishes",
+      وضعیت: "اجباری",
+      توضیح: "نوع پرداخت سطح سنگ (جداشده با کاما).",
+      "نمونه مقدار مجاز": "polished,honed",
+    },
+    {
+      "نام ستون (Header)": "is_in_stock",
+      وضعیت: "اجباری",
+      توضیح:
+        "وضعیت موجودی کالا (in_stock موجود، on_demand سفارشی، discontinued توقف تولید).",
+      "نمونه مقدار مجاز": "in_stock",
+    },
+    {
+      "نام ستون (Header)": "description_fa / description_en / description_ar",
+      وضعیت: "اجباری",
+      توضیح: "متن معرفی و کانسپت سنگ به ۳ زبان.",
+      "نمونه مقدار مجاز": "الهام‌گرفته از صخره‌های...",
+    },
+    {
+      "نام ستون (Header)": "meta_title_fa / meta_title_en / meta_title_ar",
+      وضعیت: "اجباری",
+      توضیح: "عنوان سئو گوگل صفحه به ۳ زبان.",
+      "نمونه مقدار مجاز": "اسلب سنگ کوارتز سفید ساده داور | پرسیس کوارتز",
+    },
+    {
+      "نام ستون (Header)":
+        "meta_description_fa / meta_description_en / meta_description_ar",
+      وضعیت: "اجباری",
+      توضیح: "خلاصه توضیحات گوگل زیر عنوان به ۳ زبان.",
+      "نمونه مقدار مجاز": "بررسی مشخصات فنی و سفارش سنگ کوارتز...",
+    },
+    {
+      "نام ستون (Header)": "تصاویر و عکس‌ها",
+      وضعیت: "در پنل ادمین",
+      توضیح:
+        "عکس‌ها در فایل اکسل قرار نمی‌گیرند. پس از آپلود، وارد ویرایش هر محصول در پنل پیلود شده و عکس‌ها را آپلود کنید.",
+      "نمونه مقدار مجاز": "در داشبورد پیلود",
+    },
+  ];
+
+  const workbook = XLSX.utils.book_new();
+
+  const worksheetData = XLSX.utils.json_to_sheet(sampleData);
+  XLSX.utils.book_append_sheet(workbook, worksheetData, "Products Template");
+
+  const worksheetGuide = XLSX.utils.json_to_sheet(guideData);
+  XLSX.utils.book_append_sheet(
+    workbook,
+    worksheetGuide,
+    "راهنمای تکمیل (Guide)",
+  );
+
+  const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
+
+  return new NextResponse(buffer, {
+    status: 200,
+    headers: {
+      "Content-Type":
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "Content-Disposition":
+        'attachment; filename="PersisQuartz_Products_Template.xlsx"',
+    },
+  });
+}
+</file>
+
+<file path="src/app/api/admin/import-products/route.ts">
+// src/app/api/admin/import-products/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { getPayload } from "payload";
+import configPromise from "@/payload.config";
+import * as XLSX from "xlsx";
+import { excelProductRowSchema } from "@/lib/validations/excel-product-import";
+
+export async function POST(req: NextRequest) {
+  try {
+    const payload = await getPayload({ config: configPromise });
+
+    // ۱. بررسی دسترسی ادمین
+    const { user } = await payload.auth({ headers: req.headers });
+    if (!user) {
+      return NextResponse.json(
+        { error: "عدم دسترسی! لطفاً وارد پنل ادمین شوید." },
+        { status: 401 },
+      );
+    }
+
+    const formData = await req.formData();
+    const file = formData.get("file") as File | null;
+    if (!file) {
+      return NextResponse.json({ error: "فایلی دریافت نشد." }, { status: 400 });
+    }
+
+    const arrayBuffer = await file.arrayBuffer();
+    const workbook = XLSX.read(arrayBuffer, { type: "array" });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const rawData = XLSX.utils.sheet_to_json<Record<string, any>>(worksheet, {
+      defval: "",
+    });
+
+    let createdCount = 0;
+    let updatedCount = 0;
+    const errors: string[] = [];
+
+    // ۲. بارگذاری کالکشن‌های رابطه‌ای
+    const [categories, colors, veinPatterns, dimensions] = await Promise.all([
+      payload.find({ collection: "categories", limit: 500 }),
+      payload.find({ collection: "colors", limit: 500 }),
+      payload.find({ collection: "vein-patterns", limit: 500 }),
+      payload.find({ collection: "dimensions", limit: 500 }),
+    ]);
+
+    const categoryMap = new Map(
+      categories.docs.map((c) => [c.slug.toLowerCase(), c.id]),
+    );
+    const colorMap = new Map(
+      colors.docs.map((c) => [c.slug.toLowerCase(), c.id]),
+    );
+    const veinPatternMap = new Map(
+      veinPatterns.docs.map((v) => [v.slug.toLowerCase(), v.id]),
+    );
+    const dimensionMap = new Map(
+      dimensions.docs.map((d) => [d.slug.toLowerCase(), d.id]),
+    );
+
+    // ۳. پیمایش و پردازش ردیف‌ها
+    for (let index = 0; index < rawData.length; index++) {
+      const rowNum = index + 2;
+      const row = rawData[index];
+
+      if (!row.code && !row.slug && !row.title_fa) continue;
+
+      const parseResult = excelProductRowSchema.safeParse(row);
+      if (!parseResult.success) {
+        const errorMsgs = parseResult.error.errors
+          .map((e) => e.message)
+          .join(" | ");
+        errors.push(`ردیف ${rowNum}: ${errorMsgs}`);
+        continue;
+      }
+
+      const item = parseResult.data;
+
+      // بررسی دسته‌بندی
+      const categoryId = categoryMap.get(item.category_slug);
+      if (!categoryId) {
+        errors.push(
+          `ردیف ${rowNum}: دسته‌بندی با اسلاگ "${item.category_slug}" یافت نشد. لطفاً ابتدا اکسل دسته‌بندی‌ها را آپلود کنید.`,
+        );
+        continue;
+      }
+
+      // طیف رنگی
+      let colorId = colorMap.get(item.color_slug);
+      if (!colorId) {
+        const newColor = await payload.create({
+          collection: "colors",
+          data: { title: item.color_slug, slug: item.color_slug },
+        });
+        colorId = newColor.id;
+        colorMap.set(item.color_slug, colorId);
+      }
+
+      // الگوی رگه
+      const veinPatternId = item.vein_pattern_slug
+        ? veinPatternMap.get(item.vein_pattern_slug)
+        : undefined;
+
+      // ابعاد اسلب
+      const dimensionIds: (string | number)[] = [];
+      if (item.dimension_slugs) {
+        item.dimension_slugs.split(",").forEach((s) => {
+          const id = dimensionMap.get(s.trim().toLowerCase());
+          if (id) dimensionIds.push(id);
+        });
+      }
+
+      const formattedThicknesses = item.thicknesses
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+      const formattedFinishes = item.finishes
+        .split(",")
+        .map((f) => f.trim().toLowerCase())
+        .filter(Boolean);
+
+      const existing = await payload.find({
+        collection: "products",
+        where: {
+          or: [
+            { code: { equals: item.code } },
+            { slug: { equals: item.slug } },
+          ],
+        },
+        limit: 1,
+      });
+
+      const baseData: any = {
+        code: item.code,
+        slug: item.slug,
+        category: categoryId,
+        color_family: colorId,
+        vein_pattern: veinPatternId || null,
+        dimensions: dimensionIds.length > 0 ? dimensionIds : undefined,
+        available_thicknesses: formattedThicknesses,
+        custom_thickness_available: item.custom_thickness_available,
+        finishes: formattedFinishes,
+        is_in_stock: item.is_in_stock,
+      };
+
+      if (existing.docs.length > 0) {
+        const productId = existing.docs[0].id;
+
+        // ۱. بروزرسانی زبان فارسی (fa)
+        await payload.update({
+          collection: "products",
+          id: productId,
+          locale: "fa",
+          data: {
+            ...baseData,
+            title: item.title_fa,
+            description: item.description_fa,
+            meta_title: item.meta_title_fa,
+            meta_description: item.meta_description_fa,
+          },
+        });
+
+        // ۲. بروزرسانی زبان انگلیسی (en)
+        await payload.update({
+          collection: "products",
+          id: productId,
+          locale: "en",
+          data: {
+            title: item.title_en,
+            description: item.description_en,
+            meta_title: item.meta_title_en,
+            meta_description: item.meta_description_en,
+          },
+        });
+
+        // ۳. بروزرسانی زبان عربی (ar)
+        await payload.update({
+          collection: "products",
+          id: productId,
+          locale: "ar",
+          data: {
+            title: item.title_ar,
+            description: item.description_ar,
+            meta_title: item.meta_title_ar,
+            meta_description: item.meta_description_ar,
+          },
+        });
+
+        updatedCount++;
+      } else {
+        // ۱. ایجاد اولیه با زبان فارسی (fa)
+        const createdDoc = await payload.create({
+          collection: "products",
+          locale: "fa",
+          data: {
+            ...baseData,
+            title: item.title_fa,
+            description: item.description_fa,
+            meta_title: item.meta_title_fa,
+            meta_description: item.meta_description_fa,
+          },
+        });
+
+        // ۲. افزودن مقادیر انگلیسی (en)
+        await payload.update({
+          collection: "products",
+          id: createdDoc.id,
+          locale: "en",
+          data: {
+            title: item.title_en,
+            description: item.description_en,
+            meta_title: item.meta_title_en,
+            meta_description: item.meta_description_en,
+          },
+        });
+
+        // ۳. افزودن مقادیر عربی (ar)
+        await payload.update({
+          collection: "products",
+          id: createdDoc.id,
+          locale: "ar",
+          data: {
+            title: item.title_ar,
+            description: item.description_ar,
+            meta_title: item.meta_title_ar,
+            meta_description: item.meta_description_ar,
+          },
+        });
+
+        createdCount++;
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      summary: {
+        createdCount,
+        updatedCount,
+        failedCount: errors.length,
+        errors,
+      },
+    });
+  } catch (error: any) {
+    console.error("Products Excel Import Error:", error);
+    return NextResponse.json(
+      { error: "خطا در پردازش فایل محصولات", details: error.message },
+      { status: 500 },
+    );
+  }
+}
+</file>
+
 <file path="src/components/home/interactive-tools.tsx">
 // src/components/home/interactive-tools.tsx
 "use client";
@@ -5230,6 +4785,1019 @@ export const InteractiveTools: React.FC = () => {
 };
 </file>
 
+<file path="src/components/products/product-card.tsx">
+"use client";
+
+import React from "react";
+import Image from "next/image";
+import { Link } from "@/i18n/routing";
+import { ArrowUpRight } from "lucide-react";
+import { useTranslations } from "next-intl";
+import type { ProductItem } from "@/services/product.service";
+
+interface ProductCardProps {
+  product: ProductItem;
+  className?: string;
+}
+
+export const ProductCard: React.FC<ProductCardProps> = ({
+  product,
+  className = "",
+}) => {
+  const t = useTranslations("ProductsGrid");
+
+  const imageUrl =
+    typeof product.thumbnail === "object" && product.thumbnail?.url
+      ? product.thumbnail.url
+      : typeof product.thumbnail === "string"
+        ? product.thumbnail
+        : "/PersisQuartz-Red.png";
+
+  const isDefaultLogo = imageUrl === "/PersisQuartz-Red.png";
+
+  return (
+    <Link
+      href={`/products/${product.slug}`}
+      className={`group relative flex flex-col bg-card border border-border/50 hover:border-primary/60 transition-all duration-500 overflow-hidden select-none h-full ${className}`}
+    >
+      {/* قاب تصویر عمودی اسلب (نسبت 3:4) */}
+      <div className="relative aspect-[3/4] w-full overflow-hidden bg-muted/40 flex items-center justify-center p-6">
+        <Image
+          src={imageUrl}
+          alt={product.title}
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          loading="lazy"
+          className={`${
+            isDefaultLogo
+              ? "object-contain p-8 opacity-70 group-hover:opacity-100 group-hover:scale-105"
+              : "object-cover group-hover:scale-105"
+          } transition-all duration-700 ease-out`}
+        />
+
+        {/* وضعیت تولید سفارشی */}
+        {product.is_in_stock === "on_demand" && (
+          <div className="absolute top-3 start-3 bg-background/90 backdrop-blur-md px-2.5 py-1 border border-border/50 text-[10px] font-mono tracking-widest uppercase text-amber-600 dark:text-amber-400 z-10">
+            {t("onDemand")}
+          </div>
+        )}
+
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-500 pointer-events-none" />
+      </div>
+
+      {/* اطلاعات متنی */}
+      <div className="p-4 sm:p-5 flex items-center justify-between gap-3 border-t border-border/30 flex-1 bg-card">
+        <div className="space-y-0.5">
+          <span className="text-[10px] sm:text-[11px] font-mono font-medium text-muted-foreground tracking-wider block">
+            {product.code}
+          </span>
+          <h4 className="text-sm sm:text-base font-medium text-foreground group-hover:text-primary transition-colors duration-300">
+            {product.title}
+          </h4>
+        </div>
+
+        <div className="hidden sm:flex shrink-0 h-8 w-8 sm:h-9 sm:w-9 border border-primary bg-primary text-primary-foreground items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+          <ArrowUpRight className="h-4 w-4" />
+        </div>
+      </div>
+    </Link>
+  );
+};
+
+export default ProductCard;
+</file>
+
+<file path="src/components/products/product-filters-client.tsx">
+"use client";
+
+import React, { useState, useTransition } from "react";
+import { usePathname, useRouter } from "@/i18n/routing";
+import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { Button } from "@/components/ui/button";
+import { RotateCcw, SlidersHorizontal, X, Check } from "lucide-react";
+import type {
+  CategoryItem,
+  ColorItem,
+  VeinPatternItem,
+} from "@/services/product.service";
+
+interface ProductFiltersClientProps {
+  categories?: CategoryItem[];
+  colors?: ColorItem[];
+  veinPatterns?: VeinPatternItem[];
+}
+
+export const ProductFiltersClient: React.FC<ProductFiltersClientProps> = ({
+  categories = [],
+  colors = [],
+  veinPatterns = [],
+}) => {
+  const t = useTranslations("ProductsFilter");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  const currentCategory =
+    searchParams.get("category") || searchParams.get("cat") || "";
+  const currentColor = searchParams.get("color") || "";
+  const currentVeinPattern = searchParams.get("vein_pattern") || "";
+
+  const activeFiltersCount =
+    (currentCategory ? 1 : 0) +
+    (currentColor ? 1 : 0) +
+    (currentVeinPattern ? 1 : 0);
+
+  const updateFilters = (key: string, value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("cat");
+
+    if (value) {
+      params.set(key, value);
+    } else {
+      params.delete(key);
+    }
+
+    params.delete("page");
+
+    startTransition(() => {
+      router.push(`${pathname}?${params.toString()}`);
+    });
+  };
+
+  const handleReset = () => {
+    startTransition(() => {
+      router.push(pathname);
+    });
+  };
+
+  const filterContent = (
+    <div className="space-y-8">
+      <div className="flex items-center justify-between pb-4 border-b border-border/40">
+        <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground">
+          {t("title")}
+        </h3>
+        {activeFiltersCount > 0 && (
+          <Button
+            variant="ghost"
+            size="xs"
+            onClick={handleReset}
+            className="text-xs text-muted-foreground hover:text-primary gap-1"
+          >
+            <RotateCcw className="h-3 w-3" />
+            <span>{t("reset")}</span>
+          </Button>
+        )}
+      </div>
+
+      {/* ۱. فیلتر دسته‌بندی‌ها (سری‌ها) */}
+      <div className="space-y-3">
+        <label className="text-xs uppercase tracking-widest text-primary font-semibold block">
+          {t("collections")}
+        </label>
+        <div className="space-y-1.5">
+          <button
+            onClick={() => updateFilters("category", "")}
+            className={`w-full text-start text-xs py-2.5 px-3 border transition-colors ${
+              currentCategory === ""
+                ? "border-primary bg-primary/10 text-primary font-medium"
+                : "border-border/40 hover:border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {t("all")}
+          </button>
+
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => updateFilters("category", cat.slug)}
+              className={`w-full text-start text-xs py-2.5 px-3 border transition-colors ${
+                currentCategory === cat.slug
+                  ? "border-primary bg-primary/10 text-primary font-medium"
+                  : "border-border/40 hover:border-border text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {cat.title}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ۲. فیلتر طیف رنگی */}
+      {colors.length > 0 && (
+        <div className="space-y-3">
+          <label className="text-xs uppercase tracking-widest text-primary font-semibold block">
+            {t("colorFamily")}
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            {colors.map((color) => (
+              <button
+                key={color.id}
+                onClick={() =>
+                  updateFilters(
+                    "color",
+                    currentColor === color.slug ? "" : color.slug,
+                  )
+                }
+                className={`text-xs py-2.5 px-2 border flex items-center justify-center gap-2 transition-colors ${
+                  currentColor === color.slug
+                    ? "border-primary bg-primary text-primary-foreground font-medium"
+                    : "border-border/40 hover:border-border text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {color.hex_code && (
+                  <span
+                    className="h-3 w-3 rounded-full border border-black/20 shrink-0"
+                    style={{ backgroundColor: color.hex_code }}
+                  />
+                )}
+                <span>{color.title}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ۳. فیلتر الگوهای رگه (Vein Patterns) */}
+      {veinPatterns.length > 0 && (
+        <div className="space-y-3">
+          <label className="text-xs uppercase tracking-widest text-primary font-semibold block">
+            {t("veinPattern")}
+          </label>
+          <div className="space-y-1.5">
+            {veinPatterns.map((pattern) => {
+              const isSelected = currentVeinPattern === pattern.slug;
+              return (
+                <button
+                  key={pattern.id}
+                  onClick={() =>
+                    updateFilters(
+                      "vein_pattern",
+                      isSelected ? "" : pattern.slug,
+                    )
+                  }
+                  className={`w-full text-start text-xs py-2.5 px-3 border transition-colors flex items-center justify-between ${
+                    isSelected
+                      ? "border-primary bg-primary/10 text-primary font-medium"
+                      : "border-border/40 hover:border-border text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <span>{pattern.title}</span>
+                  {isSelected && <Check className="h-3.5 w-3.5 text-primary" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <>
+      <div className="md:hidden mb-6 flex items-center justify-between">
+        <Button
+          variant="outline"
+          onClick={() => setIsMobileOpen(true)}
+          className="w-full h-11 justify-between text-xs tracking-wider uppercase rounded-none border-border/80 bg-card"
+        >
+          <span className="flex items-center gap-2">
+            <SlidersHorizontal className="h-4 w-4 text-primary" />
+            <span>{t("title")}</span>
+          </span>
+          {activeFiltersCount > 0 && (
+            <span className="h-5 w-5 bg-primary text-primary-foreground text-[10px] flex items-center justify-center">
+              {activeFiltersCount}
+            </span>
+          )}
+        </Button>
+      </div>
+
+      {isMobileOpen && (
+        <div className="fixed inset-0 z-50 md:hidden flex flex-col justify-end bg-black/60 backdrop-blur-sm animate-in fade-in-0 duration-200">
+          <div className="bg-background border-t border-border/60 p-6 max-h-[85vh] flex flex-col justify-between">
+            {/* هدر کشو */}
+            <div className="flex items-center justify-between pb-3 border-b border-border/40 mb-4 shrink-0">
+              <span className="text-xs uppercase tracking-widest text-primary font-semibold">
+                {t("title")}
+              </span>
+              <button
+                onClick={() => setIsMobileOpen(false)}
+                className="p-1 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* محتوای اسکرول‌شونده */}
+            <div className="overflow-y-auto pr-1 flex-1 mb-4 space-y-6">
+              {filterContent}
+            </div>
+
+            {/* دکمه مشاهده نتایج در انتهای موبایل */}
+            <div className="pt-3 border-t border-border/40 shrink-0">
+              <Button
+                onClick={() => setIsMobileOpen(false)}
+                className="w-full h-12 rounded-none bg-primary text-primary-foreground hover:bg-primary/90 text-xs uppercase tracking-wider font-medium"
+              >
+                {t("viewResults")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div
+        className={`hidden md:block space-y-8 bg-card border border-border/50 p-6 ${
+          isPending ? "opacity-60 transition-opacity" : ""
+        }`}
+      >
+        {filterContent}
+      </div>
+    </>
+  );
+};
+</file>
+
+<file path="src/components/products/product-grid-client.tsx">
+"use client";
+
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { Loader2 } from "lucide-react";
+import { useTranslations, useLocale } from "next-intl";
+import type { ProductItem, ProductMeta } from "@/services/product.service";
+import { fetchMoreProductsAction } from "@/app/actions/product-actions";
+import { ProductCard } from "@/components/products/product-card";
+
+interface ProductGridProps {
+  initialProducts: ProductItem[];
+  initialMeta: ProductMeta;
+  category?: string;
+  color?: string;
+  search?: string;
+}
+
+export const ProductGridClient: React.FC<ProductGridProps> = ({
+  initialProducts,
+  initialMeta,
+  category,
+  color,
+  search,
+}) => {
+  const t = useTranslations("ProductsGrid");
+  const locale = useLocale() as "fa" | "en" | "ar";
+
+  const [products, setProducts] = useState<ProductItem[]>(initialProducts);
+  const [meta, setMeta] = useState<ProductMeta>(initialMeta);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  const observerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    setProducts(initialProducts);
+    setMeta(initialMeta);
+  }, [initialProducts, initialMeta]);
+
+  const loadMoreProducts = useCallback(async () => {
+    if (isLoadingMore || !meta.has_next_page) return;
+
+    setIsLoadingMore(true);
+    const nextPage = meta.current_page + 1;
+
+    try {
+      const res = await fetchMoreProductsAction({
+        locale,
+        page: nextPage,
+        limit: 9,
+        category,
+        color,
+        search, // <-- ارسال مقدار جستجو در pagination
+      });
+
+      setProducts((prev) => [...prev, ...res.data]);
+      setMeta(res.meta);
+    } catch (error) {
+      console.error("Error loading infinite scroll products:", error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [isLoadingMore, meta, locale, category, color, search]);
+
+  useEffect(() => {
+    const el = observerRef.current;
+    if (!el || !meta.has_next_page) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && meta.has_next_page && !isLoadingMore) {
+          loadMoreProducts();
+        }
+      },
+      { threshold: 0.2 },
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [meta.has_next_page, isLoadingMore, loadMoreProducts]);
+
+  if (!products || products.length === 0) {
+    return (
+      <div className="p-12 text-center bg-card border border-border/40 space-y-3">
+        <p className="text-sm text-foreground font-medium">
+          {t("noProductsFound")}
+        </p>
+        <p className="text-xs text-muted-foreground font-light">
+          {t("tryResettingFilters")}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      <div className="flex items-center justify-between pb-4 border-b border-border/40">
+        <span className="text-xs font-mono text-muted-foreground uppercase">
+          {t("showingCount", {
+            count: products.length,
+            total: meta.total_items,
+          })}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        {products.map((product, idx) => (
+          <ProductCard key={`${product.id}-${idx}`} product={product} />
+        ))}
+      </div>
+
+      <div ref={observerRef} className="pt-6 flex justify-center">
+        {isLoadingMore && (
+          <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground py-4">
+            <Loader2 className="h-4 w-4 animate-spin text-primary" />
+          </div>
+        )}
+
+        {!meta.has_next_page && products.length > 9 && (
+          <p className="text-[11px] font-mono text-muted-foreground/60 uppercase tracking-widest pt-4">
+            — END OF CATALOG —
+          </p>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default ProductGridClient;
+</file>
+
+<file path="src/lib/validations/contact.ts">
+// src/lib/validations/contact.ts
+import { z } from "zod";
+
+export const quickContactSchema = z.object({
+  fullName: z
+    .string()
+    .min(2, { message: "fullNameError" }) // کلید ترجمه برای Zod
+    .max(60),
+  country: z.string().min(2, { message: "countryError" }),
+  phone: z
+    .string()
+    .min(7, { message: "phoneError" })
+    .max(20)
+    .regex(/^[+]*[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/, {
+      message: "phoneInvalidError",
+    }),
+  message: z.string().min(5, { message: "messageError" }).max(500),
+});
+
+export type QuickContactValues = z.infer<typeof quickContactSchema>;
+</file>
+
+<file path="src/payload/collections/Products.ts">
+// src/payload/collections/Products.ts
+import { CollectionConfig } from "payload";
+
+export const Products: CollectionConfig = {
+  slug: "products",
+  admin: {
+    useAsTitle: "title",
+    group: "Catalog",
+    defaultColumns: ["title", "code", "category", "is_in_stock", "updatedAt"],
+    components: {
+      beforeListTable: [
+        "@/components/admin/ExcelProductImportControl#ExcelProductImportControl",
+      ],
+    },
+  },
+  access: { read: () => true },
+  fields: [
+    {
+      name: "title",
+      type: "text",
+      required: true,
+      localized: true,
+      admin: {
+        description: "نام مدل سنگ (مثلاً: مه البرز / Alborz Mist)",
+      },
+    },
+    {
+      name: "slug",
+      type: "text",
+      required: true,
+      unique: true,
+      index: true,
+      admin: {
+        description: "اسلاگ سئو برای URL (مثلاً: alborz-mist)",
+      },
+    },
+    {
+      name: "code",
+      type: "text",
+      required: true,
+      index: true,
+      admin: {
+        description: "کد اختصاصی سنگ (مثلاً: PQ-202)",
+      },
+    },
+    {
+      name: "category",
+      type: "relationship",
+      relationTo: "categories",
+      required: true,
+      admin: { description: "سری/دسته‌بندی سنگ (تک‌رنگ، رگه‌دار، کالاکاتا)" },
+    },
+    {
+      name: "color_family",
+      type: "relationship",
+      relationTo: "colors",
+      required: true,
+      admin: { description: "طیف رنگی اصلی سنگ" },
+    },
+    {
+      name: "vein_pattern",
+      type: "relationship",
+      relationTo: "vein-patterns",
+      admin: {
+        description: "الگوی رگه (مثلاً رگه نازک، رگه ضخیم، ابر و بادی)",
+      },
+    },
+    {
+      name: "is_in_stock",
+      type: "select",
+      defaultValue: "in_stock",
+      options: [
+        { label: "موجود در انبار / تحویل فوری (In Stock)", value: "in_stock" },
+        {
+          label: "تولید سفارشی / استعلام زمان (On Demand)",
+          value: "on_demand",
+        },
+        { label: "توقف تولید / آرشیو (Discontinued)", value: "discontinued" },
+      ],
+    },
+    {
+      name: "thumbnail",
+      type: "upload",
+      relationTo: "media",
+      required: false,
+      admin: { description: "تصویر اصلی و تمام‌قد اسلب (Full Slab Scan)" },
+    },
+    {
+      name: "gallery",
+      type: "array",
+      admin: {
+        description: "گالری اسلایدر تصاویر (بافت نزدیک و اجرا در محیط)",
+      },
+      fields: [
+        {
+          name: "image",
+          type: "upload",
+          relationTo: "media",
+          required: true,
+        },
+        {
+          name: "caption",
+          type: "text",
+          localized: true,
+          admin: { description: "توضیح تصویر (مثلاً: اجرا در کانتر آشپزخانه)" },
+        },
+      ],
+    },
+    {
+      name: "available_thicknesses",
+      type: "select",
+      hasMany: true,
+      options: [
+        { label: "10mm (1.0 cm)", value: "10mm" },
+        { label: "11mm (1.1 cm)", value: "11mm" },
+        { label: "12mm (1.2 cm)", value: "12mm" },
+        { label: "13mm (1.3 cm)", value: "13mm" },
+        { label: "14mm (1.4 cm)", value: "14mm" },
+        { label: "15mm (1.5 cm)", value: "15mm" },
+        { label: "16mm (1.6 cm)", value: "16mm" },
+        { label: "17mm (1.7 cm)", value: "17mm" },
+        { label: "18mm (1.8 cm)", value: "18mm" },
+        { label: "19mm (1.9 cm)", value: "19mm" },
+        { label: "20mm (2.0 cm)", value: "20mm" },
+        { label: "21mm (2.1 cm)", value: "21mm" },
+        { label: "22mm (2.2 cm)", value: "22mm" },
+        { label: "23mm (2.3 cm)", value: "23mm" },
+        { label: "24mm (2.4 cm)", value: "24mm" },
+        { label: "25mm (2.5 cm)", value: "25mm" },
+        { label: "26mm (2.6 cm)", value: "26mm" },
+        { label: "27mm (2.7 cm)", value: "27mm" },
+        { label: "28mm (2.8 cm)", value: "28mm" },
+        { label: "29mm (2.9 cm)", value: "29mm" },
+        { label: "30mm (3.0 cm)", value: "30mm" },
+      ],
+      defaultValue: ["12mm", "20mm"],
+    },
+    {
+      name: "custom_thickness_available",
+      type: "checkbox",
+      defaultValue: false,
+      admin: { description: "امکان سفارش تولید با ضخامت خاص سفارشی" },
+    },
+    {
+      name: "finishes",
+      type: "select",
+      hasMany: true,
+      options: [
+        { label: "براق (Polished)", value: "polished" },
+        { label: "مات (Honed / Matt)", value: "honed" },
+        { label: "بافت‌دار (Textured / Suede)", value: "textured" },
+        { label: "چرمی (Leathered)", value: "leathered" },
+      ],
+      defaultValue: ["polished"],
+    },
+    {
+      name: "dimensions",
+      type: "relationship",
+      relationTo: "dimensions",
+      hasMany: true,
+      admin: {
+        description: "ابعاد قابل عرضه اسلب (امکان انتخاب ابعاد جدید در آینده)",
+      },
+    },
+    {
+      name: "description",
+      type: "textarea",
+      localized: true,
+      admin: { description: "توضیحات معمارانه و سئومحور سنگ" },
+    },
+    {
+      name: "meta_title",
+      type: "text",
+      localized: true,
+      admin: { description: "عنوان متای سئو گوگل" },
+    },
+    {
+      name: "meta_description",
+      type: "textarea",
+      localized: true,
+      admin: { description: "توضیحات متای سئو گوگل" },
+    },
+  ],
+};
+</file>
+
+<file path="src/payload/collections/Users.ts">
+import type { CollectionConfig } from "payload";
+
+export const Users: CollectionConfig = {
+  slug: "users",
+  admin: {
+    useAsTitle: "email",
+    description: "مدیریت حساب کاربری ادمین",
+  },
+  auth: {
+    // تنظیمات قفل شدن حساب در صورت ورود ناموفق متوالی
+    maxLoginAttempts: 5,
+    lockTime: 600 * 1000, // ۱۰ دقیقه قفل در صورت ۵ بار اشتباه
+  },
+  access: {
+    create: ({ req: { user } }) => Boolean(user),
+    read: ({ req: { user } }) => Boolean(user),
+    update: ({ req: { user } }) => Boolean(user),
+    delete: ({ req: { user } }) => Boolean(user),
+  },
+  fields: [
+    {
+      name: "name",
+      type: "text",
+      label: "نام",
+    },
+  ],
+};
+</file>
+
+<file path="src/services/product.service.ts">
+import "server-only";
+import { getPayload } from "payload";
+import configPromise from "@/payload.config";
+
+export interface GetProductsParams {
+  locale: "fa" | "en" | "ar";
+  page?: number;
+  limit?: number;
+  category?: string;
+  color?: string;
+  vein_pattern?: string;
+  sort?: string;
+  search?: string;
+}
+
+export interface ProductMeta {
+  current_page: number;
+  total_pages: number;
+  total_items: number;
+  has_next_page: boolean;
+}
+
+export interface CategoryItem {
+  id: string;
+  title: string;
+  slug: string;
+}
+
+export interface ColorItem {
+  id: string;
+  title: string;
+  slug: string;
+  hex_code?: string;
+}
+
+export interface VeinPatternItem {
+  id: string;
+  title: string;
+  slug: string;
+}
+
+export interface GalleryItem {
+  image: { url: string; alt?: string } | string;
+  caption?: string;
+}
+
+export interface ProductItem {
+  id: string;
+  title: string;
+  slug: string;
+  code: string;
+  category: CategoryItem | string;
+  color_family: ColorItem | string;
+  vein_pattern?: VeinPatternItem | string;
+  is_in_stock: "in_stock" | "on_demand" | "discontinued";
+  thumbnail: { url: string; alt?: string } | string;
+  gallery?: GalleryItem[];
+  available_thicknesses?: string[];
+  finishes?: string[];
+  dimensions?: string;
+  description?: string;
+  meta_title?: string;
+  meta_description?: string;
+  specsSheetUrl?: string;
+}
+
+export function extractCategorySlug(
+  category: CategoryItem | string | undefined,
+): string {
+  if (!category) return "";
+  if (typeof category === "object") return category.slug || "";
+  return category;
+}
+
+export function extractCategoryTitle(
+  category: CategoryItem | string | undefined,
+): string {
+  if (!category) return "";
+  if (typeof category === "object") return category.title || "";
+  return category;
+}
+
+export async function getProductsService({
+  locale,
+  page = 1,
+  limit = 9,
+  category,
+  color,
+  vein_pattern,
+  sort = "-createdAt",
+  search,
+}: GetProductsParams): Promise<{ data: ProductItem[]; meta: ProductMeta }> {
+  try {
+    const payload = await getPayload({ config: configPromise });
+    const where: Record<string, any> = {};
+
+    if (category) {
+      where["category.slug"] = { equals: category };
+    }
+
+    if (color) {
+      where["color_family.slug"] = { equals: color };
+    }
+
+    if (vein_pattern) {
+      where["vein_pattern.slug"] = { equals: vein_pattern };
+    }
+
+    if (search) {
+      where.or = [{ title: { like: search } }, { code: { like: search } }];
+    }
+
+    const response = await payload.find({
+      collection: "products",
+      locale,
+      page,
+      limit,
+      where,
+      sort,
+      depth: 2,
+    });
+
+    return {
+      data: (response.docs as unknown as ProductItem[]) || [],
+      meta: {
+        current_page: response.page ?? 1,
+        total_pages: response.totalPages ?? 1,
+        total_items: response.totalDocs ?? 0,
+        has_next_page: (response.page ?? 1) < (response.totalPages ?? 1),
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching products from Payload CMS:", error);
+    return {
+      data: [],
+      meta: {
+        current_page: 1,
+        total_pages: 1,
+        total_items: 0,
+        has_next_page: false,
+      },
+    };
+  }
+}
+
+export async function getProductBySlugService(
+  slug: string,
+  locale: "fa" | "en" | "ar",
+): Promise<ProductItem | null> {
+  try {
+    const payload = await getPayload({ config: configPromise });
+    const response = await payload.find({
+      collection: "products",
+      locale,
+      where: { slug: { equals: slug } },
+      limit: 1,
+      depth: 2,
+    });
+
+    if (response.docs && response.docs.length > 0) {
+      return response.docs[0] as unknown as ProductItem;
+    }
+    return null;
+  } catch (error) {
+    console.error("Error fetching product by slug from Payload CMS:", error);
+    return null;
+  }
+}
+
+export async function getCategoriesService(
+  locale: "fa" | "en" | "ar",
+): Promise<CategoryItem[]> {
+  try {
+    const payload = await getPayload({ config: configPromise });
+    const response = await payload.find({
+      collection: "categories",
+      locale,
+      limit: 100,
+      sort: "order",
+    });
+
+    return response.docs.map((doc: any) => ({
+      id: doc.id,
+      title: doc.title,
+      slug: doc.slug,
+    }));
+  } catch (error) {
+    console.error("Error fetching categories from Payload CMS:", error);
+    return [];
+  }
+}
+
+export async function getColorsService(
+  locale: "fa" | "en" | "ar",
+): Promise<ColorItem[]> {
+  try {
+    const payload = await getPayload({ config: configPromise });
+    const response = await payload.find({
+      collection: "colors",
+      locale,
+      limit: 100,
+    });
+
+    return response.docs.map((doc: any) => ({
+      id: doc.id,
+      title: doc.title,
+      slug: doc.slug,
+      hex_code: doc.hex_code,
+    }));
+  } catch (error) {
+    console.error("Error fetching colors from Payload CMS:", error);
+    return [];
+  }
+}
+
+export async function getVeinPatternsService(
+  locale: "fa" | "en" | "ar",
+): Promise<VeinPatternItem[]> {
+  try {
+    const payload = await getPayload({ config: configPromise });
+    const response = await payload.find({
+      collection: "vein-patterns",
+      locale,
+      limit: 100,
+    });
+
+    return response.docs.map((doc: any) => ({
+      id: doc.id,
+      title: doc.title,
+      slug: doc.slug,
+    }));
+  } catch (error) {
+    console.error("Error fetching vein patterns from Payload CMS:", error);
+    return [];
+  }
+}
+</file>
+
+<file path="tsconfig.json">
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts" , "src/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
+</file>
+
+<file path="docs/rules.md">
+# AI Coding Rules
+
+When generating code for this project, you MUST follow these rules:
+
+1. **Production-Grade & MVP Focus:** This is a PRODUCTION-GRADE project. All code must be robust, scalable, secure, and optimized to reach a high-quality Minimum Viable Product (MVP) standard efficiently.
+2. **TypeScript Only:** Write strictly typed TypeScript code. Avoid `any`. Define proper interfaces/types for all data, especially for Payload CMS responses.
+3. **App Router Conventions:** Use `page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`.
+4. **i18n Implementation:** Always use `next-intl` hooks (like `useTranslations`) for text. NEVER hardcode text strings in the components.
+5. **Server vs Client:**
+   - Default to Server Components (RSC).
+   - Add `"use client"` only at the very top of files that explicitly require `useState`, `useEffect`, user events (`onClick`), or `motion`.
+6. **Form Handling:** Always combine `react-hook-form` and `@hookform/resolvers/zod`. Define Zod schemas in a separate file or outside the component.
+7. **Imports:** Use absolute imports (e.g., `@/components/...`).
+8. **Clean Code & Modularization:** Pages must only act as layouts/wrappers. Break large UI parts into small, modular, single-responsibility components under `src/components/`.
+9. **Uncompromised Performance & Logical Styling:**
+   - **Performance:** Optimize all media assets (Next.js `<Image />` with proper `sizes` and `priority`, lightweight video loading), ensure zero layout shifts (CLS), and use lazy loading / Dynamic Imports for non-critical code.
+   - **Logical Tailwind Properties:** ALWAYS use logical CSS properties (e.g., `ms-`, `me-`, `ps-`, `pe-`, `border-s`, `border-e`) instead of physical ones (`ml-`, `mr-`, etc.) to guarantee seamless, zero-duplicate RTL/LTR support across all languages (FA, EN, AR).
+
+---
+
+## Component Architecture & Naming Conventions
+
+### 📁 Directory Structure
+
+- **Base UI Components (Shadcn/Radix):** `src/components/ui/`
+- **Shared Layout Elements (Header, Footer, Logo):** `src/components/shared/`
+- **Feature-Specific UI:** `src/components/[feature]/` (e.g., `src/components/products/`)
+
+### 🏷️ Naming Conventions
+
+- **Component File Names:** `kebab-case.tsx` (e.g., `product-card.tsx`, `main-nav.tsx`).
+- **Component Function Names:** `PascalCase` (e.g., `export const ProductCard = ...`).
+- **Hooks:** `camelCase.ts` (e.g., `useScroll.ts`).
+- **Utilities & Services:** `camelCase.ts` (e.g., `formatCurrency.ts`).
+</file>
+
 <file path="src/components/home/product-showcase.tsx">
 // src/components/home/product-showcase.tsx
 "use client";
@@ -5353,124 +5921,409 @@ export const ProductShowcase: React.FC<ProductShowcaseProps> = ({
 };
 </file>
 
-<file path="src/lib/validations/contact.ts">
-// src/lib/validations/contact.ts
-import { z } from "zod";
+<file path="src/components/shared/footer.tsx">
+// src/components/shared/footer.tsx
+"use client";
 
-export const quickContactSchema = z.object({
-  fullName: z
-    .string()
-    .min(2, { message: "fullNameError" }) // کلید ترجمه برای Zod
-    .max(60),
-  country: z.string().min(2, { message: "countryError" }),
-  phone: z
-    .string()
-    .min(7, { message: "phoneError" })
-    .max(20)
-    .regex(/^[+]*[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/, {
-      message: "phoneInvalidError",
-    }),
-  message: z.string().min(5, { message: "messageError" }).max(500),
-});
+import React, { useState } from "react";
+import { Link } from "@/i18n/routing";
+import { Logo } from "@/components/shared/logo";
+import { Separator } from "@/components/ui/separator";
+import { useTranslations } from "next-intl";
+import { Mail, MapPin, ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-export type QuickContactValues = z.infer<typeof quickContactSchema>;
-</file>
+interface FooterSectionProps {
+  title: string;
+  children: React.ReactNode;
+}
 
-<file path="src/payload/collections/Users.ts">
-import type { CollectionConfig } from "payload";
+const FooterSection: React.FC<FooterSectionProps> = ({ title, children }) => {
+  const [isOpen, setIsOpen] = useState(false);
 
-export const Users: CollectionConfig = {
-  slug: "users",
-  admin: {
-    useAsTitle: "email",
-    description: "مدیریت حساب کاربری ادمین",
-  },
-  auth: {
-    // تنظیمات قفل شدن حساب در صورت ورود ناموفق متوالی
-    maxLoginAttempts: 5,
-    lockTime: 600 * 1000, // ۱۰ دقیقه قفل در صورت ۵ بار اشتباه
-  },
-  access: {
-    create: ({ req: { user } }) => Boolean(user),
-    read: ({ req: { user } }) => Boolean(user),
-    update: ({ req: { user } }) => Boolean(user),
-    delete: ({ req: { user } }) => Boolean(user),
-  },
-  fields: [
-    {
-      name: "name",
-      type: "text",
-      label: "نام",
-    },
-  ],
+  return (
+    <div className="border-b border-neutral-800/60 sm:border-none pb-4 sm:pb-0 space-y-4">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between text-xs font-semibold text-white uppercase tracking-widest text-start sm:cursor-default"
+      >
+        <span>{title}</span>
+        <ChevronDown
+          className={cn(
+            "h-4 w-4 text-neutral-400 transition-transform duration-200 sm:hidden",
+            isOpen && "rotate-180",
+          )}
+        />
+      </button>
+
+      <div
+        className={cn(
+          "space-y-2.5 text-sm font-light text-neutral-400 transition-all",
+          isOpen ? "block pt-2" : "hidden sm:block",
+        )}
+      >
+        {children}
+      </div>
+    </div>
+  );
+};
+
+export const Footer: React.FC = () => {
+  const t = useTranslations("Footer");
+
+  return (
+    <footer className="bg-neutral-950 text-neutral-300 border-t border-neutral-800">
+      <div className="container mx-auto px-6 sm:px-12 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12 mb-16">
+          {/* ستون برند (در همه سایزها ثابت و باز) */}
+          <div className="lg:col-span-2 space-y-6 pb-6 sm:pb-0 border-b border-neutral-800 sm:border-none">
+            <Logo variant="icon-white-bg" size={48} />
+            <p className="text-sm text-neutral-400 leading-relaxed max-w-sm font-light">
+              {t("description")}
+            </p>
+            <div className="text-xs text-neutral-500 space-y-2">
+              <p className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-neutral-400 shrink-0" />
+                <span>{t("address")}</span>
+              </p>
+              <p dir="ltr" className="flex items-center gap-2 justify-start">
+                <Mail className="h-4 w-4 text-neutral-400 shrink-0" />
+                <span>{t("email")}</span>
+              </p>
+            </div>
+          </div>
+
+          {/* ستون ۱: کالکشن‌ها */}
+          <FooterSection title={t("productsTitle")}>
+            <ul className="space-y-2.5">
+              <li>
+                <Link
+                  href="/products?cat=monocolor"
+                  className="hover:text-white transition-colors"
+                >
+                  {t("monocolorSeries")}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/products?cat=veined-effect"
+                  className="hover:text-white transition-colors"
+                >
+                  {t("veinedEffectSeries")}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/products?cat=calacatta"
+                  className="hover:text-white transition-colors"
+                >
+                  {t("calacattaSeries")}
+                </Link>
+              </li>
+            </ul>
+          </FooterSection>
+
+          {/* ستون ۲: دسترسی سریع */}
+          <FooterSection title={t("quickLinksTitle")}>
+            <ul className="space-y-2.5">
+              <li>
+                <Link
+                  href="/dealers"
+                  className="hover:text-white transition-colors"
+                >
+                  {t("findDealers")}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/catalogs"
+                  className="hover:text-white transition-colors"
+                >
+                  {t("downloadCatalog")}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/about"
+                  className="hover:text-white transition-colors"
+                >
+                  {t("aboutUs")}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/contact"
+                  className="hover:text-white transition-colors"
+                >
+                  {t("contactUs")}
+                </Link>
+              </li>
+            </ul>
+          </FooterSection>
+
+          {/* ستون ۳: اطلاعات و قوانین */}
+          <FooterSection title={t("infoAndLegalTitle")}>
+            <ul className="space-y-2.5">
+              <li>
+                <Link
+                  href="/terms"
+                  className="hover:text-white transition-colors"
+                >
+                  {t("termsAndConditions")}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/faq"
+                  className="hover:text-white transition-colors"
+                >
+                  {t("faq")}
+                </Link>
+              </li>
+            </ul>
+          </FooterSection>
+        </div>
+
+        <Separator className="bg-neutral-800 my-8" />
+
+        {/* بخش حقوق و شبکه‌های اجتماعی */}
+        <div className="flex flex-col sm:flex-row items-center justify-between text-xs text-neutral-500 font-light gap-6">
+          <p>
+            © {new Date().getFullYear()} Persis Quartz. {t("copyright")}
+          </p>
+
+          <div className="flex items-center gap-3">
+            {/* اینستاگرام */}
+            <a
+              href="https://instagram.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 rounded-full border border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-600 transition-all"
+              aria-label="Instagram"
+            >
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                viewBox="0 0 24 24"
+              >
+                <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+              </svg>
+            </a>
+            {/* لینکدین */}
+            <a
+              href="https://linkedin.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 rounded-full border border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-600 transition-all"
+              aria-label="LinkedIn"
+            >
+              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z" />
+              </svg>
+            </a>
+            {/* تلگرام */}
+            <a
+              href="https://t.me"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 rounded-full border border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-600 transition-all"
+              aria-label="Telegram"
+            >
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                viewBox="0 0 24 24"
+              >
+                <line x1="22" x2="11" y1="2" y2="13" />
+                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+              </svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
 };
 </file>
 
-<file path="tsconfig.json">
-{
-  "compilerOptions": {
-    "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "preserve",
-    "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    "paths": {
-      "@/*": ["./src/*"]
-    }
+<file path="src/payload.config.ts">
+import { buildConfig } from "payload";
+import { postgresAdapter } from "@payloadcms/db-postgres";
+import { lexicalEditor } from "@payloadcms/richtext-lexical";
+import sharp from "sharp";
+import path from "path";
+import { fileURLToPath } from "url";
+import { Users } from "./payload/collections/Users";
+import { HeroBanner } from "./payload/collections/HeroBanner";
+import { Media } from "./payload/collections/Media";
+import { Products } from "./payload/collections/Products";
+import { Categories } from "./payload/collections/Categories";
+import { Colors } from "./payload/collections/Colors";
+import { VeinPatterns } from "./payload/collections/VeinPatterns";
+import { Dimensions } from "./payload/collections/Dimensions";
+
+const filename = fileURLToPath(import.meta.url);
+const dirname = path.dirname(filename);
+
+export default buildConfig({
+  admin: {
+    user: Users.slug,
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts" , "src/types/**/*.ts"],
-  "exclude": ["node_modules"]
-}
+  sharp,
+  collections: [
+    HeroBanner,
+    Users,
+    Media,
+    Categories,
+    Colors,
+    VeinPatterns,
+    Dimensions,
+    Products,
+  ],
+
+  editor: lexicalEditor({}),
+
+  localization: {
+    locales: ["fa", "en", "ar"],
+    defaultLocale: "fa",
+    fallback: true,
+  },
+
+  secret: process.env.PAYLOAD_SECRET || "",
+
+  typescript: {
+    outputFile: path.resolve(dirname, "payload-types.ts"),
+  },
+
+  db: postgresAdapter({
+    pool: {
+      connectionString: process.env.DATABASE_URI || "",
+    },
+  }),
+});
 </file>
 
-<file path="docs/rules.md">
-# AI Coding Rules
+<file path="src/app/globals.css">
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-When generating code for this project, you MUST follow these rules:
+@custom-variant dark (&:is(.dark *));
 
-1. **Production-Grade & MVP Focus:** This is a PRODUCTION-GRADE project. All code must be robust, scalable, secure, and optimized to reach a high-quality Minimum Viable Product (MVP) standard efficiently.
-2. **TypeScript Only:** Write strictly typed TypeScript code. Avoid `any`. Define proper interfaces/types for all data, especially for Payload CMS responses.
-3. **App Router Conventions:** Use `page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`.
-4. **i18n Implementation:** Always use `next-intl` hooks (like `useTranslations`) for text. NEVER hardcode text strings in the components.
-5. **Server vs Client:**
-   - Default to Server Components (RSC).
-   - Add `"use client"` only at the very top of files that explicitly require `useState`, `useEffect`, user events (`onClick`), or `motion`.
-6. **Form Handling:** Always combine `react-hook-form` and `@hookform/resolvers/zod`. Define Zod schemas in a separate file or outside the component.
-7. **Imports:** Use absolute imports (e.g., `@/components/...`).
-8. **Clean Code & Modularization:** Pages must only act as layouts/wrappers. Break large UI parts into small, modular, single-responsibility components under `src/components/`.
-9. **Uncompromised Performance & Logical Styling:**
-   - **Performance:** Optimize all media assets (Next.js `<Image />` with proper `sizes` and `priority`, lightweight video loading), ensure zero layout shifts (CLS), and use lazy loading / Dynamic Imports for non-critical code.
-   - **Logical Tailwind Properties:** ALWAYS use logical CSS properties (e.g., `ms-`, `me-`, `ps-`, `pe-`, `border-s`, `border-e`) instead of physical ones (`ml-`, `mr-`, etc.) to guarantee seamless, zero-duplicate RTL/LTR support across all languages (FA, EN, AR).
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-vazirmatn), var(--font-inter), system-ui, sans-serif;
+  --font-mono: var(--font-inter), monospace;
+  --font-heading: var(--font-vazirmatn), var(--font-inter), sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
 
----
+:root {
+  --background: oklch(0.99 0 0);
+  --foreground: oklch(0.15 0.01 15);
 
-## Component Architecture & Naming Conventions
+  /* Brand Color: #9B0737 (Burgundy / Crimson) */
+  --primary: oklch(0.38 0.18 15);
+  --primary-foreground: oklch(0.99 0 0);
 
-### 📁 Directory Structure
+  /* Secondary & Accents */
+  --secondary: oklch(0.96 0.01 15);
+  --secondary-foreground: oklch(0.25 0.12 15);
+  --muted: oklch(0.96 0.005 15);
+  --muted-foreground: oklch(0.5 0.02 15);
+  --accent: oklch(0.94 0.02 15);
+  --accent-foreground: oklch(0.38 0.18 15);
 
-- **Base UI Components (Shadcn/Radix):** `src/components/ui/`
-- **Shared Layout Elements (Header, Footer, Logo):** `src/components/shared/`
-- **Feature-Specific UI:** `src/components/[feature]/` (e.g., `src/components/products/`)
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.15 0.01 15);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.15 0.01 15);
+  --border: oklch(0.91 0.01 15);
+  --input: oklch(0.91 0.01 15);
+  --ring: oklch(0.38 0.18 15);
+  --radius: 0.5rem;
+}
 
-### 🏷️ Naming Conventions
+.dark {
+  --background: oklch(0.12 0.01 15);
+  --foreground: oklch(0.98 0 0);
 
-- **Component File Names:** `kebab-case.tsx` (e.g., `product-card.tsx`, `main-nav.tsx`).
-- **Component Function Names:** `PascalCase` (e.g., `export const ProductCard = ...`).
-- **Hooks:** `camelCase.ts` (e.g., `useScroll.ts`).
-- **Utilities & Services:** `camelCase.ts` (e.g., `formatCurrency.ts`).
+  --primary: oklch(0.48 0.2 15);
+  --primary-foreground: oklch(0.99 0 0);
+
+  --secondary: oklch(0.2 0.03 15);
+  --secondary-foreground: oklch(0.98 0 0);
+  --muted: oklch(0.2 0.02 15);
+  --muted-foreground: oklch(0.65 0.01 15);
+  --accent: oklch(0.25 0.04 15);
+  --accent-foreground: oklch(0.98 0 0);
+
+  --card: oklch(0.16 0.01 15);
+  --card-foreground: oklch(0.98 0 0);
+  --popover: oklch(0.16 0.01 15);
+  --popover-foreground: oklch(0.98 0 0);
+  --border: oklch(0.25 0.02 15);
+  --input: oklch(0.25 0.02 15);
+  --ring: oklch(0.48 0.2 15);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
 </file>
 
 <file path="src/components/home/hero-banner.tsx">
@@ -5971,298 +6824,6 @@ export const InfoCardsStack: React.FC = () => {
 };
 </file>
 
-<file path="src/components/shared/footer.tsx">
-// src/components/shared/footer.tsx
-"use client";
-
-import React, { useState } from "react";
-import { Link } from "@/i18n/routing";
-import { Logo } from "@/components/shared/logo";
-import { Separator } from "@/components/ui/separator";
-import { useTranslations } from "next-intl";
-import { Mail, MapPin, ChevronDown } from "lucide-react";
-import { cn } from "@/lib/utils";
-
-interface FooterSectionProps {
-  title: string;
-  children: React.ReactNode;
-}
-
-const FooterSection: React.FC<FooterSectionProps> = ({ title, children }) => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <div className="border-b border-neutral-800/60 sm:border-none pb-4 sm:pb-0 space-y-4">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between text-xs font-semibold text-white uppercase tracking-widest text-start sm:cursor-default"
-      >
-        <span>{title}</span>
-        <ChevronDown
-          className={cn(
-            "h-4 w-4 text-neutral-400 transition-transform duration-200 sm:hidden",
-            isOpen && "rotate-180",
-          )}
-        />
-      </button>
-
-      <div
-        className={cn(
-          "space-y-2.5 text-sm font-light text-neutral-400 transition-all",
-          isOpen ? "block pt-2" : "hidden sm:block",
-        )}
-      >
-        {children}
-      </div>
-    </div>
-  );
-};
-
-export const Footer: React.FC = () => {
-  const t = useTranslations("Footer");
-
-  return (
-    <footer className="bg-neutral-950 text-neutral-300 border-t border-neutral-800">
-      <div className="container mx-auto px-6 sm:px-12 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12 mb-16">
-          {/* ستون برند (در همه سایزها ثابت و باز) */}
-          <div className="lg:col-span-2 space-y-6 pb-6 sm:pb-0 border-b border-neutral-800 sm:border-none">
-            <Logo variant="icon-white-bg" size={48} />
-            <p className="text-sm text-neutral-400 leading-relaxed max-w-sm font-light">
-              {t("description")}
-            </p>
-            <div className="text-xs text-neutral-500 space-y-2">
-              <p className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-neutral-400 shrink-0" />
-                <span>{t("address")}</span>
-              </p>
-              <p dir="ltr" className="flex items-center gap-2 justify-start">
-                <Mail className="h-4 w-4 text-neutral-400 shrink-0" />
-                <span>{t("email")}</span>
-              </p>
-            </div>
-          </div>
-
-          {/* ستون ۱: کالکشن‌ها */}
-          <FooterSection title={t("productsTitle")}>
-            <ul className="space-y-2.5">
-              <li>
-                <Link
-                  href="/products?cat=monocolor"
-                  className="hover:text-white transition-colors"
-                >
-                  {t("monocolorSeries")}
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/products?cat=veined-effect"
-                  className="hover:text-white transition-colors"
-                >
-                  {t("veinedEffectSeries")}
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/products?cat=calacatta"
-                  className="hover:text-white transition-colors"
-                >
-                  {t("calacattaSeries")}
-                </Link>
-              </li>
-            </ul>
-          </FooterSection>
-
-          {/* ستون ۲: دسترسی سریع */}
-          <FooterSection title={t("quickLinksTitle")}>
-            <ul className="space-y-2.5">
-              <li>
-                <Link
-                  href="/dealers"
-                  className="hover:text-white transition-colors"
-                >
-                  {t("findDealers")}
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/catalogs"
-                  className="hover:text-white transition-colors"
-                >
-                  {t("downloadCatalog")}
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/about"
-                  className="hover:text-white transition-colors"
-                >
-                  {t("aboutUs")}
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/contact"
-                  className="hover:text-white transition-colors"
-                >
-                  {t("contactUs")}
-                </Link>
-              </li>
-            </ul>
-          </FooterSection>
-
-          {/* ستون ۳: اطلاعات و قوانین */}
-          <FooterSection title={t("infoAndLegalTitle")}>
-            <ul className="space-y-2.5">
-              <li>
-                <Link
-                  href="/terms"
-                  className="hover:text-white transition-colors"
-                >
-                  {t("termsAndConditions")}
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/faq"
-                  className="hover:text-white transition-colors"
-                >
-                  {t("faq")}
-                </Link>
-              </li>
-            </ul>
-          </FooterSection>
-        </div>
-
-        <Separator className="bg-neutral-800 my-8" />
-
-        {/* بخش حقوق و شبکه‌های اجتماعی */}
-        <div className="flex flex-col sm:flex-row items-center justify-between text-xs text-neutral-500 font-light gap-6">
-          <p>
-            © {new Date().getFullYear()} Persis Quartz. {t("copyright")}
-          </p>
-
-          <div className="flex items-center gap-3">
-            {/* اینستاگرام */}
-            <a
-              href="https://instagram.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2 rounded-full border border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-600 transition-all"
-              aria-label="Instagram"
-            >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                viewBox="0 0 24 24"
-              >
-                <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
-                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-                <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
-              </svg>
-            </a>
-            {/* لینکدین */}
-            <a
-              href="https://linkedin.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2 rounded-full border border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-600 transition-all"
-              aria-label="LinkedIn"
-            >
-              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z" />
-              </svg>
-            </a>
-            {/* تلگرام */}
-            <a
-              href="https://t.me"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2 rounded-full border border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-600 transition-all"
-              aria-label="Telegram"
-            >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                viewBox="0 0 24 24"
-              >
-                <line x1="22" x2="11" y1="2" y2="13" />
-                <polygon points="22 2 15 22 11 13 2 9 22 2" />
-              </svg>
-            </a>
-          </div>
-        </div>
-      </div>
-    </footer>
-  );
-};
-</file>
-
-<file path="src/payload.config.ts">
-import { buildConfig } from "payload";
-import { postgresAdapter } from "@payloadcms/db-postgres";
-import { lexicalEditor } from "@payloadcms/richtext-lexical";
-import sharp from "sharp";
-import path from "path";
-import { fileURLToPath } from "url";
-import { Users } from "./payload/collections/Users";
-import { HeroBanner } from "./payload/collections/HeroBanner";
-import { Media } from "./payload/collections/Media";
-import { Products } from "./payload/collections/Products";
-import { Categories } from "./payload/collections/Categories";
-import { Colors } from "./payload/collections/Colors";
-import { VeinPatterns } from "./payload/collections/VeinPatterns";
-import { Dimensions } from "./payload/collections/Dimensions";
-
-const filename = fileURLToPath(import.meta.url);
-const dirname = path.dirname(filename);
-
-export default buildConfig({
-  admin: {
-    user: Users.slug,
-  },
-  sharp,
-  collections: [
-    HeroBanner,
-    Users,
-    Media,
-    Categories,
-    Colors,
-    VeinPatterns,
-    Dimensions,
-    Products,
-  ],
-
-  editor: lexicalEditor({}),
-
-  localization: {
-    locales: ["fa", "en", "ar"],
-    defaultLocale: "fa",
-    fallback: true,
-  },
-
-  secret: process.env.PAYLOAD_SECRET || "",
-
-  typescript: {
-    outputFile: path.resolve(dirname, "payload-types.ts"),
-  },
-
-  db: postgresAdapter({
-    pool: {
-      connectionString: process.env.DATABASE_URI || "",
-    },
-  }),
-});
-</file>
-
 <file path="next.config.ts">
 import createNextIntlPlugin from "next-intl/plugin";
 import { withPayload } from "@payloadcms/next/withPayload";
@@ -6297,119 +6858,6 @@ const nextConfig: NextConfig = {
 export default withPayload(withNextIntl(nextConfig));
 </file>
 
-<file path="src/app/globals.css">
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
-
-@custom-variant dark (&:is(.dark *));
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-vazirmatn), var(--font-inter), system-ui, sans-serif;
-  --font-mono: var(--font-inter), monospace;
-  --font-heading: var(--font-vazirmatn), var(--font-inter), sans-serif;
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
-}
-
-:root {
-  --background: oklch(0.99 0 0);
-  --foreground: oklch(0.15 0.01 15);
-
-  /* Brand Color: #9B0737 (Burgundy / Crimson) */
-  --primary: oklch(0.38 0.18 15);
-  --primary-foreground: oklch(0.99 0 0);
-
-  /* Secondary & Accents */
-  --secondary: oklch(0.96 0.01 15);
-  --secondary-foreground: oklch(0.25 0.12 15);
-  --muted: oklch(0.96 0.005 15);
-  --muted-foreground: oklch(0.5 0.02 15);
-  --accent: oklch(0.94 0.02 15);
-  --accent-foreground: oklch(0.38 0.18 15);
-
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.15 0.01 15);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0.01 15);
-  --border: oklch(0.91 0.01 15);
-  --input: oklch(0.91 0.01 15);
-  --ring: oklch(0.38 0.18 15);
-  --radius: 0.5rem;
-}
-
-.dark {
-  --background: oklch(0.12 0.01 15);
-  --foreground: oklch(0.98 0 0);
-
-  --primary: oklch(0.48 0.2 15);
-  --primary-foreground: oklch(0.99 0 0);
-
-  --secondary: oklch(0.2 0.03 15);
-  --secondary-foreground: oklch(0.98 0 0);
-  --muted: oklch(0.2 0.02 15);
-  --muted-foreground: oklch(0.65 0.01 15);
-  --accent: oklch(0.25 0.04 15);
-  --accent-foreground: oklch(0.98 0 0);
-
-  --card: oklch(0.16 0.01 15);
-  --card-foreground: oklch(0.98 0 0);
-  --popover: oklch(0.16 0.01 15);
-  --popover-foreground: oklch(0.98 0 0);
-  --border: oklch(0.25 0.02 15);
-  --input: oklch(0.25 0.02 15);
-  --ring: oklch(0.48 0.2 15);
-}
-
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-  html {
-    @apply font-sans;
-  }
-}
-</file>
-
 <file path="src/components/shared/header.tsx">
 // src/components/shared/header.tsx
 "use client";
@@ -6424,10 +6872,11 @@ import {
   Menu,
   X,
   PhoneCall,
-  Search,
   ChevronDown,
   ArrowLeft,
   ArrowRight,
+  ArrowUpRight,
+  Layers,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -6503,7 +6952,7 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
   ] as const;
 
   const navLinkStyle = cn(
-    "text-sm font-medium transition-colors hover:opacity-80 py-2 px-3 rounded-md",
+    "text-xs uppercase tracking-wider font-medium transition-colors hover:opacity-80 py-2 px-3 rounded-md",
     isHomePage && !isScrolled
       ? "text-white hover:bg-white/10"
       : "text-foreground hover:bg-accent/50",
@@ -6533,8 +6982,9 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
           {/* ۱. لوگو */}
           <Logo variant="full" className="w-36 sm:w-44" />
 
-          {/* ۲. منوی دسکتاپ (دینامیک) */}
+          {/* ۲. منوی دسکتاپ (مگامنو دسته‌بندی‌ها) */}
           <nav className="hidden lg:flex items-center gap-1">
+            {/* دراپ‌داون دسته‌بندی‌ها */}
             <DropdownMenu dir={isRtl ? "rtl" : "ltr"}>
               <DropdownMenuTrigger
                 className={cn(
@@ -6547,27 +6997,51 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="start"
-                className="w-[560px] p-5 grid grid-cols-3 gap-4 border border-border/40 shadow-xl bg-popover"
+                className="w-[620px] p-6 border border-border/50 shadow-2xl bg-popover rounded-none space-y-4"
               >
-                {categories.map((cat, idx) => (
+                {/* هدر مگامنو */}
+                <div className="flex items-center justify-between pb-3 border-b border-border/40">
+                  <div className="flex items-center gap-2">
+                    <Layers className="h-4 w-4 text-primary" />
+                    <span className="text-xs uppercase tracking-widest text-foreground font-semibold">
+                      {t("collections")}
+                    </span>
+                  </div>
                   <Link
-                    key={cat.id || idx}
-                    href={`/products?category=${cat.slug}`}
-                    className="group p-2.5 rounded-md hover:bg-muted/60 transition-colors flex flex-col justify-between"
+                    href="/products"
+                    className="text-[11px] uppercase tracking-wider text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
                   >
-                    <div>
-                      <span className="text-[10px] font-mono tracking-wider text-muted-foreground block mb-1">
-                        0{idx + 1}
-                      </span>
-                      <h5 className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
-                        {cat.title}
-                      </h5>
-                    </div>
+                    <span>{t("viewAllProducts")}</span>
+                    <ArrowUpRight className="h-3.5 w-3.5" />
                   </Link>
-                ))}
+                </div>
+
+                {/* کارت‌های کالکشن */}
+                <div className="grid grid-cols-3 gap-3">
+                  {categories.map((cat, idx) => (
+                    <Link
+                      key={cat.id || idx}
+                      href={`/products?category=${cat.slug}`}
+                      className="group p-3.5 border border-border/40 hover:border-primary/60 bg-card/50 hover:bg-card transition-all flex flex-col justify-between min-h-[110px]"
+                    >
+                      <div>
+                        <span className="text-[10px] text-primary block mb-1.5 font-bold">
+                          0{idx + 1}
+                        </span>
+                        <h5 className="text-xs font-medium text-foreground group-hover:text-primary transition-colors leading-snug">
+                          {cat.title}
+                        </h5>
+                      </div>
+                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60 group-hover:text-foreground transition-colors pt-2 block">
+                        Explore &rarr;
+                      </span>
+                    </Link>
+                  ))}
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
 
+            {/* کاربردها */}
             <DropdownMenu dir={isRtl ? "rtl" : "ltr"}>
               <DropdownMenuTrigger
                 className={cn(
@@ -6580,13 +7054,13 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="start"
-                className="w-72 p-3 bg-popover border border-border/40 shadow-xl space-y-1"
+                className="w-72 p-3 bg-popover border border-border/40 shadow-xl space-y-1 rounded-none"
               >
                 <Link
                   href="/applications/kitchen"
-                  className="flex flex-col gap-1 p-3 rounded-md hover:bg-muted/70 transition-colors"
+                  className="flex flex-col gap-1 p-3 rounded-none hover:bg-muted/70 transition-colors"
                 >
-                  <span className="text-xs font-semibold text-foreground">
+                  <span className="text-xs font-medium text-foreground">
                     {t("kitchenCountertops")}
                   </span>
                 </Link>
@@ -6595,9 +7069,9 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
 
                 <Link
                   href="/applications/bathroom"
-                  className="flex flex-col gap-1 p-3 rounded-md hover:bg-muted/70 transition-colors"
+                  className="flex flex-col gap-1 p-3 rounded-none hover:bg-muted/70 transition-colors"
                 >
-                  <span className="text-xs font-semibold text-foreground">
+                  <span className="text-xs font-medium text-foreground">
                     {t("vanitiesAndBathrooms")}
                   </span>
                 </Link>
@@ -6621,22 +7095,8 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
             </Link>
           </nav>
 
-          {/* ۳. دکمه‌های اکشن */}
+          {/* ۳. دکمه‌های اکشن (سرچ حذف شد) */}
           <div className="flex items-center gap-2 sm:gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              className={cn(
-                "hover:text-foreground",
-                isHomePage &&
-                  !isScrolled &&
-                  "text-white hover:bg-white/10 hover:text-white",
-              )}
-              aria-label="Search"
-            >
-              <Search className="h-4 w-4" />
-            </Button>
-
             <Button
               asChild
               variant="ghost"
@@ -6654,13 +7114,14 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
               </Link>
             </Button>
 
+            {/* سوئیچر زبان */}
             <DropdownMenu dir={isRtl ? "rtl" : "ltr"}>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
                   size="sm"
                   className={cn(
-                    "gap-1 px-2 font-mono text-xs outline-none hidden sm:inline-flex",
+                    "gap-1 px-2 text-xs outline-none hidden sm:inline-flex rounded-none",
                     isHomePage &&
                       !isScrolled &&
                       "text-white hover:bg-white/10 hover:text-white",
@@ -6671,7 +7132,10 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
                   <ChevronDown className="h-3 w-3 opacity-50" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="min-w-[120px]">
+              <DropdownMenuContent
+                align="end"
+                className="min-w-[120px] rounded-none"
+              >
                 {languages.map((lang) => (
                   <DropdownMenuItem
                     key={lang.code}
@@ -6682,7 +7146,7 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
                     )}
                   >
                     {lang.label}
-                    <span className="uppercase font-mono text-[10px] text-muted-foreground">
+                    <span className="uppercase text-[10px] text-muted-foreground">
                       {lang.code}
                     </span>
                   </DropdownMenuItem>
@@ -6690,10 +7154,11 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
               </DropdownMenuContent>
             </DropdownMenu>
 
+            {/* دکمه منوی موبایل */}
             <button
               onClick={() => setIsMobileMenuOpen(true)}
               className={cn(
-                "lg:hidden p-2 focus:outline-none transition-colors rounded-md",
+                "lg:hidden p-2 focus:outline-none transition-colors rounded-none",
                 isHomePage && !isScrolled
                   ? "text-white hover:bg-white/10"
                   : "text-foreground hover:bg-accent",
@@ -6706,7 +7171,7 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
         </div>
       </header>
 
-      {/* ۴. کشوی موبایل (دینامیک) */}
+      {/* ۴. کشوی موبایل */}
       <div
         className={cn(
           "fixed inset-0 z-50 lg:hidden transition-all duration-300",
@@ -6736,7 +7201,7 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
               <Logo variant="full" className="w-32" />
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                className="p-2 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
                 aria-label="Close Mobile Menu"
               >
                 <X className="h-5 w-5" />
@@ -6744,6 +7209,7 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
             </div>
 
             <nav className="space-y-4">
+              {/* بخش محصولات در موبایل */}
               <div className="border-b border-border/50 pb-3">
                 <button
                   onClick={() => setIsMobileProductsOpen(!isMobileProductsOpen)}
@@ -6759,7 +7225,16 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
                 </button>
 
                 {isMobileProductsOpen && (
-                  <div className="flex flex-col gap-3 pt-3 ps-4 text-sm font-light text-muted-foreground">
+                  <div className="flex flex-col gap-2.5 pt-3 ps-4 text-sm font-light text-muted-foreground">
+                    <Link
+                      href="/products"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center justify-between py-1 font-medium text-foreground hover:text-primary transition-colors border-b border-border/30 pb-2 mb-1"
+                    >
+                      <span>{t("viewAllProducts")}</span>
+                      <ArrowIcon className="h-3.5 w-3.5 opacity-60 text-primary" />
+                    </Link>
+
                     {categories.map((cat) => (
                       <Link
                         key={cat.id}
@@ -6775,6 +7250,7 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
                 )}
               </div>
 
+              {/* کاربردها در موبایل */}
               <div className="border-b border-border/50 pb-3">
                 <button
                   onClick={() => setIsMobileAppsOpen(!isMobileAppsOpen)}
@@ -6855,7 +7331,7 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
           </div>
 
           <div className="pt-6 border-t border-border/60 space-y-3 mt-6">
-            <span className="text-[11px] uppercase tracking-widest text-muted-foreground font-mono block">
+            <span className="text-[11px] uppercase tracking-widest text-muted-foreground block">
               زبان / Language
             </span>
             <div className="flex items-center gap-2">
@@ -6867,7 +7343,7 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
                     setIsMobileMenuOpen(false);
                   }}
                   className={cn(
-                    "px-3 py-1.5 text-xs font-medium border transition-colors rounded-sm",
+                    "px-3 py-1.5 text-xs font-medium border transition-colors rounded-none",
                     locale === lang.code
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-border text-muted-foreground hover:bg-muted",
@@ -7057,6 +7533,7 @@ export default async function HomePage({
   "Header": {
     "products": "محصولات",
     "collections": "کالکشن‌ها",
+    "viewAllProducts": "مشاهده تمام اسلب‌ها",
     "monocolorSeries": "سری تک‌رنگ",
     "monocolorDesc": "سطوح یکدست، مدرن و خالص سفید و مشکی",
     "veinedEffectSeries": "سری رگه‌دار",
@@ -7166,14 +7643,9 @@ export default async function HomePage({
     "reset": "پاک‌سازی",
     "collections": "کالکشن‌ها",
     "all": "همه کدهای سنگ",
-    "monocolor": "سری تک‌رنگ",
-    "veined": "سری رگه‌دار",
-    "calacatta": "سری کالاکاتا",
     "colorFamily": "طیف رنگی",
-    "white": "سفید",
-    "black": "مشکی",
-    "grey": "طوسی",
-    "beige": "کرم / بژ"
+    "veinPattern": "الگوی رگه",
+    "viewResults": "مشاهده نتایج"
   },
   "ProductsGrid": {
     "showingCount": "نمایش {count} کد از مجموع {total} اسلب",
@@ -7182,11 +7654,42 @@ export default async function HomePage({
     "onDemand": "تولید سفارشی"
   },
   "ProductDetail": {
-    "thicknesses": "ضخامت‌های استاندارد اسلب (Available Thicknesses)",
-    "finishes": "پرداخت سطح (Finishes)",
-    "requestSample": "درخواست نمونه کالا (Request a Sample)",
-    "findDealer": "یافتن نمایندگی (Find a Dealer)",
-    "downloadSpecs": "دانلود مشخصات فنی (Download Specs)"
+    "home": "صفحه اصلی",
+    "products": "کاتالوگ محصولات",
+    "brandName": "پرسیس کوارتز",
+    "thickness": "ضخامت اسلب",
+    "finish": "پرداخت سطح",
+    "inStock": "کد فعال در خط تولید",
+    "onDemand": "تولید سفارشی پروژه",
+    "discontinued": "آرشیو / توقف تولید",
+    "requestSample": "درخواست نمونه اسلب (Sample)",
+    "requestSampleDesc": "ارسال نمونه لمسی سنگ ویژه معماران و سازندگان",
+    "findDealer": "عاملیت‌ها و مراکز فروش",
+    "downloadSpecs": "کاتالوگ و مشخصات",
+    "share": "اشتراک‌گذاری",
+    "copied": "کپی شد!",
+    "dimensions": "ابعاد اسلب",
+    "techTitle": "Technical Details",
+    "techSubtitle": "مشخصات فنی و استانداردهای متریال پرسیس کوارتز",
+    "specDimensionsTitle": "ابعاد استاندارد تولید",
+    "specDimensionsVal": "۳۲۰ × ۷۵ سانتیمتر | ۳۲۰ × ۹۲ سانتیمتر",
+    "specThicknessTitle": "ضخامت‌ها",
+    "specThicknessVal": "۱۲ میلیمتر | ۲۰ میلیمتر | ۳۰ میلیمتر (سفارشی)",
+    "specFinishesTitle": "نوع پرداخت سطح",
+    "specFinishesVal": "براق (Polished) | مات (Honed)",
+    "specStructureTitle": "ساختار فیزیکی",
+    "specStructureVal": "متراکم، فاقد تخلخل و نفوذناپذیر در شرایط خلأ",
+    "specSafetyTitle": "بهداشت و سلامت",
+    "specSafetyVal": "سطح آنتی‌باکتریال و مقاوم در برابر لکه و اسیدهای خانگی",
+    "specCareTitle": "نظافت و نگهداری",
+    "specCareVal": "شستشوی آسان با آب گرم و شوینده ملایم بدون نیاز به پولیش",
+    "applicationsTitle": "کاربردهای پیشنهادی",
+    "appKitchen": "رویه کابینت و جزیره آشپزخانه",
+    "appKitchenDesc": "مقاومت بالا در برابر سایش، حرارت ظروف و لکه‌های سرسخت غذایی.",
+    "appVanity": "سرویس‌های بهداشتی و روشویی",
+    "appVanityDesc": "نفوذناپذیری کامل در برابر رطوبت مداوم و ممانعت از رشد باکتری و قارچ.",
+    "appCommercial": "پروژه‌های تجاری و درمانی",
+    "appCommercialDesc": "دوام بالا در فضاهای پرتردد، میزهای آزمایشگاهی و المان‌های دکوراتیو."
   }
 }
 </file>
@@ -7199,6 +7702,7 @@ export default async function HomePage({
   "Header": {
     "products": "المنتجات",
     "collections": "المجموعات",
+    "viewAllProducts": "عرض جميع الألواح",
     "monocolorSeries": "سلسلة أحادية اللون",
     "monocolorDesc": "أسطح نقية، حديثة وموحدة بالكامل",
     "veinedEffectSeries": "سلسلة التموجات",
@@ -7313,20 +7817,22 @@ export default async function HomePage({
     "reset": "إعادة ضبط",
     "collections": "المجموعات",
     "all": "جميع أكواد الحجر",
-    "monocolor": "سلسلة أحادية اللون",
-    "veined": "سلسلة التموجات",
-    "calacatta": "سلسلة كالاكاتا",
     "colorFamily": "درجات الألوان",
-    "white": "أبيض",
-    "black": "أسود",
-    "grey": "رمادي",
-    "beige": "بيج"
+    "veinPattern": "نمط التعريقات",
+    "viewResults": "عرض النتائج"
   },
   "ProductsGrid": {
     "showingCount": "عرض {count} من إجمالي {total} لوح كوارتز",
     "noProductsFound": "لم يتم العثور على منتجات تطابق اختياراتك.",
     "tryResettingFilters": "يرجى تعديل أو إعادة ضبط الفلاتر المحددة.",
     "onDemand": "إنتاج حسب الطلب"
+  },
+  "ProductDetail": {
+    "thicknesses": "السماكات القياسية المتوفرة",
+    "finishes": "معالجة وتشطيب السطح",
+    "requestSample": "طلب عينة منتج",
+    "findDealer": "البحث عن موزع",
+    "downloadSpecs": "تحميل المواصفات الفنية"
   }
 }
 </file>
@@ -7339,6 +7845,7 @@ export default async function HomePage({
   "Header": {
     "products": "Products",
     "collections": "Collections",
+    "viewAllProducts": "View All Slabs",
     "monocolorSeries": "Monocolor Series",
     "monocolorDesc": "Seamless, modern, and pure solid tones",
     "veinedEffectSeries": "Veined Series",
@@ -7453,20 +7960,22 @@ export default async function HomePage({
     "reset": "Reset",
     "collections": "Collections",
     "all": "All Stone Codes",
-    "monocolor": "Monocolor Series",
-    "veined": "Veined Series",
-    "calacatta": "Calacatta Series",
     "colorFamily": "Color Family",
-    "white": "White",
-    "black": "Black",
-    "grey": "Grey",
-    "beige": "Beige"
+    "veinPattern": "Vein Pattern",
+    "viewResults": "View Results"
   },
   "ProductsGrid": {
     "showingCount": "Showing {count} of {total} slab codes",
     "noProductsFound": "No products match your criteria.",
     "tryResettingFilters": "Please adjust or reset your selected filters.",
     "onDemand": "On Demand"
+  },
+  "ProductDetail": {
+    "thicknesses": "Available Thicknesses",
+    "finishes": "Surface Finishes",
+    "requestSample": "Request a Sample",
+    "findDealer": "Find a Dealer",
+    "downloadSpecs": "Download Technical Specs"
   }
 }
 </file>

@@ -126,10 +126,31 @@
     "onDemand": "تولید سفارشی"
   },
   "ProductDetail": {
-    "thicknesses": "ضخامت‌های استاندارد اسلب (Available Thicknesses)",
-    "finishes": "پرداخت سطح (Finishes)",
-    "requestSample": "درخواست نمونه کالا (Request a Sample)",
-    "findDealer": "یافتن نمایندگی (Find a Dealer)",
-    "downloadSpecs": "دانلود مشخصات فنی (Download Specs)"
+    "home": "صفحه اصلی",
+    "products": "کاتالوگ محصولات",
+    "thickness": "ضخامت",
+    "finish": "پرداخت سطح",
+    "inStock": "کد فعال در خط تولید",
+    "onDemand": "تولید سفارشی پروژه",
+    "requestSample": "درخواست نمونه اسلب (Sample)",
+    "requestSampleDesc": "ارسال نمونه لمسی ویژه معماران و سازندگان",
+    "findDealer": "عاملیت‌ها و مراکز فروش",
+    "downloadSpecs": "کاتالوگ و مشخصات",
+    "share": "اشتراک‌گذاری",
+    "copied": "کپی شد!",
+    "fullScan": "اسکن کامل اسلب",
+    "textureZoom": "نمای نزدیک بافت",
+    "techTitle": "Technical Details",
+    "techSubtitle": "مشخصات فنی و استانداردهای مهندسی",
+    "specDimensionsTitle": "ابعاد اسلب",
+    "specThicknessTitle": "ضخامت استاندارد",
+    "specFinishesTitle": "فینیش و پرداخت",
+    "applicationsTitle": "کاربردهای پیشنهادی",
+    "appKitchen": "رویه کابینت و جزیره",
+    "appKitchenDesc": "مقاومت بالا در برابر سایش، حرارت ظروف و لکه‌های سرسخت.",
+    "appVanity": "روشویی و حمام",
+    "appVanityDesc": "نفوذناپذیری کامل در برابر رطوبت مداوم.",
+    "appCommercial": "پروژه‌های تجاری",
+    "appCommercialDesc": "دوام بالا در فضاهای پرتردد و میزهای آزمایشگاهی."
   }
 }

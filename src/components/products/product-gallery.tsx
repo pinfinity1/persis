@@ -4,20 +4,25 @@ import React, { useState } from "react";
 import Image from "next/image";
 import type { GalleryItem } from "@/services/product.service";
 import { ZoomIn } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface ProductGalleryProps {
   mainThumbnailUrl: string;
   title: string;
+  code: string;
   gallery?: GalleryItem[];
 }
 
-export const ProductGallery: React.FC<ProductGalleryProps> = ({
+export function ProductGallery({
   mainThumbnailUrl,
   title,
+  code,
   gallery = [],
-}) => {
+}: ProductGalleryProps) {
+  const t = useTranslations("ProductDetail");
+
   const images = [
-    { url: mainThumbnailUrl, caption: title },
+    { url: mainThumbnailUrl, caption: `${title} (${code})` },
     ...gallery.map((g) => ({
       url:
         typeof g.image === "object" && g.image?.url
@@ -27,19 +32,41 @@ export const ProductGallery: React.FC<ProductGalleryProps> = ({
             : mainThumbnailUrl,
       caption: g.caption || title,
     })),
-  ];
+  ].filter((img) => Boolean(img.url));
 
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
 
-  const activeImage = images[selectedIdx] || images[0];
+  const activeImage = images[selectedIdx] || {
+    url: "/PersisQuartz-Red.png",
+    caption: title,
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    // زوم فقط در مانیتورهای دسکتاپ عمل میکند
+    if (!isZoomed || typeof window === "undefined" || window.innerWidth < 1024)
+      return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setMousePos({ x, y });
+  };
+
+  const handleMouseEnter = () => {
+    if (typeof window !== "undefined" && window.innerWidth >= 1024) {
+      setIsZoomed(true);
+    }
+  };
 
   return (
-    <div className="space-y-4 select-none">
-      {/* تصویر اصلی با نسبت اسلب واقعی (3:4) و افکت Zoom */}
+    <div className="space-y-4 select-none lg:sticky lg:top-28">
+      {/* فریم اصلی اسلب (نسبت ۳ به ۴) */}
       <div
-        className="relative aspect-[3/4] w-full bg-muted border border-border/50 overflow-hidden cursor-zoom-in group"
-        onClick={() => setIsZoomed(!isZoomed)}
+        className="relative aspect-[3/4] w-full bg-card border border-border/60 overflow-hidden shadow-sm lg:cursor-crosshair"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={() => setIsZoomed(false)}
+        onMouseMove={handleMouseMove}
       >
         <Image
           src={activeImage.url}
@@ -47,33 +74,35 @@ export const ProductGallery: React.FC<ProductGalleryProps> = ({
           fill
           priority
           sizes="(max-width: 1024px) 100vw, 50vw"
-          className={`object-cover transition-transform duration-700 ease-out ${
-            isZoomed ? "scale-150" : "group-hover:scale-105"
-          }`}
+          className="object-cover transition-transform duration-150 ease-out"
+          style={{
+            transformOrigin: `${mousePos.x}% ${mousePos.y}%`,
+            transform: isZoomed ? "scale(2.2)" : "scale(1)",
+          }}
         />
 
-        <div className="absolute bottom-4 end-4 bg-background/80 backdrop-blur-md p-2 border border-border/40 text-foreground">
-          <ZoomIn className="h-4 w-4" />
+        {/* نشانگر قابلیت زوم فقط برای دسکتاپ */}
+        <div className="hidden lg:flex absolute bottom-4 end-4 bg-background/90 backdrop-blur-md px-2.5 py-1.5 border border-border/50 text-xs text-foreground items-center gap-1.5 shadow-sm">
+          <ZoomIn className="h-3.5 w-3.5 text-primary" />
+          <span>Hover to Zoom</span>
         </div>
-
-        {activeImage.caption && (
-          <div className="absolute bottom-4 start-4 bg-background/90 backdrop-blur-md px-3 py-1.5 border border-border/40 text-[11px] font-mono text-foreground">
-            {activeImage.caption}
-          </div>
-        )}
       </div>
 
-      {/* تصاویر کوچک (Thumbnails) */}
+      {/* تصاویر بندانگشتی تنها در صورت وجود بیش از یک تصویر رندر میشوند */}
       {images.length > 1 && (
-        <div className="flex items-center gap-3 overflow-x-auto pb-2">
+        <div className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-none">
           {images.map((img, idx) => (
             <button
               key={idx}
-              onClick={() => setSelectedIdx(idx)}
-              className={`relative h-20 w-16 shrink-0 border transition-all overflow-hidden ${
+              type="button"
+              onClick={() => {
+                setSelectedIdx(idx);
+                setIsZoomed(false);
+              }}
+              className={`relative h-20 w-16 sm:h-24 sm:w-20 shrink-0 border transition-all overflow-hidden bg-muted/30 cursor-pointer ${
                 selectedIdx === idx
-                  ? "border-primary ring-1 ring-primary"
-                  : "border-border/50 opacity-60 hover:opacity-100"
+                  ? "border-primary ring-2 ring-primary/30"
+                  : "border-border/60 opacity-60 hover:opacity-100"
               }`}
             >
               <Image
@@ -83,10 +112,13 @@ export const ProductGallery: React.FC<ProductGalleryProps> = ({
                 sizes="80px"
                 className="object-cover"
               />
+              <span className="absolute bottom-1 end-1 bg-black/70 text-white text-[10px] px-1.5 font-mono">
+                0{idx + 1}
+              </span>
             </button>
           ))}
         </div>
       )}
     </div>
   );
-};
+}
