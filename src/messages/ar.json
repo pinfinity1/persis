@@ -33,7 +33,7 @@
     "calacattaSeries": "سلسلة كالاكاتا",
     "quickLinksTitle": "روابط سريعة",
     "findDealers": "الموزعون",
-    "downloadCatalog": "تحميل الكتالوج",
+    "downloadCatalog": "الكتالوج",
     "aboutUs": "من نحن",
     "contactUs": "اتصل بنا",
     "infoAndLegalTitle": "المعلومات والأحكام",
@@ -157,5 +157,15 @@
     "appVanityDesc": "بنية غير مسامية بالكامل مقاومة للرطوبة المستمرة.",
     "appCommercial": "المشاريع التجارية",
     "appCommercialDesc": "متانة استثنائية في الأماكن المزدحمة والمختبرات."
+  },
+  "Catalogs": {
+    "title": "الكتالوجات الرقمية",
+    "view": "معاينة",
+    "download": "تحميل PDF",
+    "allCategories": "جميع الفئات",
+    "searchPlaceholder": "البحث في الكتالوجات...",
+    "noCatalogsFound": "لم يتم العثور على كتالوجات تطابق بحثك.",
+    "resetFilters": "إعادة ضبط",
+    "previewNotAvailable": "المعاينة غير متاحة لهذا الملف."
   }
 }

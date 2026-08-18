@@ -29,6 +29,9 @@ const inter = localFont({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000",
+  ),
   title: "Persis Quartz",
   description:
     "تولیدکننده سطوح کوارتز مهندسی‌شده با استانداردهای جهانی؛ تلفیقی از استحکام بی‌نظیر و زیبایی معماری.",

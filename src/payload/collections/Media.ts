@@ -4,40 +4,77 @@ import type { CollectionConfig } from "payload";
 export const Media: CollectionConfig = {
   slug: "media",
   access: {
-    read: () => true, // دسترسی عمومی برای خواندن تصاویر/ویدیوها در فرانت‌‌اند
+    read: () => true,
+  },
+  admin: {
+    useAsTitle: "alt",
+    defaultColumns: ["filename", "mimeType", "filesize", "updatedAt"],
   },
   upload: {
-    staticDir: "media", // پوشه ذخیره‌سازی محلی فایل‌ها
-    adminThumbnail: "card",
+    adminThumbnail: "thumbnail",
     imageSizes: [
       {
         name: "thumbnail",
-        width: 400,
-        height: 300,
-        position: "centre",
+        width: 300,
+        height: 225,
+        formatOptions: { format: "webp", options: { quality: 80 } },
       },
       {
         name: "card",
         width: 768,
         height: 1024,
-        position: "centre",
+        formatOptions: { format: "webp", options: { quality: 85 } },
       },
       {
         name: "desktop",
         width: 1920,
-        height: 1080,
-        position: "centre",
+        height: 1440,
+        formatOptions: { format: "webp", options: { quality: 88 } },
       },
     ],
-    mimeTypes: ["image/*", "video/mp4", "video/webm"], // پشتیبانی از عکس و ویدیو
+    mimeTypes: [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/avif",
+      "image/svg+xml",
+      "video/mp4",
+      "video/webm",
+      "application/pdf",
+    ],
+  },
+  hooks: {
+    beforeOperation: [
+      ({ args, operation }) => {
+        if (operation === "create" && args.req?.file) {
+          const file = args.req.file;
+          const safeFileName = file.name
+            .toLowerCase()
+            .replace(/\s+/g, "-")
+            .replace(/[^a-z0-9.-]/g, "");
+          file.name = safeFileName;
+        }
+        return args;
+      },
+    ],
   },
   fields: [
     {
       name: "alt",
       type: "text",
       localized: true,
+      required: true,
       admin: {
-        description: "متن جایگزین تصویر برای سئو (Alt Text)",
+        description:
+          "متن جایگزین عکس برای سئو و Accessibility (برای ویدیو و PDF اختیاری است)",
+      },
+    },
+    {
+      name: "caption",
+      type: "text",
+      localized: true,
+      admin: {
+        description: "کپشن یا توضیح کوتاه",
       },
     },
   ],

@@ -200,7 +200,7 @@ export function ProductConfigurator({
             variant="outline"
             className="w-full h-12 border-border/80 hover:bg-muted text-foreground rounded-none text-xs tracking-wider uppercase"
           >
-            <a
+            <Link
               href="/catalogs"
               target="_blank"
               rel="noopener noreferrer"
@@ -208,7 +208,7 @@ export function ProductConfigurator({
             >
               <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
               <span>{t("downloadSpecs")}</span>
-            </a>
+            </Link>
           </Button>
         </div>
       </div>

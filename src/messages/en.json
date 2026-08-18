@@ -33,7 +33,7 @@
     "calacattaSeries": "Calacatta Series",
     "quickLinksTitle": "Quick Links",
     "findDealers": "Find Dealers",
-    "downloadCatalog": "Download Catalog",
+    "downloadCatalog": "Catalog",
     "aboutUs": "About Us",
     "contactUs": "Contact Us",
     "infoAndLegalTitle": "Info & Legal",
@@ -157,5 +157,15 @@
     "appVanityDesc": "Completely non-porous structure against constant moisture.",
     "appCommercial": "Commercial Projects",
     "appCommercialDesc": "Extreme durability in high-traffic spaces and clinical labs."
+  },
+  "Catalogs": {
+    "title": "Digital Catalogs",
+    "view": "Preview",
+    "download": "Download",
+    "allCategories": "All Categories",
+    "searchPlaceholder": "Search catalogs...",
+    "noCatalogsFound": "No catalogs found matching your search.",
+    "resetFilters": "Reset Filters",
+    "previewNotAvailable": "Preview is not available for this file."
   }
 }

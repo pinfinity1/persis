@@ -5,25 +5,27 @@ import type { NextConfig } from "next";
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
   images: {
+    formats: ["image/avif", "image/webp"],
     remotePatterns: [
       {
         protocol: "http",
         hostname: "localhost",
-        port: "3000",
       },
       {
         protocol: "http",
         hostname: "127.0.0.1",
-        port: "3000",
       },
-      //دامنه اصلی سایت/پیلود (در زمان دیپلوی)
-      /*
+      // دامنه اصلی سایت (برای پروداکشن)
       {
         protocol: "https",
         hostname: "persisquartz.com",
       },
-      */
+      {
+        protocol: "https",
+        hostname: "www.persisquartz.com",
+      },
     ],
   },
 };
