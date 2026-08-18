@@ -154,6 +154,7 @@ src/
       VeinPatterns.ts
   services/
     catalog.service.ts
+    hero.service.ts
     product.service.ts
   types/
     declarations.d.ts
@@ -2898,34 +2899,6 @@ export const { Link, redirect, usePathname, useRouter, getPathname } =
   createNavigation(routing);
 </file>
 
-<file path="src/lib/payload/hero.ts">
-import { getPayload } from "payload";
-import configPromise from "@/payload.config";
-
-export async function getHeroBanners(locale: string = "fa") {
-  try {
-    const payload = await getPayload({ config: configPromise });
-
-    const response = await payload.find({
-      collection: "hero-banners",
-      locale: locale as "fa" | "en" | "ar",
-      depth: 1, // <-- این خط کلیدی است: باعث می‌شود url ویدیوها و عکس‌ها دریافت شود
-      where: {
-        status: {
-          equals: "published",
-        },
-      },
-      sort: "order",
-    });
-
-    return response.docs;
-  } catch (error) {
-    console.error("Error fetching Hero Banners from Payload:", error);
-    return [];
-  }
-}
-</file>
-
 <file path="src/lib/validations/excel-category-import.ts">
 import { z } from "zod";
 
@@ -3516,59 +3489,35 @@ export const VeinPatterns: CollectionConfig = {
 };
 </file>
 
-<file path="src/services/catalog.service.ts">
+<file path="src/services/hero.service.ts">
+// مسیر جدید: src/services/hero.service.ts
+import { cache } from "react";
 import "server-only";
 import { getPayload } from "payload";
 import configPromise from "@/payload.config";
 
-export interface CatalogItem {
-  id: string;
-  title: string;
-  slug: string;
-  year: number;
-  catalog_type: "full_catalog" | "technical" | "collection" | "guide";
-  description?: string;
-  cover_image: { url: string; alt?: string } | string;
-  pdf_file: { url: string; filename?: string } | string;
-  file_size_mb: number;
-  page_count?: number;
-  status: "published" | "draft";
-}
-
-export async function getGroupedCatalogsService(
-  locale: "fa" | "en" | "ar",
-): Promise<Record<number, CatalogItem[]>> {
+export const getHeroBannersService = cache(async (locale: string = "fa") => {
   try {
     const payload = await getPayload({ config: configPromise });
 
     const response = await payload.find({
-      collection: "catalogs",
-      locale,
-      limit: 100,
+      collection: "hero-banners",
+      locale: locale as "fa" | "en" | "ar",
+      depth: 1,
       where: {
-        status: { equals: "published" },
+        status: {
+          equals: "published",
+        },
       },
-      sort: "-year",
-      depth: 2,
+      sort: "order",
     });
 
-    const docs = (response.docs as unknown as CatalogItem[]) || [];
-
-    // گروه بندی سالیانه
-    return docs.reduce(
-      (acc, catalog) => {
-        const year = catalog.year || new Date().getFullYear();
-        if (!acc[year]) acc[year] = [];
-        acc[year].push(catalog);
-        return acc;
-      },
-      {} as Record<number, CatalogItem[]>,
-    );
+    return response.docs;
   } catch (error) {
-    console.error("Error fetching grouped catalogs:", error);
-    return {};
+    console.error("Error fetching Hero Banners from Payload:", error);
+    return [];
   }
-}
+});
 </file>
 
 <file path="src/types/declarations.d.ts">
@@ -5052,6 +5001,35 @@ export async function ProductSpecsMatrix({
 }
 </file>
 
+<file path="src/lib/payload/hero.ts">
+import { cache } from "react";
+import { getPayload } from "payload";
+import configPromise from "@/payload.config";
+
+export const getHeroBanners = cache(async (locale: string = "fa") => {
+  try {
+    const payload = await getPayload({ config: configPromise });
+
+    const response = await payload.find({
+      collection: "hero-banners",
+      locale: locale as "fa" | "en" | "ar",
+      depth: 1, // <-- این خط کلیدی است: باعث می‌شود url ویدیوها و عکس‌ها دریافت شود
+      where: {
+        status: {
+          equals: "published",
+        },
+      },
+      sort: "order",
+    });
+
+    return response.docs;
+  } catch (error) {
+    console.error("Error fetching Hero Banners from Payload:", error);
+    return [];
+  }
+});
+</file>
+
 <file path="src/lib/validations/contact.ts">
 // src/lib/validations/contact.ts
 import { z } from "zod";
@@ -5479,6 +5457,64 @@ export const Users: CollectionConfig = {
     },
   ],
 };
+</file>
+
+<file path="src/services/catalog.service.ts">
+import { cache } from "react";
+import "server-only";
+import { getPayload } from "payload";
+import configPromise from "@/payload.config";
+
+export interface CatalogItem {
+  id: string;
+  title: string;
+  slug: string;
+  year: number;
+  catalog_type: "full_catalog" | "technical" | "collection" | "guide";
+  description?: string;
+  cover_image: { url: string; alt?: string } | string;
+  pdf_file: { url: string; filename?: string } | string;
+  file_size_mb: number;
+  page_count?: number;
+  status: "published" | "draft";
+}
+
+export const getGroupedCatalogsService = cache(
+  async (
+    locale: "fa" | "en" | "ar",
+  ): Promise<Record<number, CatalogItem[]>> => {
+    try {
+      const payload = await getPayload({ config: configPromise });
+
+      const response = await payload.find({
+        collection: "catalogs",
+        locale,
+        limit: 100,
+        where: {
+          status: { equals: "published" },
+        },
+        sort: "-year",
+        depth: 2,
+      });
+
+      const docs = (response.docs as unknown as CatalogItem[]) || [];
+
+      // گروه بندی سالیانه
+      return docs.reduce(
+        (acc, catalog) => {
+          const year = catalog.year || new Date().getFullYear();
+          if (!acc[year]) acc[year] = [];
+          acc[year].push(catalog);
+          return acc;
+        },
+        {} as Record<number, CatalogItem[]>,
+      );
+    } catch (error) {
+      console.error("Error fetching grouped catalogs:", error);
+      return {};
+    }
+  },
+);
 </file>
 
 <file path="docker-compose.yml">
@@ -6826,293 +6862,6 @@ export const Footer: React.FC = () => {
 };
 </file>
 
-<file path="src/services/product.service.ts">
-import "server-only";
-import { getPayload } from "payload";
-import configPromise from "@/payload.config";
-
-export interface GetProductsParams {
-  locale: "fa" | "en" | "ar";
-  page?: number;
-  limit?: number;
-  category?: string;
-  color?: string;
-  vein_pattern?: string;
-  sort?: string;
-  search?: string;
-}
-
-export interface ProductMeta {
-  current_page: number;
-  total_pages: number;
-  total_items: number;
-  has_next_page: boolean;
-}
-
-export interface CategoryItem {
-  id: string;
-  title: string;
-  slug: string;
-}
-
-export interface ColorItem {
-  id: string;
-  title: string;
-  slug: string;
-  hex_code?: string;
-}
-
-export interface VeinPatternItem {
-  id: string;
-  title: string;
-  slug: string;
-}
-
-export interface GalleryItem {
-  image: { url: string; alt?: string } | string;
-  caption?: string;
-}
-
-export interface ProductItem {
-  id: string;
-  title: string;
-  slug: string;
-  code: string;
-  category: CategoryItem | string;
-  color_family: ColorItem | string;
-  vein_pattern?: VeinPatternItem | string;
-  is_in_stock: "in_stock" | "on_demand" | "discontinued";
-  thumbnail: { url: string; alt?: string } | string;
-  gallery?: GalleryItem[];
-  available_thicknesses?: string[];
-  finishes?: string[];
-  dimensions?: string;
-  description?: string;
-  meta_title?: string;
-  meta_description?: string;
-  specsSheetUrl?: string;
-}
-
-export function extractCategorySlug(
-  category: CategoryItem | string | undefined,
-): string {
-  if (!category) return "";
-  if (typeof category === "object") return category.slug || "";
-  return category;
-}
-
-export function extractCategoryTitle(
-  category: CategoryItem | string | undefined,
-): string {
-  if (!category) return "";
-  if (typeof category === "object") return category.title || "";
-  return category;
-}
-
-export async function getProductsService({
-  locale,
-  page = 1,
-  limit = 9,
-  category,
-  color,
-  vein_pattern,
-  sort = "-createdAt",
-  search,
-}: GetProductsParams): Promise<{ data: ProductItem[]; meta: ProductMeta }> {
-  try {
-    const payload = await getPayload({ config: configPromise });
-    const where: Record<string, any> = {};
-
-    if (category) {
-      where["category.slug"] = { equals: category };
-    }
-
-    if (color) {
-      where["color_family.slug"] = { equals: color };
-    }
-
-    if (vein_pattern) {
-      where["vein_pattern.slug"] = { equals: vein_pattern };
-    }
-
-    if (search) {
-      where.or = [{ title: { like: search } }, { code: { like: search } }];
-    }
-
-    const response = await payload.find({
-      collection: "products",
-      locale,
-      page,
-      limit,
-      where,
-      sort,
-      depth: 2,
-    });
-
-    return {
-      data: (response.docs as unknown as ProductItem[]) || [],
-      meta: {
-        current_page: response.page ?? 1,
-        total_pages: response.totalPages ?? 1,
-        total_items: response.totalDocs ?? 0,
-        has_next_page: (response.page ?? 1) < (response.totalPages ?? 1),
-      },
-    };
-  } catch (error) {
-    console.error("Error fetching products from Payload CMS:", error);
-    return {
-      data: [],
-      meta: {
-        current_page: 1,
-        total_pages: 1,
-        total_items: 0,
-        has_next_page: false,
-      },
-    };
-  }
-}
-
-export async function getProductBySlugService(
-  slug: string,
-  locale: "fa" | "en" | "ar",
-): Promise<ProductItem | null> {
-  try {
-    const payload = await getPayload({ config: configPromise });
-    const response = await payload.find({
-      collection: "products",
-      locale,
-      where: { slug: { equals: slug } },
-      limit: 1,
-      depth: 2,
-    });
-
-    if (response.docs && response.docs.length > 0) {
-      return response.docs[0] as unknown as ProductItem;
-    }
-    return null;
-  } catch (error) {
-    console.error("Error fetching product by slug from Payload CMS:", error);
-    return null;
-  }
-}
-
-export async function getCategoriesService(
-  locale: "fa" | "en" | "ar",
-): Promise<CategoryItem[]> {
-  try {
-    const payload = await getPayload({ config: configPromise });
-    const response = await payload.find({
-      collection: "categories",
-      locale,
-      limit: 100,
-      sort: "order",
-    });
-
-    return response.docs.map((doc: any) => ({
-      id: doc.id,
-      title: doc.title,
-      slug: doc.slug,
-    }));
-  } catch (error) {
-    console.error("Error fetching categories from Payload CMS:", error);
-    return [];
-  }
-}
-
-export async function getColorsService(
-  locale: "fa" | "en" | "ar",
-): Promise<ColorItem[]> {
-  try {
-    const payload = await getPayload({ config: configPromise });
-    const response = await payload.find({
-      collection: "colors",
-      locale,
-      limit: 100,
-    });
-
-    return response.docs.map((doc: any) => ({
-      id: doc.id,
-      title: doc.title,
-      slug: doc.slug,
-      hex_code: doc.hex_code,
-    }));
-  } catch (error) {
-    console.error("Error fetching colors from Payload CMS:", error);
-    return [];
-  }
-}
-
-export async function getVeinPatternsService(
-  locale: "fa" | "en" | "ar",
-): Promise<VeinPatternItem[]> {
-  try {
-    const payload = await getPayload({ config: configPromise });
-    const response = await payload.find({
-      collection: "vein-patterns",
-      locale,
-      limit: 100,
-    });
-
-    return response.docs.map((doc: any) => ({
-      id: doc.id,
-      title: doc.title,
-      slug: doc.slug,
-    }));
-  } catch (error) {
-    console.error("Error fetching vein patterns from Payload CMS:", error);
-    return [];
-  }
-}
-
-export async function getAllDimensionsService(): Promise<string[]> {
-  try {
-    const payload = await getPayload({ config: configPromise });
-    const response = await payload.find({
-      collection: "dimensions",
-      limit: 50,
-    });
-    return response.docs.map((d: any) => d.title);
-  } catch (error) {
-    console.error("Error fetching dimensions:", error);
-    return [];
-  }
-}
-
-export async function getAllThicknessesService(): Promise<string[]> {
-  try {
-    const payload = await getPayload({ config: configPromise });
-    const response = await payload.find({
-      collection: "thicknesses" as any,
-      limit: 50,
-    });
-    return response.docs.map((d: any) => d.slug || d.title);
-  } catch (error) {
-    console.error("Error fetching thicknesses:", error);
-    return [];
-  }
-}
-
-export async function getAllFinishesService(
-  locale: "fa" | "en" | "ar",
-): Promise<{ title: string; slug: string }[]> {
-  try {
-    const payload = await getPayload({ config: configPromise });
-    const response = await payload.find({
-      collection: "finishes" as any,
-      locale,
-      limit: 50,
-    });
-    return response.docs.map((d: any) => ({
-      title: d.title,
-      slug: d.slug,
-    }));
-  } catch (error) {
-    console.error("Error fetching finishes:", error);
-    return [];
-  }
-}
-</file>
-
 <file path="src/app/[locale]/products/[slug]/page.tsx">
 import React from "react";
 import { notFound } from "next/navigation";
@@ -7896,6 +7645,303 @@ export const InfoCardsStack: React.FC = () => {
 };
 </file>
 
+<file path="src/services/product.service.ts">
+import { cache } from "react";
+import "server-only";
+import { getPayload } from "payload";
+import configPromise from "@/payload.config";
+
+export interface GetProductsParams {
+  locale: "fa" | "en" | "ar";
+  page?: number;
+  limit?: number;
+  category?: string;
+  color?: string;
+  vein_pattern?: string;
+  sort?: string;
+  search?: string;
+}
+
+export interface ProductMeta {
+  current_page: number;
+  total_pages: number;
+  total_items: number;
+  has_next_page: boolean;
+}
+
+export interface CategoryItem {
+  id: string;
+  title: string;
+  slug: string;
+}
+
+export interface ColorItem {
+  id: string;
+  title: string;
+  slug: string;
+  hex_code?: string;
+}
+
+export interface VeinPatternItem {
+  id: string;
+  title: string;
+  slug: string;
+}
+
+export interface GalleryItem {
+  image: { url: string; alt?: string } | string;
+  caption?: string;
+}
+
+export interface ProductItem {
+  id: string;
+  title: string;
+  slug: string;
+  code: string;
+  category: CategoryItem | string;
+  color_family: ColorItem | string;
+  vein_pattern?: VeinPatternItem | string;
+  is_in_stock: "in_stock" | "on_demand" | "discontinued";
+  thumbnail: { url: string; alt?: string } | string;
+  gallery?: GalleryItem[];
+  available_thicknesses?: string[];
+  finishes?: string[];
+  dimensions?: string;
+  description?: string;
+  meta_title?: string;
+  meta_description?: string;
+  specsSheetUrl?: string;
+}
+
+export function extractCategorySlug(
+  category: CategoryItem | string | undefined,
+): string {
+  if (!category) return "";
+  if (typeof category === "object") return category.slug || "";
+  return category;
+}
+
+export function extractCategoryTitle(
+  category: CategoryItem | string | undefined,
+): string {
+  if (!category) return "";
+  if (typeof category === "object") return category.title || "";
+  return category;
+}
+
+export const getProductsService = cache(
+  async ({
+    locale,
+    page = 1,
+    limit = 9,
+    category,
+    color,
+    vein_pattern,
+    sort = "-createdAt",
+    search,
+  }: GetProductsParams): Promise<{
+    data: ProductItem[];
+    meta: ProductMeta;
+  }> => {
+    try {
+      const payload = await getPayload({ config: configPromise });
+      const where: Record<string, any> = {};
+
+      if (category) {
+        where["category.slug"] = { equals: category };
+      }
+
+      if (color) {
+        where["color_family.slug"] = { equals: color };
+      }
+
+      if (vein_pattern) {
+        where["vein_pattern.slug"] = { equals: vein_pattern };
+      }
+
+      if (search) {
+        where.or = [{ title: { like: search } }, { code: { like: search } }];
+      }
+
+      const response = await payload.find({
+        collection: "products",
+        locale,
+        page,
+        limit,
+        where,
+        sort,
+        depth: 2,
+      });
+
+      return {
+        data: (response.docs as unknown as ProductItem[]) || [],
+        meta: {
+          current_page: response.page ?? 1,
+          total_pages: response.totalPages ?? 1,
+          total_items: response.totalDocs ?? 0,
+          has_next_page: (response.page ?? 1) < (response.totalPages ?? 1),
+        },
+      };
+    } catch (error) {
+      console.error("Error fetching products from Payload CMS:", error);
+      return {
+        data: [],
+        meta: {
+          current_page: 1,
+          total_pages: 1,
+          total_items: 0,
+          has_next_page: false,
+        },
+      };
+    }
+  },
+);
+
+export const getProductBySlugService = cache(
+  async (
+    slug: string,
+    locale: "fa" | "en" | "ar",
+  ): Promise<ProductItem | null> => {
+    try {
+      const payload = await getPayload({ config: configPromise });
+      const response = await payload.find({
+        collection: "products",
+        locale,
+        where: { slug: { equals: slug } },
+        limit: 1,
+        depth: 2,
+      });
+
+      if (response.docs && response.docs.length > 0) {
+        return response.docs[0] as unknown as ProductItem;
+      }
+      return null;
+    } catch (error) {
+      console.error("Error fetching product by slug from Payload CMS:", error);
+      return null;
+    }
+  },
+);
+
+export const getCategoriesService = cache(
+  async (locale: "fa" | "en" | "ar"): Promise<CategoryItem[]> => {
+    try {
+      const payload = await getPayload({ config: configPromise });
+      const response = await payload.find({
+        collection: "categories",
+        locale,
+        limit: 100,
+        sort: "order",
+      });
+
+      return response.docs.map((doc: any) => ({
+        id: doc.id,
+        title: doc.title,
+        slug: doc.slug,
+      }));
+    } catch (error) {
+      console.error("Error fetching categories from Payload CMS:", error);
+      return [];
+    }
+  },
+);
+
+export const getColorsService = cache(
+  async (locale: "fa" | "en" | "ar"): Promise<ColorItem[]> => {
+    try {
+      const payload = await getPayload({ config: configPromise });
+      const response = await payload.find({
+        collection: "colors",
+        locale,
+        limit: 100,
+      });
+
+      return response.docs.map((doc: any) => ({
+        id: doc.id,
+        title: doc.title,
+        slug: doc.slug,
+        hex_code: doc.hex_code,
+      }));
+    } catch (error) {
+      console.error("Error fetching colors from Payload CMS:", error);
+      return [];
+    }
+  },
+);
+
+export const getVeinPatternsService = cache(
+  async (locale: "fa" | "en" | "ar"): Promise<VeinPatternItem[]> => {
+    try {
+      const payload = await getPayload({ config: configPromise });
+      const response = await payload.find({
+        collection: "vein-patterns",
+        locale,
+        limit: 100,
+      });
+
+      return response.docs.map((doc: any) => ({
+        id: doc.id,
+        title: doc.title,
+        slug: doc.slug,
+      }));
+    } catch (error) {
+      console.error("Error fetching vein patterns from Payload CMS:", error);
+      return [];
+    }
+  },
+);
+
+export const getAllDimensionsService = cache(async (): Promise<string[]> => {
+  try {
+    const payload = await getPayload({ config: configPromise });
+    const response = await payload.find({
+      collection: "dimensions",
+      limit: 50,
+    });
+    return response.docs.map((d: any) => d.title);
+  } catch (error) {
+    console.error("Error fetching dimensions:", error);
+    return [];
+  }
+});
+
+export const getAllThicknessesService = cache(async (): Promise<string[]> => {
+  try {
+    const payload = await getPayload({ config: configPromise });
+    const response = await payload.find({
+      collection: "thicknesses" as any,
+      limit: 50,
+    });
+    return response.docs.map((d: any) => d.slug || d.title);
+  } catch (error) {
+    console.error("Error fetching thicknesses:", error);
+    return [];
+  }
+});
+
+export const getAllFinishesService = cache(
+  async (
+    locale: "fa" | "en" | "ar",
+  ): Promise<{ title: string; slug: string }[]> => {
+    try {
+      const payload = await getPayload({ config: configPromise });
+      const response = await payload.find({
+        collection: "finishes" as any,
+        locale,
+        limit: 50,
+      });
+      return response.docs.map((d: any) => ({
+        title: d.title,
+        slug: d.slug,
+      }));
+    } catch (error) {
+      console.error("Error fetching finishes:", error);
+      return [];
+    }
+  },
+);
+</file>
+
 <file path="src/components/shared/header.tsx">
 // src/components/shared/header.tsx
 "use client";
@@ -8519,59 +8565,6 @@ const nextConfig: NextConfig = {
 export default withPayload(withNextIntl(nextConfig));
 </file>
 
-<file path="package.json">
-{
-  "name": "persisquartz",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "clean": "rm -rf .next && next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint",
-    "payload": "payload"
-  },
-  "dependencies": {
-    "@hookform/resolvers": "^5.5.7",
-    "@payloadcms/db-postgres": "^3.86.0",
-    "@payloadcms/next": "^3.86.0",
-    "@payloadcms/richtext-lexical": "^3.86.0",
-    "@payloadcms/storage-s3": "^3.88.0",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "embla-carousel-react": "^8.6.0",
-    "graphql": "^16.14.2",
-    "lucide-react": "^1.27.0",
-    "motion": "^12.43.0",
-    "next": "15.5.20",
-    "next-intl": "^4.13.4",
-    "payload": "^3.86.0",
-    "radix-ui": "^1.6.7",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "react-hook-form": "^7.83.0",
-    "shadcn": "^4.15.0",
-    "sharp": "^0.35.3",
-    "tailwind-merge": "^3.6.0",
-    "tw-animate-css": "^1.4.0",
-    "xlsx": "^0.18.5",
-    "zod": "^3.25.76"
-  },
-  "devDependencies": {
-    "@eslint/eslintrc": "^3",
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20.19.43",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "15.5.20",
-    "tailwindcss": "^4",
-    "typescript": "^5"
-  }
-}
-</file>
-
 <file path="src/app/[locale]/layout.tsx">
 // src/app/[locale]/layout.tsx
 import type { Metadata } from "next";
@@ -8647,14 +8640,69 @@ export default async function RootLayout({
 }
 </file>
 
+<file path="package.json">
+{
+  "name": "persisquartz",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbo",
+    "clean": "rm -rf .next && next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "payload": "payload"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.5.7",
+    "@payloadcms/db-postgres": "^3.86.0",
+    "@payloadcms/next": "^3.86.0",
+    "@payloadcms/richtext-lexical": "^3.86.0",
+    "@payloadcms/storage-s3": "^3.88.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "embla-carousel-react": "^8.6.0",
+    "graphql": "^16.14.2",
+    "lucide-react": "^1.27.0",
+    "motion": "^12.43.0",
+    "next": "15.4.11",
+    "next-intl": "^4.13.4",
+    "payload": "^3.86.0",
+    "radix-ui": "^1.6.7",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-hook-form": "^7.83.0",
+    "shadcn": "^4.15.0",
+    "sharp": "^0.35.3",
+    "tailwind-merge": "^3.6.0",
+    "tw-animate-css": "^1.4.0",
+    "xlsx": "^0.18.5",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20.19.43",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "15.4.11",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  },
+  "overrides": {
+    "sharp": "^0.35.3"
+  }
+}
+</file>
+
 <file path="src/app/[locale]/page.tsx">
-// src/app/[locale]/page.tsx
 import { HeroBanner } from "@/components/home/hero-banner";
 import { BrandIntro } from "@/components/home/brand-intro";
 import { ProductShowcase } from "@/components/home/product-showcase";
 import { InteractiveTools } from "@/components/home/interactive-tools";
 import { InfoCardsStack } from "@/components/home/info-cards-stack";
-import { getHeroBanners } from "@/lib/payload/hero";
+import { getHeroBannersService } from "@/services/hero.service";
 import { getProductsService } from "@/services/product.service";
 
 export default async function HomePage({
@@ -8665,9 +8713,8 @@ export default async function HomePage({
   const { locale } = await params;
   const currentLocale = locale as "fa" | "en" | "ar";
 
-  // فراخوانی همزمان بنرها و محصولات فعال از پیلود
   const [heroSlides, { data: products }] = await Promise.all([
-    getHeroBanners(currentLocale),
+    getHeroBannersService(currentLocale),
     getProductsService({
       locale: currentLocale,
       page: 1,

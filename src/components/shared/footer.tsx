@@ -120,7 +120,7 @@ export const Footer: React.FC = () => {
               </li>
               <li>
                 <Link
-                  href="/about"
+                  href="/about-persis"
                   className="hover:text-white transition-colors"
                 >
                   {t("aboutUs")}

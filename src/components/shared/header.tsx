@@ -229,7 +229,7 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
               {t("careAndMaintenance")}
             </Link>
 
-            <Link href="/about" className={navLinkStyle}>
+            <Link href="/about-persis" className={navLinkStyle}>
               {t("about")}
             </Link>
           </nav>
