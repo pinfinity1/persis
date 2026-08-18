@@ -62,6 +62,8 @@ src/
           route.ts
       layout.tsx
     [locale]/
+      care-and-maintenance/
+        page.tsx
       catalogs/
         page.tsx
       products/
@@ -89,6 +91,8 @@ src/
     admin/
       ExcelCategoryImportControl.tsx
       ExcelProductImportControl.tsx
+    care/
+      routine-accordion.tsx
     catalogs/
       catalog-card.tsx
     home/
@@ -168,12 +172,25 @@ tsconfig.json
 <files>
 This section contains the contents of the repository's files.
 
-<file path="src/app/[locale]/catalogs/page.tsx">
+<file path="src/app/[locale]/care-and-maintenance/page.tsx">
 import React from "react";
 import type { Metadata } from "next";
-import { getGroupedCatalogsService } from "@/services/catalog.service";
-import { CatalogCard } from "@/components/catalogs/catalog-card";
+import Image from "next/image";
 import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/routing";
+import { Button } from "@/components/ui/button";
+import { RoutineAccordion } from "@/components/care/routine-accordion";
+import {
+  Sparkles,
+  Droplets,
+  ShieldCheck,
+  ChefHat,
+  ThermometerSun,
+  TestTubeDiagonal,
+  ShieldAlert,
+  ArrowUpRight,
+  FileText,
+} from "lucide-react";
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -183,599 +200,386 @@ export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "CareMaintenance" });
+
   return {
-    title:
-      locale === "fa"
-        ? "کاتالوگ‌ها و مستندات فنی | پرسیس کوارتز"
-        : "Catalogs & Technical Documentation | Persis Quartz",
-    description:
-      "دانلود مستقیم و مشاهده آنلاین کاتالوگ‌های سالانه و راهنماهای مهندسی پرسیس کوارتز.",
+    title: t("metaTitle"),
+    description: t("metaDescription"),
+    openGraph: {
+      title: t("metaTitle"),
+      description: t("metaDescription"),
+      images: ["/PersisQuartz-Red.png"],
+    },
   };
 }
 
-export default async function CatalogsPage({ params }: PageProps) {
+export default async function CareAndMaintenancePage({ params }: PageProps) {
   const { locale } = await params;
-  const currentLocale = locale as "fa" | "en" | "ar";
+  const t = await getTranslations({ locale, namespace: "CareMaintenance" });
 
-  const groupedCatalogs = await getGroupedCatalogsService(currentLocale);
-  const years = Object.keys(groupedCatalogs)
-    .map(Number)
-    .sort((a, b) => b - a);
+  // فیچرهای یکپارچه شده با آیکون‌های استاندارد پروژه
+  const engineeredFeatures = [
+    { label: t("featScratch"), icon: "/icons/scratch.png" },
+    { label: t("featStain"), icon: "/icons/stain.png" },
+    { label: t("featImpact"), icon: "/icons/impact.png" },
+    { label: t("featImpermeable"), icon: "/icons/layerbarrier.png" },
+    { label: t("featAntibacterial"), icon: "/icons/antibacterial.png" },
+    { label: t("featEasyClean"), icon: "/icons/easyclean.png" },
+  ];
 
-  const t = await getTranslations({
-    locale: currentLocale,
-    namespace: "Catalogs",
-  });
+  // مراحل روتین برای ارسال به کامپوننت آکاردئون
+  // داخل کامپوننت CareAndMaintenancePage:
+  const routineSteps: StepItem[] = [
+    {
+      id: "step-1",
+      stepNumber: "Step 01 • Post Installation",
+      title: t("firstCleanTitle"),
+      desc: t("firstCleanDesc"),
+      iconName: "sparkles",
+    },
+    {
+      id: "step-2",
+      stepNumber: "Step 02 • Daily Maintenance",
+      title: t("dailyCareTitle"),
+      desc: t("dailyCareDesc"),
+      iconName: "droplets",
+    },
+    {
+      id: "step-3",
+      stepNumber: "Step 03 • Stain Handling",
+      title: t("stainsTitle"),
+      desc: t("stainsDesc"),
+      iconName: "shieldCheck",
+    },
+  ];
 
   return (
-    <main className="container mx-auto px-4 sm:px-12 py-20 sm:py-28 min-h-screen space-y-12 sm:space-y-16">
-      {/* عنوان مینیمال هدر */}
-      <div dir="ltr" className="relative pt-4 pb-2 select-none overflow-hidden">
-        <h1 className="sr-only">کاتالوگ‌های پرسیس کوارتز</h1>
-        <span className="text-4xl sm:text-7xl lg:text-9xl font-black text-foreground/[0.04] uppercase tracking-tighter leading-none block">
-          PUBLICATIONS
-        </span>
-        <div className="absolute bottom-2 start-0 z-10 flex items-center gap-3">
-          <span className="h-px w-6 bg-primary" />
-          <span className="text-[10px] sm:text-[11px] font-mono tracking-[0.25em] text-primary uppercase">
-            Official Catalogs & Tech Specs
+    <main className="min-h-screen bg-background pb-20 sm:pb-32 select-none">
+      {/* ۱. هدر مینیمال */}
+      <section className="relative pt-32 pb-16 sm:pt-40 sm:pb-20 bg-muted/20 border-b border-border/40 overflow-hidden">
+        <div
+          aria-hidden="true"
+          dir="ltr"
+          className="absolute inset-0 pointer-events-none flex items-center justify-center overflow-hidden opacity-[0.03] select-none"
+        >
+          <span className="text-[15vw] font-black uppercase tracking-tighter text-foreground leading-none whitespace-nowrap block">
+            MAINTENANCE
           </span>
         </div>
-      </div>
 
-      {years.length > 0 ? (
-        <div className="space-y-12 sm:space-y-16">
-          {years.map((year) => (
-            <section key={year} className="space-y-4 sm:space-y-6">
-              <div className="flex items-center gap-3 border-b border-border/40 pb-2">
-                <span className="text-lg sm:text-2xl font-light font-mono text-primary">
-                  {year}
-                </span>
-                <span className="text-[11px] sm:text-xs text-muted-foreground uppercase tracking-widest font-mono">
-                  Collection
-                </span>
-              </div>
+        <div className="container mx-auto px-6 sm:px-12 relative z-10 text-center max-w-4xl space-y-5">
+          <div className="flex items-center justify-center gap-3">
+            <span className="h-px w-6 bg-primary" />
+            <span className="text-[11px] sm:text-xs uppercase tracking-[0.25em] text-primary font-mono font-medium">
+              {t("tagline")}
+            </span>
+            <span className="h-px w-6 bg-primary" />
+          </div>
 
-              {/* در موبایل ۱ ستونه افقی، در تبلت ۲ ستونه و در دسکتاپ ۳/۴ ستونه */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
-                {groupedCatalogs[year].map((catalog) => (
-                  <CatalogCard key={catalog.id} catalog={catalog} />
-                ))}
-              </div>
-            </section>
-          ))}
-        </div>
-      ) : (
-        <div className="p-12 text-center bg-card border border-border/40">
-          <p className="text-sm font-light text-muted-foreground">
-            {t("noCatalogsFound")}
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-light text-foreground tracking-tight">
+            {t("title")}
+          </h1>
+
+          <p className="text-xs sm:text-base font-light text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+            {t("intro")}
           </p>
         </div>
-      )}
+      </section>
+
+      {/* ۲. گرید آیکون‌های ساختاری متریال */}
+      <section className="container mx-auto px-6 sm:px-12 pt-16 sm:pt-20">
+        <div className="mb-8 space-y-1">
+          <span className="text-[10px] sm:text-xs uppercase tracking-widest text-primary font-mono block">
+            01 / Engineering DNA
+          </span>
+          <h2 className="text-xl sm:text-2xl font-light text-foreground">
+            {t("featuresSectionTitle")}
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+          {engineeredFeatures.map((item, idx) => (
+            <div
+              key={idx}
+              className="p-5 bg-card border border-border/60 flex flex-col items-center text-center gap-3.5 group hover:border-primary/60 transition-all duration-300"
+            >
+              <div className="relative h-9 w-9 shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
+                <Image
+                  src={item.icon}
+                  alt={item.label}
+                  fill
+                  sizes="36px"
+                  className="object-contain dark:invert"
+                />
+              </div>
+              <span className="text-xs font-light text-foreground leading-snug">
+                {item.label}
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ۳. آکاردئون تعاملی همراه با مدیا */}
+      <RoutineAccordion
+        sectionTitle={t("routineSectionTitle")}
+        items={routineSteps}
+        mediaSrc="/PersisQuartz-Red.png"
+      />
+
+      {/* ۴. باکس استانداردهای محافظتی تیره */}
+      <section className="container mx-auto px-6 sm:px-12 pt-20 sm:pt-24">
+        <div className="bg-neutral-950 text-neutral-200 border border-neutral-800 p-8 sm:p-14 lg:p-16">
+          <div className="max-w-2xl mb-12 sm:mb-16 space-y-2">
+            <span className="text-[10px] sm:text-xs uppercase tracking-widest text-primary font-mono block">
+              03 / Preventive Rules
+            </span>
+            <h2 className="text-2xl sm:text-4xl font-light text-white tracking-tight">
+              {t("dosAndDontsTitle")}
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12">
+            <div className="flex gap-5 items-start p-6 bg-neutral-900/50 border border-neutral-800/80">
+              <div className="shrink-0 p-3 bg-neutral-900 border border-neutral-700/60 text-neutral-300">
+                <ChefHat className="h-5 w-5 text-primary" />
+              </div>
+              <div className="space-y-2">
+                <h4 className="text-sm sm:text-base font-medium text-white tracking-wide">
+                  {t("scratchProtTitle")}
+                </h4>
+                <p className="text-xs sm:text-sm font-light text-neutral-400 leading-relaxed">
+                  {t("scratchProtDesc")}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-5 items-start p-6 bg-neutral-900/50 border border-neutral-800/80">
+              <div className="shrink-0 p-3 bg-neutral-900 border border-neutral-700/60 text-neutral-300">
+                <ThermometerSun className="h-5 w-5 text-primary" />
+              </div>
+              <div className="space-y-2">
+                <h4 className="text-sm sm:text-base font-medium text-white tracking-wide">
+                  {t("heatProtTitle")}
+                </h4>
+                <p className="text-xs sm:text-sm font-light text-neutral-400 leading-relaxed">
+                  {t("heatProtDesc")}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-5 items-start p-6 bg-neutral-900/50 border border-neutral-800/80">
+              <div className="shrink-0 p-3 bg-neutral-900 border border-neutral-700/60 text-neutral-300">
+                <TestTubeDiagonal className="h-5 w-5 text-primary" />
+              </div>
+              <div className="space-y-2">
+                <h4 className="text-sm sm:text-base font-medium text-white tracking-wide">
+                  {t("chemicalsProtTitle")}
+                </h4>
+                <p className="text-xs sm:text-sm font-light text-neutral-400 leading-relaxed">
+                  {t("chemicalsProtDesc")}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-5 items-start p-6 bg-neutral-900/50 border border-neutral-800/80">
+              <div className="shrink-0 p-3 bg-neutral-900 border border-neutral-700/60 text-neutral-300">
+                <ShieldAlert className="h-5 w-5 text-primary" />
+              </div>
+              <div className="space-y-2">
+                <h4 className="text-sm sm:text-base font-medium text-white tracking-wide">
+                  {t("edgesProtTitle")}
+                </h4>
+                <p className="text-xs sm:text-sm font-light text-neutral-400 leading-relaxed">
+                  {t("edgesProtDesc")}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ۵. بخش فراخوان به عمل (CTA) */}
+      <section className="container mx-auto px-6 sm:px-12 pt-16 sm:pt-20">
+        <div className="p-8 sm:p-12 bg-card border border-border/60 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="space-y-2 text-center md:text-start">
+            <h3 className="text-lg sm:text-xl font-medium text-foreground">
+              {t("ctaTitle")}
+            </h3>
+            <p className="text-xs sm:text-sm text-muted-foreground font-light max-w-xl">
+              {t("ctaDesc")}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4 shrink-0">
+            <Button
+              asChild
+              variant="outline"
+              size="lg"
+              className="rounded-none text-xs uppercase tracking-wider h-11 px-6 border-border hover:bg-muted"
+            >
+              <Link href="/catalogs" className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-muted-foreground" />
+                <span>{t("ctaCatalogBtn")}</span>
+              </Link>
+            </Button>
+
+            <Button
+              asChild
+              size="lg"
+              className="rounded-none text-xs uppercase tracking-wider h-11 px-6 bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              <Link href="/contact" className="flex items-center gap-2">
+                <span>{t("ctaContactBtn")}</span>
+                <ArrowUpRight className="h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }
 </file>
 
-<file path="src/components/catalogs/catalog-card.tsx">
+<file path="src/components/care/routine-accordion.tsx">
 "use client";
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { useTranslations } from "next-intl";
-import { Download, Eye, FileText } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import type { CatalogItem } from "@/services/catalog.service";
+import { Sparkles, Droplets, ShieldCheck, ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-const TYPE_LABELS: Record<string, string> = {
-  full_catalog: "Full Catalog",
-  technical: "Technical Specs",
-  collection: "Collection Brochure",
-  guide: "Care & Installation Guide",
+// مپ کردن نام متنی آیکون به کامپوننت مربوطه در سمت کلاینت
+const ICON_MAP: Record<string, React.ElementType> = {
+  sparkles: Sparkles,
+  droplets: Droplets,
+  shieldCheck: ShieldCheck,
 };
 
-export const CatalogCard: React.FC<{ catalog: CatalogItem }> = ({
-  catalog,
+export interface StepItem {
+  id: string;
+  stepNumber: string;
+  title: string;
+  desc: string;
+  iconName: "sparkles" | "droplets" | "shieldCheck";
+}
+
+interface RoutineAccordionProps {
+  sectionTitle: string;
+  items: StepItem[];
+  mediaSrc?: string;
+}
+
+export const RoutineAccordion: React.FC<RoutineAccordionProps> = ({
+  sectionTitle,
+  items,
+  mediaSrc = "/PersisQuartz-Red.png",
 }) => {
-  const t = useTranslations("Catalogs");
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [openId, setOpenId] = useState<string>(items[0]?.id || "");
 
-  const coverUrl =
-    typeof catalog.cover_image === "object" && catalog.cover_image?.url
-      ? catalog.cover_image.url
-      : "/PersisQuartz-Red.png";
-
-  const pdfUrl =
-    typeof catalog.pdf_file === "object" && catalog.pdf_file?.url
-      ? catalog.pdf_file.url
-      : typeof catalog.pdf_file === "string"
-        ? catalog.pdf_file
-        : "";
-
-  const handleDownload = () => {
-    if (!pdfUrl) return;
-    const link = document.createElement("a");
-    link.href = pdfUrl;
-    link.download = `${catalog.slug}.pdf`;
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const toggleItem = (id: string) => {
+    setOpenId((prev) => (prev === id ? "" : id));
   };
 
   return (
-    <>
-      <div className="group flex flex-row sm:flex-col bg-card border border-border/50 hover:border-primary/60 transition-all duration-300 overflow-hidden h-36 sm:h-auto">
-        {/* کاور افقی و جمع‌وجور در موبایل */}
-        <div className="relative w-28 sm:w-full shrink-0 sm:aspect-[4/3] overflow-hidden bg-muted/40 flex items-center justify-center">
-          <Image
-            src={coverUrl}
-            alt={catalog.title}
-            fill
-            sizes="(max-width: 640px) 112px, (max-width: 1024px) 50vw, 33vw"
-            className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-          />
-          <div className="absolute top-2 end-2 bg-background/90 backdrop-blur-md px-1.5 py-0.5 border border-border/50 text-[9px] sm:text-[10px] font-mono text-muted-foreground">
-            {catalog.file_size_mb} MB
-          </div>
-        </div>
-
-        {/* اطلاعات و اکشن‌ها */}
-        <div className="p-3 sm:p-5 flex flex-col flex-1 justify-between min-w-0">
-          <div className="space-y-1">
-            <span className="text-[9px] sm:text-[10px] uppercase tracking-wider text-primary font-mono block truncate">
-              {TYPE_LABELS[catalog.catalog_type] || "Documentation"}
-            </span>
-            <h4 className="text-xs sm:text-base font-light text-foreground group-hover:text-primary transition-colors line-clamp-1 sm:line-clamp-2 leading-snug">
-              {catalog.title}
-            </h4>
-            {catalog.description && (
-              <p className="hidden sm:block text-xs text-muted-foreground font-light line-clamp-2 leading-relaxed pt-1">
-                {catalog.description}
-              </p>
-            )}
-          </div>
-
-          <div className="flex items-center gap-1.5 sm:grid sm:grid-cols-2 sm:gap-2 pt-2 sm:pt-3 border-t border-border/30">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsPreviewOpen(true)}
-              className="rounded-none text-[11px] sm:text-xs h-7 sm:h-9 flex-1 px-2 tracking-wider uppercase border-border/60 hover:bg-muted"
-            >
-              <Eye className="h-3 w-3 sm:h-3.5 sm:w-3.5 me-1 text-muted-foreground" />
-              <span>{t("view")}</span>
-            </Button>
-
-            <Button
-              size="sm"
-              onClick={handleDownload}
-              className="rounded-none text-[11px] sm:text-xs h-7 sm:h-9 flex-1 px-2 tracking-wider uppercase bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              <Download className="h-3 w-3 sm:h-3.5 sm:w-3.5 me-1" />
-              <span>{t("download")}</span>
-            </Button>
-          </div>
-        </div>
+    <section className="container mx-auto px-6 sm:px-12 pt-20 sm:pt-24">
+      <div className="mb-10 space-y-1">
+        <span className="text-[10px] sm:text-xs uppercase tracking-widest text-primary font-mono block">
+          02 / Routine Protocol
+        </span>
+        <h2 className="text-2xl sm:text-3xl font-light text-foreground">
+          {sectionTitle}
+        </h2>
       </div>
 
-      {/* مدال پیش‌نمایش */}
-      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="sm:max-w-5xl h-[85vh] flex flex-col p-4 sm:p-6 rounded-none bg-background">
-          <DialogHeader className="pb-3 border-b border-border/40 shrink-0">
-            <div className="flex items-center gap-2">
-              <FileText className="h-4 w-4 text-primary" />
-              <DialogTitle className="text-base font-normal">
-                {catalog.title}
-              </DialogTitle>
-            </div>
-            <DialogDescription className="text-xs">
-              {catalog.file_size_mb} MB{" "}
-              {catalog.page_count ? `• ${catalog.page_count} Pages` : ""}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="flex-1 w-full h-full bg-muted/20 border border-border/40 overflow-hidden relative mt-2">
-            {pdfUrl ? (
-              <iframe
-                src={`${pdfUrl}#toolbar=1&navpanes=0`}
-                className="w-full h-full border-0"
-                title={catalog.title}
-              />
-            ) : (
-              <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
-                {t("previewNotAvailable")}
-              </div>
-            )}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+        {/* ستون مدیا */}
+        <div className="lg:col-span-5 w-full">
+          <div className="relative aspect-[4/3] sm:aspect-square w-full bg-muted/40 border border-border/60 overflow-hidden">
+            <Image
+              src={mediaSrc}
+              alt="Persis Quartz Routine Care"
+              fill
+              sizes="(max-width: 1024px) 100vw, 40vw"
+              className="object-cover"
+            />
+            <div className="absolute inset-0 bg-black/10 pointer-events-none" />
           </div>
-        </DialogContent>
-      </Dialog>
-    </>
+        </div>
+
+        {/* ستون آکاردئون */}
+        <div className="lg:col-span-7 space-y-3">
+          {items.map((item) => {
+            const isOpen = openId === item.id;
+            const Icon = ICON_MAP[item.iconName] || Droplets;
+
+            return (
+              <div
+                key={item.id}
+                className={cn(
+                  "border bg-card transition-colors duration-200",
+                  isOpen
+                    ? "border-primary/60"
+                    : "border-border/60 hover:border-border",
+                )}
+              >
+                <button
+                  type="button"
+                  onClick={() => toggleItem(item.id)}
+                  className="w-full p-5 sm:p-6 flex items-center justify-between text-start gap-4 cursor-pointer focus:outline-none"
+                >
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div
+                      className={cn(
+                        "p-2.5 shrink-0 border transition-colors",
+                        isOpen
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-muted/50 text-primary border-border/50",
+                      )}
+                    >
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest block">
+                        {item.stepNumber}
+                      </span>
+                      <h3 className="text-sm sm:text-base font-medium text-foreground truncate">
+                        {item.title}
+                      </h3>
+                    </div>
+                  </div>
+
+                  <ChevronDown
+                    className={cn(
+                      "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200",
+                      isOpen && "rotate-180 text-primary",
+                    )}
+                  />
+                </button>
+
+                <div
+                  className={cn(
+                    "grid transition-all duration-200 ease-in-out px-5 sm:px-6",
+                    isOpen
+                      ? "grid-rows-[1fr] pb-6 opacity-100"
+                      : "grid-rows-[0fr] pb-0 opacity-0",
+                  )}
+                >
+                  <div className="overflow-hidden">
+                    <p className="text-xs sm:text-sm font-light text-muted-foreground leading-relaxed pt-2 border-t border-border/30">
+                      {item.desc}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
   );
 };
-</file>
-
-<file path="src/components/ui/dialog.tsx">
-"use client"
-
-import * as React from "react"
-import { Dialog as DialogPrimitive } from "radix-ui"
-
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { XIcon } from "lucide-react"
-
-function Dialog({
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Root>) {
-  return <DialogPrimitive.Root data-slot="dialog" {...props} />
-}
-
-function DialogTrigger({
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
-  return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />
-}
-
-function DialogPortal({
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Portal>) {
-  return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />
-}
-
-function DialogClose({
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Close>) {
-  return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
-}
-
-function DialogOverlay({
-  className,
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
-  return (
-    <DialogPrimitive.Overlay
-      data-slot="dialog-overlay"
-      className={cn(
-        "fixed inset-0 isolate z-50 bg-black/10 duration-100 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
-        className
-      )}
-      {...props}
-    />
-  )
-}
-
-function DialogContent({
-  className,
-  children,
-  showCloseButton = true,
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Content> & {
-  showCloseButton?: boolean
-}) {
-  return (
-    <DialogPortal>
-      <DialogOverlay />
-      <DialogPrimitive.Content
-        data-slot="dialog-content"
-        className={cn(
-          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
-          className
-        )}
-        {...props}
-      >
-        {children}
-        {showCloseButton && (
-          <DialogPrimitive.Close data-slot="dialog-close" asChild>
-            <Button
-              variant="ghost"
-              className="absolute top-2 right-2"
-              size="icon-sm"
-            >
-              <XIcon
-              />
-              <span className="sr-only">Close</span>
-            </Button>
-          </DialogPrimitive.Close>
-        )}
-      </DialogPrimitive.Content>
-    </DialogPortal>
-  )
-}
-
-function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
-  return (
-    <div
-      data-slot="dialog-header"
-      className={cn("flex flex-col gap-2", className)}
-      {...props}
-    />
-  )
-}
-
-function DialogFooter({
-  className,
-  showCloseButton = false,
-  children,
-  ...props
-}: React.ComponentProps<"div"> & {
-  showCloseButton?: boolean
-}) {
-  return (
-    <div
-      data-slot="dialog-footer"
-      className={cn(
-        "-mx-4 -mb-4 flex flex-col-reverse gap-2 rounded-b-xl border-t bg-muted/50 p-4 sm:flex-row sm:justify-end",
-        className
-      )}
-      {...props}
-    >
-      {children}
-      {showCloseButton && (
-        <DialogPrimitive.Close asChild>
-          <Button variant="outline">Close</Button>
-        </DialogPrimitive.Close>
-      )}
-    </div>
-  )
-}
-
-function DialogTitle({
-  className,
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Title>) {
-  return (
-    <DialogPrimitive.Title
-      data-slot="dialog-title"
-      className={cn(
-        "font-heading text-base leading-none font-medium",
-        className
-      )}
-      {...props}
-    />
-  )
-}
-
-function DialogDescription({
-  className,
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Description>) {
-  return (
-    <DialogPrimitive.Description
-      data-slot="dialog-description"
-      className={cn(
-        "text-sm text-muted-foreground *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground",
-        className
-      )}
-      {...props}
-    />
-  )
-}
-
-export {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogOverlay,
-  DialogPortal,
-  DialogTitle,
-  DialogTrigger,
-}
-</file>
-
-<file path="src/lib/catalog-utils.ts">
-// src/lib/catalog-utils.ts
-export interface CategoryItemLike {
-  id?: string;
-  title?: string;
-  slug?: string;
-}
-
-export function extractCategorySlug(
-  category: CategoryItemLike | string | undefined,
-): string {
-  if (!category) return "";
-  if (typeof category === "object") return category.slug || "";
-  return category;
-}
-
-export function extractCategoryTitle(
-  category: CategoryItemLike | string | undefined,
-): string {
-  if (!category) return "";
-  if (typeof category === "object") return category.title || "";
-  return category;
-}
-</file>
-
-<file path="src/payload/collections/Catalogs.ts">
-import type { CollectionConfig } from "payload";
-
-export const Catalogs: CollectionConfig = {
-  slug: "catalogs",
-  admin: {
-    useAsTitle: "title",
-    group: "Catalog",
-    defaultColumns: ["title", "year", "catalog_type", "file_size_mb", "status"],
-  },
-  access: {
-    read: () => true,
-  },
-  fields: [
-    {
-      name: "title",
-      type: "text",
-      required: true,
-      localized: true,
-      admin: {
-        description:
-          "عنوان کاتالوگ (مثلاً: کاتالوگ جامع اسلب‌ها / مشخصات فنی و دیتیل)",
-      },
-    },
-    {
-      name: "slug",
-      type: "text",
-      required: true,
-      unique: true,
-    },
-    {
-      type: "row",
-      fields: [
-        {
-          name: "year",
-          type: "number",
-          required: true,
-          defaultValue: new Date().getFullYear(),
-          admin: {
-            description: "سال انتشار (مانند 2026 یا 2025)",
-            width: "50%",
-          },
-        },
-        {
-          name: "catalog_type",
-          type: "select",
-          required: true,
-          defaultValue: "full_catalog",
-          options: [
-            {
-              label: "کاتالوگ جامع محصولات (Full Catalog)",
-              value: "full_catalog",
-            },
-            {
-              label: "مشخصات فنی و مهندسی (Technical Specs)",
-              value: "technical",
-            },
-            {
-              label: "بروشور اختصاصی کالکشن (Collection Brochure)",
-              value: "collection",
-            },
-            {
-              label: "راهنمای نصب و نگهداری (Care & Installation)",
-              value: "guide",
-            },
-          ],
-          admin: {
-            width: "50%",
-          },
-        },
-      ],
-    },
-    {
-      name: "description",
-      type: "textarea",
-      localized: true,
-    },
-    {
-      name: "cover_image",
-      type: "upload",
-      relationTo: "media",
-      required: true,
-    },
-    {
-      name: "pdf_file",
-      type: "upload",
-      relationTo: "media",
-      required: true,
-    },
-    {
-      type: "row",
-      fields: [
-        {
-          name: "file_size_mb",
-          type: "number",
-          required: true,
-          admin: {
-            description: "حجم فایل (MB)",
-            width: "50%",
-          },
-        },
-        {
-          name: "page_count",
-          type: "number",
-          admin: {
-            description: "تعداد صفحات (اختیاری)",
-            width: "50%",
-          },
-        },
-      ],
-    },
-    {
-      name: "status",
-      type: "select",
-      defaultValue: "published",
-      options: [
-        { label: "منتشر شده (Published)", value: "published" },
-        { label: "پیش‌نویس (Draft)", value: "draft" },
-      ],
-    },
-  ],
-};
-</file>
-
-<file path="src/services/catalog.service.ts">
-import "server-only";
-import { getPayload } from "payload";
-import configPromise from "@/payload.config";
-
-export interface CatalogItem {
-  id: string;
-  title: string;
-  slug: string;
-  year: number;
-  catalog_type: "full_catalog" | "technical" | "collection" | "guide";
-  description?: string;
-  cover_image: { url: string; alt?: string } | string;
-  pdf_file: { url: string; filename?: string } | string;
-  file_size_mb: number;
-  page_count?: number;
-  status: "published" | "draft";
-}
-
-export async function getGroupedCatalogsService(
-  locale: "fa" | "en" | "ar",
-): Promise<Record<number, CatalogItem[]>> {
-  try {
-    const payload = await getPayload({ config: configPromise });
-
-    const response = await payload.find({
-      collection: "catalogs",
-      locale,
-      limit: 100,
-      where: {
-        status: { equals: "published" },
-      },
-      sort: "-year",
-      depth: 2,
-    });
-
-    const docs = (response.docs as unknown as CatalogItem[]) || [];
-
-    // گروه بندی سالیانه
-    return docs.reduce(
-      (acc, catalog) => {
-        const year = catalog.year || new Date().getFullYear();
-        if (!acc[year]) acc[year] = [];
-        acc[year].push(catalog);
-        return acc;
-      },
-      {} as Record<number, CatalogItem[]>,
-    );
-  } catch (error) {
-    console.error("Error fetching grouped catalogs:", error);
-    return {};
-  }
-}
 </file>
 
 <file path="docs/content.md">
@@ -922,6 +726,98 @@ const Layout = ({ children }: { children: React.ReactNode }) => (
 );
 
 export default Layout;
+</file>
+
+<file path="src/app/[locale]/catalogs/page.tsx">
+import React from "react";
+import type { Metadata } from "next";
+import { getGroupedCatalogsService } from "@/services/catalog.service";
+import { CatalogCard } from "@/components/catalogs/catalog-card";
+import { getTranslations } from "next-intl/server";
+
+interface PageProps {
+  params: Promise<{ locale: string }>;
+}
+
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const { locale } = await params;
+  return {
+    title:
+      locale === "fa"
+        ? "کاتالوگ‌ها و مستندات فنی | پرسیس کوارتز"
+        : "Catalogs & Technical Documentation | Persis Quartz",
+    description:
+      "دانلود مستقیم و مشاهده آنلاین کاتالوگ‌های سالانه و راهنماهای مهندسی پرسیس کوارتز.",
+  };
+}
+
+export default async function CatalogsPage({ params }: PageProps) {
+  const { locale } = await params;
+  const currentLocale = locale as "fa" | "en" | "ar";
+
+  const groupedCatalogs = await getGroupedCatalogsService(currentLocale);
+  const years = Object.keys(groupedCatalogs)
+    .map(Number)
+    .sort((a, b) => b - a);
+
+  const t = await getTranslations({
+    locale: currentLocale,
+    namespace: "Catalogs",
+  });
+
+  return (
+    <main className="container mx-auto px-4 sm:px-12 py-20 sm:py-28 min-h-screen space-y-12 sm:space-y-16">
+      {/* عنوان مینیمال هدر */}
+      <div
+        dir="ltr"
+        className="relative pt-4 pb-2 select-none overflow-hidden border-b border-border/30"
+      >
+        <h1 className="sr-only">کاتالوگ‌های پرسیس کوارتز</h1>
+        <span className="text-4xl sm:text-7xl lg:text-9xl font-black text-foreground/[0.03] uppercase tracking-tighter leading-none block">
+          PUBLICATIONS
+        </span>
+        <div className="absolute bottom-4 start-0 z-10 flex items-center gap-3">
+          <span className="h-px w-6 bg-primary" />
+          <span className="text-[10px] sm:text-[11px] font-mono tracking-[0.25em] text-primary uppercase">
+            Official Catalogs & Tech Specs
+          </span>
+        </div>
+      </div>
+
+      {years.length > 0 ? (
+        <div className="space-y-12 sm:space-y-20">
+          {years.map((year) => (
+            <section key={year} className="space-y-4 sm:space-y-6">
+              <div className="flex items-center gap-3 pb-2">
+                <span className="text-xl sm:text-3xl font-light font-mono text-primary">
+                  {year}
+                </span>
+                <span className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-widest font-mono pt-1">
+                  Collection & Manuals
+                </span>
+              </div>
+
+              {/* گریدبندی عمودی: ۴ ستون در دسکتاپ تا عرض کارت‌ها کش نیاید */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                {groupedCatalogs[year].map((catalog) => (
+                  <CatalogCard key={catalog.id} catalog={catalog} />
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      ) : (
+        <div className="p-12 sm:p-20 text-center bg-card border border-border/40">
+          <p className="text-sm font-light text-muted-foreground">
+            {t("noCatalogsFound")}
+          </p>
+        </div>
+      )}
+    </main>
+  );
+}
 </file>
 
 <file path="src/app/[locale]/loading.tsx">
@@ -1597,6 +1493,158 @@ export const ExcelProductImportControl: React.FC = () => {
 };
 </file>
 
+<file path="src/components/catalogs/catalog-card.tsx">
+"use client";
+
+import React, { useState } from "react";
+import Image from "next/image";
+import { useTranslations } from "next-intl";
+import { Download, Eye, FileText } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import type { CatalogItem } from "@/services/catalog.service";
+
+const TYPE_LABELS: Record<string, string> = {
+  full_catalog: "Full Catalog",
+  technical: "Technical Specs",
+  collection: "Collection Brochure",
+  guide: "Care & Installation Guide",
+};
+
+export const CatalogCard: React.FC<{ catalog: CatalogItem }> = ({
+  catalog,
+}) => {
+  const t = useTranslations("Catalogs");
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
+  const coverUrl =
+    typeof catalog.cover_image === "object" && catalog.cover_image?.url
+      ? catalog.cover_image.url
+      : typeof catalog.cover_image === "string" && catalog.cover_image
+        ? catalog.cover_image
+        : "/PersisQuartz-Red.png";
+
+  const pdfUrl =
+    typeof catalog.pdf_file === "object" && catalog.pdf_file?.url
+      ? catalog.pdf_file.url
+      : typeof catalog.pdf_file === "string"
+        ? catalog.pdf_file
+        : "";
+
+  const handleDownload = () => {
+    if (!pdfUrl) return;
+    const link = document.createElement("a");
+    link.href = pdfUrl;
+    link.download = `${catalog.slug || "catalog"}.pdf`;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  return (
+    <>
+      <div className="group flex flex-row sm:flex-col bg-card border border-border/60 hover:border-primary/80 transition-all duration-300 overflow-hidden h-36 sm:h-auto select-none">
+        {/* کاور */}
+        <div className="relative w-28 sm:w-full shrink-0 sm:aspect-[4/3] overflow-hidden bg-muted/40 flex items-center justify-center">
+          <Image
+            src={coverUrl}
+            alt={catalog.title || "Catalog"}
+            fill
+            sizes="(max-width: 640px) 112px, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+          />
+          {catalog.file_size_mb && (
+            <div className="absolute top-2 end-2 bg-background/90 backdrop-blur-md px-1.5 py-0.5 border border-border/50 text-[9px] sm:text-[10px] font-mono text-muted-foreground">
+              {catalog.file_size_mb} MB
+            </div>
+          )}
+        </div>
+
+        {/* محتوا و دکمه‌ها */}
+        <div className="p-3 sm:p-5 flex flex-col flex-1 justify-between min-w-0">
+          <div className="space-y-1">
+            <span className="text-[9px] sm:text-[10px] uppercase tracking-wider text-primary font-mono block truncate">
+              {TYPE_LABELS[catalog.catalog_type] ||
+                catalog.catalog_type ||
+                "Documentation"}
+            </span>
+            <h4 className="text-xs sm:text-base font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1 sm:line-clamp-2 leading-snug">
+              {catalog.title}
+            </h4>
+            {catalog.description && (
+              <p className="hidden sm:block text-xs text-muted-foreground font-light line-clamp-2 leading-relaxed pt-1">
+                {catalog.description}
+              </p>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1.5 sm:grid sm:grid-cols-2 sm:gap-2 pt-2 sm:pt-3 border-t border-border/40">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsPreviewOpen(true)}
+              className="rounded-none text-[11px] sm:text-xs h-7 sm:h-9 flex-1 px-2 tracking-wider uppercase border-border/70 hover:bg-muted"
+            >
+              <Eye className="h-3 w-3 sm:h-3.5 sm:w-3.5 me-1.5 text-muted-foreground" />
+              <span>{t("view")}</span>
+            </Button>
+
+            <Button
+              size="sm"
+              onClick={handleDownload}
+              className="rounded-none text-[11px] sm:text-xs h-7 sm:h-9 flex-1 px-2 tracking-wider uppercase bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              <Download className="h-3 w-3 sm:h-3.5 sm:w-3.5 me-1.5" />
+              <span>{t("download")}</span>
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* مدال پیش‌نمایش */}
+      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+        <DialogContent className="sm:max-w-5xl h-[85vh] flex flex-col p-4 sm:p-6 rounded-none bg-background">
+          <DialogHeader className="pb-3 border-b border-border/40 shrink-0">
+            <div className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-primary shrink-0" />
+              <DialogTitle className="text-sm sm:text-base font-normal truncate">
+                {catalog.title}
+              </DialogTitle>
+            </div>
+            <DialogDescription className="text-xs text-muted-foreground">
+              {catalog.file_size_mb ? `${catalog.file_size_mb} MB` : ""}
+              {catalog.page_count ? ` • ${catalog.page_count} Pages` : ""}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex-1 w-full h-full bg-muted/20 border border-border/40 overflow-hidden relative mt-2">
+            {pdfUrl ? (
+              <iframe
+                src={`${pdfUrl}#toolbar=1&navpanes=0`}
+                className="w-full h-full border-0"
+                title={catalog.title}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
+                {t("previewNotAvailable")}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};
+</file>
+
 <file path="src/components/home/brand-intro.tsx">
 // src/components/home/brand-intro.tsx
 import React from "react";
@@ -1862,6 +1910,178 @@ function Button({
 }
 
 export { Button, buttonVariants }
+</file>
+
+<file path="src/components/ui/dialog.tsx">
+"use client";
+
+import * as React from "react";
+import { Dialog as DialogPrimitive } from "radix-ui";
+
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { XIcon } from "lucide-react";
+
+function Dialog({
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Root>) {
+  return <DialogPrimitive.Root data-slot="dialog" {...props} />;
+}
+
+function DialogTrigger({
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
+  return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />;
+}
+
+function DialogPortal({
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Portal>) {
+  return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />;
+}
+
+function DialogClose({
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Close>) {
+  return <DialogPrimitive.Close data-slot="dialog-close" {...props} />;
+}
+
+function DialogOverlay({
+  className,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
+  return (
+    <DialogPrimitive.Overlay
+      data-slot="dialog-overlay"
+      className={cn(
+        "fixed inset-0 isolate z-50 bg-black/60 backdrop-blur-xs duration-100 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+function DialogContent({
+  className,
+  children,
+  showCloseButton = true,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Content> & {
+  showCloseButton?: boolean;
+}) {
+  return (
+    <DialogPortal>
+      <DialogOverlay />
+      <DialogPrimitive.Content
+        data-slot="dialog-content"
+        className={cn(
+          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-popover p-6 text-sm text-popover-foreground shadow-2xl ring-1 ring-foreground/10 duration-100 outline-none sm:max-w-lg data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          className,
+        )}
+        {...props}
+      >
+        {children}
+        {showCloseButton && (
+          <DialogPrimitive.Close data-slot="dialog-close" asChild>
+            <Button
+              variant="ghost"
+              className="absolute top-3 end-3 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
+              size="icon-sm"
+            >
+              <XIcon className="h-4 w-4" />
+              <span className="sr-only">بستن</span>
+            </Button>
+          </DialogPrimitive.Close>
+        )}
+      </DialogPrimitive.Content>
+    </DialogPortal>
+  );
+}
+
+function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="dialog-header"
+      className={cn("flex flex-col gap-2 text-start", className)}
+      {...props}
+    />
+  );
+}
+
+function DialogFooter({
+  className,
+  showCloseButton = false,
+  children,
+  ...props
+}: React.ComponentProps<"div"> & {
+  showCloseButton?: boolean;
+}) {
+  return (
+    <div
+      data-slot="dialog-footer"
+      className={cn(
+        "-mx-6 -mb-6 flex flex-col-reverse gap-2 rounded-b-xl border-t border-border/40 bg-muted/30 p-4 sm:flex-row sm:justify-end",
+        className,
+      )}
+      {...props}
+    >
+      {children}
+      {showCloseButton && (
+        <DialogPrimitive.Close asChild>
+          <Button variant="outline" className="rounded-md">
+            بستن
+          </Button>
+        </DialogPrimitive.Close>
+      )}
+    </div>
+  );
+}
+
+function DialogTitle({
+  className,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Title>) {
+  return (
+    <DialogPrimitive.Title
+      data-slot="dialog-title"
+      className={cn(
+        "font-heading text-base leading-snug font-medium text-foreground text-start",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+function DialogDescription({
+  className,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Description>) {
+  return (
+    <DialogPrimitive.Description
+      data-slot="dialog-description"
+      className={cn(
+        "text-xs sm:text-sm text-muted-foreground leading-relaxed text-start *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-primary",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+export {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogOverlay,
+  DialogPortal,
+  DialogTitle,
+  DialogTrigger,
+};
 </file>
 
 <file path="src/components/ui/dropdown-menu.tsx">
@@ -2789,6 +3009,31 @@ export const excelCategoryRowSchema = z.object({
 export type ExcelCategoryRow = z.infer<typeof excelCategoryRowSchema>;
 </file>
 
+<file path="src/lib/catalog-utils.ts">
+// src/lib/catalog-utils.ts
+export interface CategoryItemLike {
+  id?: string;
+  title?: string;
+  slug?: string;
+}
+
+export function extractCategorySlug(
+  category: CategoryItemLike | string | undefined,
+): string {
+  if (!category) return "";
+  if (typeof category === "object") return category.slug || "";
+  return category;
+}
+
+export function extractCategoryTitle(
+  category: CategoryItemLike | string | undefined,
+): string {
+  if (!category) return "";
+  if (typeof category === "object") return category.title || "";
+  return category;
+}
+</file>
+
 <file path="src/lib/utils.ts">
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
@@ -2796,6 +3041,130 @@ import { twMerge } from "tailwind-merge"
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
+</file>
+
+<file path="src/payload/collections/Catalogs.ts">
+import type { CollectionConfig } from "payload";
+
+export const Catalogs: CollectionConfig = {
+  slug: "catalogs",
+  admin: {
+    useAsTitle: "title",
+    group: "Catalog",
+    defaultColumns: ["title", "year", "catalog_type", "file_size_mb", "status"],
+  },
+  access: {
+    read: () => true,
+  },
+  fields: [
+    {
+      name: "title",
+      type: "text",
+      required: true,
+      localized: true,
+      admin: {
+        description:
+          "عنوان کاتالوگ (مثلاً: کاتالوگ جامع اسلب‌ها / مشخصات فنی و دیتیل)",
+      },
+    },
+    {
+      name: "slug",
+      type: "text",
+      required: true,
+      unique: true,
+    },
+    {
+      type: "row",
+      fields: [
+        {
+          name: "year",
+          type: "number",
+          required: true,
+          defaultValue: new Date().getFullYear(),
+          admin: {
+            description: "سال انتشار (مانند 2026 یا 2025)",
+            width: "50%",
+          },
+        },
+        {
+          name: "catalog_type",
+          type: "select",
+          required: true,
+          defaultValue: "full_catalog",
+          options: [
+            {
+              label: "کاتالوگ جامع محصولات (Full Catalog)",
+              value: "full_catalog",
+            },
+            {
+              label: "مشخصات فنی و مهندسی (Technical Specs)",
+              value: "technical",
+            },
+            {
+              label: "بروشور اختصاصی کالکشن (Collection Brochure)",
+              value: "collection",
+            },
+            {
+              label: "راهنمای نصب و نگهداری (Care & Installation)",
+              value: "guide",
+            },
+          ],
+          admin: {
+            width: "50%",
+          },
+        },
+      ],
+    },
+    {
+      name: "description",
+      type: "textarea",
+      localized: true,
+    },
+    {
+      name: "cover_image",
+      type: "upload",
+      relationTo: "media",
+      required: true,
+    },
+    {
+      name: "pdf_file",
+      type: "upload",
+      relationTo: "media",
+      required: true,
+    },
+    {
+      type: "row",
+      fields: [
+        {
+          name: "file_size_mb",
+          type: "number",
+          required: true,
+          admin: {
+            description: "حجم فایل (MB)",
+            width: "50%",
+          },
+        },
+        {
+          name: "page_count",
+          type: "number",
+          admin: {
+            description: "تعداد صفحات (اختیاری)",
+            width: "50%",
+          },
+        },
+      ],
+    },
+    {
+      name: "status",
+      type: "select",
+      defaultValue: "published",
+      options: [
+        { label: "منتشر شده (Published)", value: "published" },
+        { label: "پیش‌نویس (Draft)", value: "draft" },
+      ],
+    },
+  ],
+};
 </file>
 
 <file path="src/payload/collections/Categories.ts">
@@ -3097,90 +3466,6 @@ export const HeroBanner: CollectionConfig = {
 };
 </file>
 
-<file path="src/payload/collections/Media.ts">
-// src/payload/collections/Media.ts
-import type { CollectionConfig } from "payload";
-
-export const Media: CollectionConfig = {
-  slug: "media",
-  access: {
-    read: () => true,
-  },
-  admin: {
-    useAsTitle: "alt",
-    defaultColumns: ["filename", "mimeType", "filesize", "updatedAt"],
-  },
-  upload: {
-    adminThumbnail: "thumbnail",
-    imageSizes: [
-      {
-        name: "thumbnail",
-        width: 300,
-        height: 225,
-        formatOptions: { format: "webp", options: { quality: 80 } },
-      },
-      {
-        name: "card",
-        width: 768,
-        height: 1024,
-        formatOptions: { format: "webp", options: { quality: 85 } },
-      },
-      {
-        name: "desktop",
-        width: 1920,
-        height: 1440,
-        formatOptions: { format: "webp", options: { quality: 88 } },
-      },
-    ],
-    mimeTypes: [
-      "image/jpeg",
-      "image/png",
-      "image/webp",
-      "image/avif",
-      "image/svg+xml",
-      "video/mp4",
-      "video/webm",
-      "application/pdf",
-    ],
-  },
-  hooks: {
-    beforeOperation: [
-      ({ args, operation }) => {
-        if (operation === "create" && args.req?.file) {
-          const file = args.req.file;
-          const safeFileName = file.name
-            .toLowerCase()
-            .replace(/\s+/g, "-")
-            .replace(/[^a-z0-9.-]/g, "");
-          file.name = safeFileName;
-        }
-        return args;
-      },
-    ],
-  },
-  fields: [
-    {
-      name: "alt",
-      type: "text",
-      localized: true,
-      required: true,
-      admin: {
-        description:
-          "متن جایگزین عکس برای سئو و Accessibility (برای ویدیو و PDF اختیاری است)",
-      },
-    },
-    {
-      name: "caption",
-      type: "text",
-      localized: true,
-      admin: {
-        description: "کپشن یا توضیح کوتاه",
-      },
-    },
-  ],
-};
-</file>
-
 <file path="src/payload/collections/Thicknesses.ts">
 import { CollectionConfig } from "payload";
 
@@ -3232,6 +3517,61 @@ export const VeinPatterns: CollectionConfig = {
     },
   ],
 };
+</file>
+
+<file path="src/services/catalog.service.ts">
+import "server-only";
+import { getPayload } from "payload";
+import configPromise from "@/payload.config";
+
+export interface CatalogItem {
+  id: string;
+  title: string;
+  slug: string;
+  year: number;
+  catalog_type: "full_catalog" | "technical" | "collection" | "guide";
+  description?: string;
+  cover_image: { url: string; alt?: string } | string;
+  pdf_file: { url: string; filename?: string } | string;
+  file_size_mb: number;
+  page_count?: number;
+  status: "published" | "draft";
+}
+
+export async function getGroupedCatalogsService(
+  locale: "fa" | "en" | "ar",
+): Promise<Record<number, CatalogItem[]>> {
+  try {
+    const payload = await getPayload({ config: configPromise });
+
+    const response = await payload.find({
+      collection: "catalogs",
+      locale,
+      limit: 100,
+      where: {
+        status: { equals: "published" },
+      },
+      sort: "-year",
+      depth: 2,
+    });
+
+    const docs = (response.docs as unknown as CatalogItem[]) || [];
+
+    // گروه بندی سالیانه
+    return docs.reduce(
+      (acc, catalog) => {
+        const year = catalog.year || new Date().getFullYear();
+        if (!acc[year]) acc[year] = [];
+        acc[year].push(catalog);
+        return acc;
+      },
+      {} as Record<number, CatalogItem[]>,
+    );
+  } catch (error) {
+    console.error("Error fetching grouped catalogs:", error);
+    return {};
+  }
+}
 </file>
 
 <file path="src/types/declarations.d.ts">
@@ -3299,83 +3639,6 @@ export const config = {
   "menuAccent": "subtle",
   "registries": {}
 }
-</file>
-
-<file path="docker-compose.yml">
-services:
-  postgres:
-    image: postgres:15-alpine
-    container_name: persisquartz_db
-    restart: unless-stopped
-    env_file:
-      - .env
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB:-persisquartz}
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-persisquartz}",
-        ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-    networks:
-      - app_network
-
-  minio:
-    image: minio/minio:latest
-    container_name: persisquartz_minio
-    restart: unless-stopped
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    environment:
-      MINIO_ROOT_USER: ${S3_ACCESS_KEY:-persis_admin}
-      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-persis_secret_123}
-    volumes:
-      - minio_data:/data
-    command: server /data --console-address ":9001"
-    networks:
-      - app_network
-
-  minio-setup:
-    image: minio/mc:latest
-    container_name: persisquartz_minio_setup
-    depends_on:
-      - minio
-    env_file:
-      - .env
-    entrypoint: >
-      /bin/sh -c "
-      until (/usr/bin/mc alias set myminio http://minio:9000 $${S3_ACCESS_KEY:-persis_admin} $${S3_SECRET_KEY:-persis_secret_123}); do
-        echo 'Waiting for MinIO to initialize...';
-        sleep 2;
-      done;
-      /usr/bin/mc mb myminio/$${S3_BUCKET:-persisquartz} --ignore-existing;
-      /usr/bin/mc anonymous set download myminio/$${S3_BUCKET:-persisquartz};
-      echo 'MinIO Bucket setup completed successfully!';
-      exit 0;
-      "
-    networks:
-      - app_network
-
-volumes:
-  pgdata:
-    name: persisquartz_pgdata
-  minio_data:
-    name: persisquartz_miniodata
-
-networks:
-  app_network:
-    driver: bridge
 </file>
 
 <file path="eslint.config.mjs">
@@ -3608,21 +3871,6 @@ For detailed information about the project architecture, design patterns, and AI
 
 - Manage Products, Categories, Projects, Blog Posts, Catalogs, and Dealers.
 - Multi-language content management.
-</file>
-
-<file path="src/app/(payload)/admin/importMap.js">
-import { ExcelCategoryImportControl as ExcelCategoryImportControl_4382766527adc79553646109e995ca58 } from '@/components/admin/ExcelCategoryImportControl'
-import { ExcelProductImportControl as ExcelProductImportControl_9c4b4526906d26e64e9447c8643cce10 } from '@/components/admin/ExcelProductImportControl'
-import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
-import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
-
-/** @type import('payload').ImportMap */
-export const importMap = {
-  "@/components/admin/ExcelCategoryImportControl#ExcelCategoryImportControl": ExcelCategoryImportControl_4382766527adc79553646109e995ca58,
-  "@/components/admin/ExcelProductImportControl#ExcelProductImportControl": ExcelProductImportControl_9c4b4526906d26e64e9447c8643cce10,
-  "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24,
-  "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
-}
 </file>
 
 <file path="src/app/(payload)/admin/importMap.ts">
@@ -4111,226 +4359,6 @@ export const InteractiveTools: React.FC = () => {
     </section>
   );
 };
-</file>
-
-<file path="src/components/products/product-configurator.tsx">
-"use client";
-
-import React, { useState, useEffect } from "react";
-import { Link } from "@/i18n/routing";
-import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/button";
-import { Box, MapPin, FileText, Share2, Check } from "lucide-react";
-import type { ProductItem } from "@/services/product.service";
-
-interface ProductConfiguratorProps {
-  product: ProductItem;
-  categoryTitle: string;
-  globalThicknesses?: string[];
-  globalFinishes?: { title: string; slug: string }[];
-}
-
-export function ProductConfigurator({
-  product,
-  categoryTitle,
-  globalThicknesses = [],
-  globalFinishes = [],
-}: ProductConfiguratorProps) {
-  const t = useTranslations("ProductDetail");
-
-  const [selectedThickness, setSelectedThickness] = useState(
-    globalThicknesses[0] || "",
-  );
-  const [selectedFinish, setSelectedFinish] = useState(
-    globalFinishes[0]?.slug || "",
-  );
-  const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    if (globalThicknesses.length > 0 && !selectedThickness) {
-      setSelectedThickness(globalThicknesses[0]);
-    }
-    if (globalFinishes.length > 0 && !selectedFinish) {
-      setSelectedFinish(globalFinishes[0].slug);
-    }
-  }, [globalThicknesses, globalFinishes, selectedThickness, selectedFinish]);
-
-  const sampleUrl = `/contact?type=sample&code=${encodeURIComponent(
-    product.code || "",
-  )}&thickness=${encodeURIComponent(
-    selectedThickness || "",
-  )}&finish=${encodeURIComponent(selectedFinish || "")}`;
-
-  const handleShare = async () => {
-    if (typeof window !== "undefined" && navigator.clipboard) {
-      await navigator.clipboard.writeText(window.location.href);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
-  return (
-    <div className="space-y-8">
-      {/* هدر سنگ */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold tracking-wider text-primary border border-primary/30 bg-primary/5 px-2.5 py-1">
-              کد {product.code}
-            </span>
-            {categoryTitle && (
-              <span className="text-xs text-muted-foreground border border-border/50 px-2 py-1">
-                {categoryTitle}
-              </span>
-            )}
-          </div>
-
-          <button
-            type="button"
-            onClick={handleShare}
-            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-          >
-            {copied ? (
-              <>
-                <Check className="h-3.5 w-3.5 text-primary" />
-                <span className="text-primary font-medium">{t("copied")}</span>
-              </>
-            ) : (
-              <>
-                <Share2 className="h-3.5 w-3.5" />
-                <span>{t("share")}</span>
-              </>
-            )}
-          </button>
-        </div>
-
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-light text-foreground tracking-tight">
-          {product.title}
-        </h1>
-      </div>
-
-      {product.description && (
-        <p className="text-sm font-light text-muted-foreground leading-relaxed">
-          {product.description}
-        </p>
-      )}
-
-      {/* انتخابگرهای سراسری ضخامت و پرداخت */}
-      {(globalThicknesses.length > 0 || globalFinishes.length > 0) && (
-        <div className="space-y-5 border-y border-border/50 py-6 bg-card/30 p-4">
-          {globalThicknesses.length > 0 && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-foreground font-medium">
-                  {t("thickness")}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                {globalThicknesses.map((th) => (
-                  <button
-                    key={th}
-                    type="button"
-                    onClick={() => setSelectedThickness(th)}
-                    className={`py-2 px-4 text-xs border transition-all text-center cursor-pointer ${
-                      selectedThickness === th
-                        ? "border-primary bg-primary text-primary-foreground font-bold shadow-sm"
-                        : "border-border/60 bg-card hover:border-border text-foreground"
-                    }`}
-                  >
-                    {th}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {globalFinishes.length > 0 && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-foreground font-medium">
-                  {t("finish")}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                {globalFinishes.map((fn) => (
-                  <button
-                    key={fn.slug}
-                    type="button"
-                    onClick={() => setSelectedFinish(fn.slug)}
-                    className={`py-2 px-4 text-xs uppercase border transition-all text-center flex items-center gap-1.5 cursor-pointer ${
-                      selectedFinish === fn.slug
-                        ? "border-primary bg-primary text-primary-foreground font-bold shadow-sm"
-                        : "border-border/60 bg-card hover:border-border text-foreground"
-                    }`}
-                  >
-                    <span>{fn.title}</span>
-                    {selectedFinish === fn.slug && (
-                      <Check className="h-3 w-3" />
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* دکمه‌های اقدام B2B */}
-      <div className="space-y-3 pt-2">
-        <Button
-          asChild
-          size="lg"
-          className="w-full h-14 bg-primary text-primary-foreground hover:bg-primary/90 rounded-none text-sm tracking-wider uppercase font-medium shadow-sm"
-        >
-          <Link
-            href={sampleUrl}
-            className="flex items-center justify-center gap-3"
-          >
-            <Box className="h-5 w-5 shrink-0" />
-            <div className="text-start">
-              <span>{t("requestSample")}</span>
-              <span className="block text-[11px] font-light opacity-90">
-                {t("requestSampleDesc")}
-              </span>
-            </div>
-          </Link>
-        </Button>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Button
-            asChild
-            variant="outline"
-            className="w-full h-12 border-border/80 hover:bg-muted text-foreground rounded-none text-xs tracking-wider uppercase"
-          >
-            <Link
-              href="/dealers"
-              className="flex items-center justify-center gap-2"
-            >
-              <MapPin className="h-4 w-4 text-primary shrink-0" />
-              <span>{t("findDealer")}</span>
-            </Link>
-          </Button>
-
-          <Button
-            asChild
-            variant="outline"
-            className="w-full h-12 border-border/80 hover:bg-muted text-foreground rounded-none text-xs tracking-wider uppercase"
-          >
-            <Link
-              href="/catalogs"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2"
-            >
-              <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
-              <span>{t("downloadSpecs")}</span>
-            </Link>
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
 </file>
 
 <file path="src/components/products/product-filters-client.tsx">
@@ -5155,6 +5183,90 @@ export const excelProductRowSchema = z.object({
 export type ExcelProductRow = z.infer<typeof excelProductRowSchema>;
 </file>
 
+<file path="src/payload/collections/Media.ts">
+// src/payload/collections/Media.ts
+import type { CollectionConfig } from "payload";
+
+export const Media: CollectionConfig = {
+  slug: "media",
+  access: {
+    read: () => true,
+  },
+  admin: {
+    useAsTitle: "alt",
+    defaultColumns: ["filename", "mimeType", "filesize", "updatedAt"],
+  },
+  upload: {
+    adminThumbnail: "thumbnail",
+    imageSizes: [
+      {
+        name: "thumbnail",
+        width: 300,
+        height: 225,
+        formatOptions: { format: "webp", options: { quality: 80 } },
+      },
+      {
+        name: "card",
+        width: 768,
+        height: 1024,
+        formatOptions: { format: "webp", options: { quality: 85 } },
+      },
+      {
+        name: "desktop",
+        width: 1920,
+        height: 1440,
+        formatOptions: { format: "webp", options: { quality: 88 } },
+      },
+    ],
+    mimeTypes: [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/avif",
+      "image/svg+xml",
+      "video/mp4",
+      "video/webm",
+      "application/pdf",
+    ],
+  },
+  hooks: {
+    beforeOperation: [
+      ({ args, operation }) => {
+        if (operation === "create" && args.req?.file) {
+          const file = args.req.file;
+          const safeFileName = file.name
+            .toLowerCase()
+            .replace(/\s+/g, "-")
+            .replace(/[^a-z0-9.-]/g, "");
+          file.name = safeFileName;
+        }
+        return args;
+      },
+    ],
+  },
+  fields: [
+    {
+      name: "alt",
+      type: "text",
+      localized: true,
+      required: true,
+      admin: {
+        description:
+          "متن جایگزین عکس برای سئو و Accessibility (برای ویدیو و PDF اختیاری است)",
+      },
+    },
+    {
+      name: "caption",
+      type: "text",
+      localized: true,
+      admin: {
+        description: "کپشن یا توضیح کوتاه",
+      },
+    },
+  ],
+};
+</file>
+
 <file path="src/payload/collections/Products.ts">
 // src/payload/collections/Products.ts
 import { CollectionConfig } from "payload";
@@ -5372,6 +5484,83 @@ export const Users: CollectionConfig = {
 };
 </file>
 
+<file path="docker-compose.yml">
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: persisquartz_db
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-persisquartz}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-persisquartz}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - app_network
+
+  minio:
+    image: minio/minio:latest
+    container_name: persisquartz_minio
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:-persis_admin}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-persis_secret_123}
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - app_network
+
+  minio-setup:
+    image: minio/mc:latest
+    container_name: persisquartz_minio_setup
+    depends_on:
+      - minio
+    env_file:
+      - .env
+    entrypoint: >
+      /bin/sh -c "
+      until (/usr/bin/mc alias set myminio http://minio:9000 $${S3_ACCESS_KEY:-persis_admin} $${S3_SECRET_KEY:-persis_secret_123}); do
+        echo 'Waiting for MinIO to initialize...';
+        sleep 2;
+      done;
+      /usr/bin/mc mb myminio/$${S3_BUCKET:-persisquartz} --ignore-existing;
+      /usr/bin/mc anonymous set download myminio/$${S3_BUCKET:-persisquartz};
+      echo 'MinIO Bucket setup completed successfully!';
+      exit 0;
+      "
+    networks:
+      - app_network
+
+volumes:
+  pgdata:
+    name: persisquartz_pgdata
+  minio_data:
+    name: persisquartz_miniodata
+
+networks:
+  app_network:
+    driver: bridge
+</file>
+
 <file path="tsconfig.json">
 {
   "compilerOptions": {
@@ -5437,6 +5626,21 @@ When generating code for this project, you MUST follow these rules:
 - **Component Function Names:** `PascalCase` (e.g., `export const ProductCard = ...`).
 - **Hooks:** `camelCase.ts` (e.g., `useScroll.ts`).
 - **Utilities & Services:** `camelCase.ts` (e.g., `formatCurrency.ts`).
+</file>
+
+<file path="src/app/(payload)/admin/importMap.js">
+import { ExcelCategoryImportControl as ExcelCategoryImportControl_4382766527adc79553646109e995ca58 } from '@/components/admin/ExcelCategoryImportControl'
+import { ExcelProductImportControl as ExcelProductImportControl_9c4b4526906d26e64e9447c8643cce10 } from '@/components/admin/ExcelProductImportControl'
+import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
+import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
+
+/** @type import('payload').ImportMap */
+export const importMap = {
+  "@/components/admin/ExcelCategoryImportControl#ExcelCategoryImportControl": ExcelCategoryImportControl_4382766527adc79553646109e995ca58,
+  "@/components/admin/ExcelProductImportControl#ExcelProductImportControl": ExcelProductImportControl_9c4b4526906d26e64e9447c8643cce10,
+  "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24,
+  "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
+}
 </file>
 
 <file path="src/app/api/admin/download-product-template/route.ts">
@@ -6168,6 +6372,226 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 };
 
 export default ProductCard;
+</file>
+
+<file path="src/components/products/product-configurator.tsx">
+"use client";
+
+import React, { useState, useEffect } from "react";
+import { Link } from "@/i18n/routing";
+import { useTranslations } from "next-intl";
+import { Button } from "@/components/ui/button";
+import { Box, MapPin, FileText, Share2, Check } from "lucide-react";
+import type { ProductItem } from "@/services/product.service";
+
+interface ProductConfiguratorProps {
+  product: ProductItem;
+  categoryTitle: string;
+  globalThicknesses?: string[];
+  globalFinishes?: { title: string; slug: string }[];
+}
+
+export function ProductConfigurator({
+  product,
+  categoryTitle,
+  globalThicknesses = [],
+  globalFinishes = [],
+}: ProductConfiguratorProps) {
+  const t = useTranslations("ProductDetail");
+
+  const [selectedThickness, setSelectedThickness] = useState(
+    globalThicknesses[0] || "",
+  );
+  const [selectedFinish, setSelectedFinish] = useState(
+    globalFinishes[0]?.slug || "",
+  );
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (globalThicknesses.length > 0 && !selectedThickness) {
+      setSelectedThickness(globalThicknesses[0]);
+    }
+    if (globalFinishes.length > 0 && !selectedFinish) {
+      setSelectedFinish(globalFinishes[0].slug);
+    }
+  }, [globalThicknesses, globalFinishes, selectedThickness, selectedFinish]);
+
+  const sampleUrl = `/contact?type=sample&code=${encodeURIComponent(
+    product.code || "",
+  )}&thickness=${encodeURIComponent(
+    selectedThickness || "",
+  )}&finish=${encodeURIComponent(selectedFinish || "")}`;
+
+  const handleShare = async () => {
+    if (typeof window !== "undefined" && navigator.clipboard) {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* هدر سنگ */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold tracking-wider text-primary border border-primary/30 bg-primary/5 px-2.5 py-1">
+              کد {product.code}
+            </span>
+            {categoryTitle && (
+              <span className="text-xs text-muted-foreground border border-border/50 px-2 py-1">
+                {categoryTitle}
+              </span>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={handleShare}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+          >
+            {copied ? (
+              <>
+                <Check className="h-3.5 w-3.5 text-primary" />
+                <span className="text-primary font-medium">{t("copied")}</span>
+              </>
+            ) : (
+              <>
+                <Share2 className="h-3.5 w-3.5" />
+                <span>{t("share")}</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-light text-foreground tracking-tight">
+          {product.title}
+        </h1>
+      </div>
+
+      {product.description && (
+        <p className="text-sm font-light text-muted-foreground leading-relaxed">
+          {product.description}
+        </p>
+      )}
+
+      {/* انتخابگرهای سراسری ضخامت و پرداخت */}
+      {(globalThicknesses.length > 0 || globalFinishes.length > 0) && (
+        <div className="space-y-5 border-y border-border/50 py-6 bg-card/30 p-4">
+          {globalThicknesses.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-foreground font-medium">
+                  {t("thickness")}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                {globalThicknesses.map((th) => (
+                  <button
+                    key={th}
+                    type="button"
+                    onClick={() => setSelectedThickness(th)}
+                    className={`py-2 px-4 text-xs border transition-all text-center cursor-pointer ${
+                      selectedThickness === th
+                        ? "border-primary bg-primary text-primary-foreground font-bold shadow-sm"
+                        : "border-border/60 bg-card hover:border-border text-foreground"
+                    }`}
+                  >
+                    {th}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {globalFinishes.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-foreground font-medium">
+                  {t("finish")}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                {globalFinishes.map((fn) => (
+                  <button
+                    key={fn.slug}
+                    type="button"
+                    onClick={() => setSelectedFinish(fn.slug)}
+                    className={`py-2 px-4 text-xs uppercase border transition-all text-center flex items-center gap-1.5 cursor-pointer ${
+                      selectedFinish === fn.slug
+                        ? "border-primary bg-primary text-primary-foreground font-bold shadow-sm"
+                        : "border-border/60 bg-card hover:border-border text-foreground"
+                    }`}
+                  >
+                    <span>{fn.title}</span>
+                    {selectedFinish === fn.slug && (
+                      <Check className="h-3 w-3" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* دکمه‌های اقدام B2B */}
+      <div className="space-y-3 pt-2">
+        <Button
+          asChild
+          size="lg"
+          className="w-full h-14 bg-primary text-primary-foreground hover:bg-primary/90 rounded-none text-sm tracking-wider uppercase font-medium shadow-sm"
+        >
+          <Link
+            href={sampleUrl}
+            className="flex items-center justify-center gap-3"
+          >
+            <Box className="h-5 w-5 shrink-0" />
+            <div className="text-start">
+              <span>{t("requestSample")}</span>
+              <span className="block text-[11px] font-light opacity-90">
+                {t("requestSampleDesc")}
+              </span>
+            </div>
+          </Link>
+        </Button>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Button
+            asChild
+            variant="outline"
+            className="w-full h-12 border-border/80 hover:bg-muted text-foreground rounded-none text-xs tracking-wider uppercase"
+          >
+            <Link
+              href="/dealers"
+              className="flex items-center justify-center gap-2"
+            >
+              <MapPin className="h-4 w-4 text-primary shrink-0" />
+              <span>{t("findDealer")}</span>
+            </Link>
+          </Button>
+
+          <Button
+            asChild
+            variant="outline"
+            className="w-full h-12 border-border/80 hover:bg-muted text-foreground rounded-none text-xs tracking-wider uppercase"
+          >
+            <Link
+              href="/catalogs"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2"
+            >
+              <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+              <span>{t("downloadSpecs")}</span>
+            </Link>
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
 </file>
 
 <file path="src/components/shared/footer.tsx">
@@ -7475,126 +7899,6 @@ export const InfoCardsStack: React.FC = () => {
 };
 </file>
 
-<file path="src/payload.config.ts">
-import { buildConfig } from "payload";
-import { postgresAdapter } from "@payloadcms/db-postgres";
-import { lexicalEditor } from "@payloadcms/richtext-lexical";
-import sharp from "sharp";
-import path from "path";
-import { s3Storage } from "@payloadcms/storage-s3";
-import { fileURLToPath } from "url";
-import { Users } from "./payload/collections/Users";
-import { HeroBanner } from "./payload/collections/HeroBanner";
-import { Media } from "./payload/collections/Media";
-import { Products } from "./payload/collections/Products";
-import { Categories } from "./payload/collections/Categories";
-import { Colors } from "./payload/collections/Colors";
-import { VeinPatterns } from "./payload/collections/VeinPatterns";
-import { Dimensions } from "./payload/collections/Dimensions";
-import { Thicknesses } from "./payload/collections/Thicknesses";
-import { Finishes } from "./payload/collections/Finishes";
-import { Catalogs } from "./payload/collections/Catalogs";
-
-const filename = fileURLToPath(import.meta.url);
-const dirname = path.dirname(filename);
-
-export default buildConfig({
-  admin: {
-    user: Users.slug,
-  },
-  sharp,
-  collections: [
-    HeroBanner,
-    Users,
-    Media,
-    Categories,
-    Colors,
-    VeinPatterns,
-    Dimensions,
-    Thicknesses,
-    Finishes,
-    Products,
-    Catalogs,
-  ],
-
-  editor: lexicalEditor({}),
-
-  localization: {
-    locales: ["fa", "en", "ar"],
-    defaultLocale: "fa",
-    fallback: true,
-  },
-
-  secret: process.env.PAYLOAD_SECRET || "",
-
-  typescript: {
-    outputFile: path.resolve(dirname, "payload-types.ts"),
-  },
-
-  db: postgresAdapter({
-    pool: {
-      connectionString: process.env.DATABASE_URI || "",
-    },
-  }),
-
-  plugins: [
-    s3Storage({
-      collections: {
-        media: {
-          prefix: "media", // پوشه‌بندی مرتب داخل باکت
-        },
-      },
-      bucket: process.env.S3_BUCKET || "persisquartz-media",
-      config: {
-        credentials: {
-          accessKeyId: process.env.S3_ACCESS_KEY || "",
-          secretAccessKey: process.env.S3_SECRET_KEY || "",
-        },
-        region: process.env.S3_REGION || "default",
-        endpoint: process.env.S3_ENDPOINT || "http://127.0.0.1:9000",
-        forcePathStyle: true, // برای MinIO و S3 داخلی الزامی است
-      },
-    }),
-  ],
-});
-</file>
-
-<file path="next.config.ts">
-import createNextIntlPlugin from "next-intl/plugin";
-import { withPayload } from "@payloadcms/next/withPayload";
-import type { NextConfig } from "next";
-
-const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
-
-const nextConfig: NextConfig = {
-  poweredByHeader: false,
-  images: {
-    formats: ["image/avif", "image/webp"],
-    remotePatterns: [
-      {
-        protocol: "http",
-        hostname: "localhost",
-      },
-      {
-        protocol: "http",
-        hostname: "127.0.0.1",
-      },
-      // دامنه اصلی سایت (برای پروداکشن)
-      {
-        protocol: "https",
-        hostname: "persisquartz.com",
-      },
-      {
-        protocol: "https",
-        hostname: "www.persisquartz.com",
-      },
-    ],
-  },
-};
-
-export default withPayload(withNextIntl(nextConfig));
-</file>
-
 <file path="src/components/shared/header.tsx">
 // src/components/shared/header.tsx
 "use client";
@@ -8098,6 +8402,126 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
 };
 </file>
 
+<file path="src/payload.config.ts">
+import { buildConfig } from "payload";
+import { postgresAdapter } from "@payloadcms/db-postgres";
+import { lexicalEditor } from "@payloadcms/richtext-lexical";
+import sharp from "sharp";
+import path from "path";
+import { s3Storage } from "@payloadcms/storage-s3";
+import { fileURLToPath } from "url";
+import { Users } from "./payload/collections/Users";
+import { HeroBanner } from "./payload/collections/HeroBanner";
+import { Media } from "./payload/collections/Media";
+import { Products } from "./payload/collections/Products";
+import { Categories } from "./payload/collections/Categories";
+import { Colors } from "./payload/collections/Colors";
+import { VeinPatterns } from "./payload/collections/VeinPatterns";
+import { Dimensions } from "./payload/collections/Dimensions";
+import { Thicknesses } from "./payload/collections/Thicknesses";
+import { Finishes } from "./payload/collections/Finishes";
+import { Catalogs } from "./payload/collections/Catalogs";
+
+const filename = fileURLToPath(import.meta.url);
+const dirname = path.dirname(filename);
+
+export default buildConfig({
+  admin: {
+    user: Users.slug,
+  },
+  sharp,
+  collections: [
+    HeroBanner,
+    Users,
+    Media,
+    Categories,
+    Colors,
+    VeinPatterns,
+    Dimensions,
+    Thicknesses,
+    Finishes,
+    Products,
+    Catalogs,
+  ],
+
+  editor: lexicalEditor({}),
+
+  localization: {
+    locales: ["fa", "en", "ar"],
+    defaultLocale: "fa",
+    fallback: true,
+  },
+
+  secret: process.env.PAYLOAD_SECRET || "",
+
+  typescript: {
+    outputFile: path.resolve(dirname, "payload-types.ts"),
+  },
+
+  db: postgresAdapter({
+    pool: {
+      connectionString: process.env.DATABASE_URI || "",
+    },
+  }),
+
+  plugins: [
+    s3Storage({
+      collections: {
+        media: {
+          prefix: "media", // پوشه‌بندی مرتب داخل باکت
+        },
+      },
+      bucket: process.env.S3_BUCKET || "persisquartz-media",
+      config: {
+        credentials: {
+          accessKeyId: process.env.S3_ACCESS_KEY || "",
+          secretAccessKey: process.env.S3_SECRET_KEY || "",
+        },
+        region: process.env.S3_REGION || "default",
+        endpoint: process.env.S3_ENDPOINT || "http://127.0.0.1:9000",
+        forcePathStyle: true, // برای MinIO و S3 داخلی الزامی است
+      },
+    }),
+  ],
+});
+</file>
+
+<file path="next.config.ts">
+import createNextIntlPlugin from "next-intl/plugin";
+import { withPayload } from "@payloadcms/next/withPayload";
+import type { NextConfig } from "next";
+
+const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
+
+const nextConfig: NextConfig = {
+  poweredByHeader: false,
+  images: {
+    formats: ["image/avif", "image/webp"],
+    remotePatterns: [
+      {
+        protocol: "http",
+        hostname: "localhost",
+      },
+      {
+        protocol: "http",
+        hostname: "127.0.0.1",
+      },
+      // دامنه اصلی سایت (برای پروداکشن)
+      {
+        protocol: "https",
+        hostname: "persisquartz.com",
+      },
+      {
+        protocol: "https",
+        hostname: "www.persisquartz.com",
+      },
+    ],
+  },
+};
+
+export default withPayload(withNextIntl(nextConfig));
+</file>
+
 <file path="package.json">
 {
   "name": "persisquartz",
@@ -8266,175 +8690,6 @@ export default async function HomePage({
 }
 </file>
 
-<file path="src/messages/fa.json">
-{
-  "Index": {
-    "title": "پرسیس کوارتز"
-  },
-  "Header": {
-    "products": "محصولات",
-    "collections": "کالکشن‌ها",
-    "viewAllProducts": "مشاهده تمام اسلب‌ها",
-    "monocolorSeries": "سری تک‌رنگ",
-    "monocolorDesc": "سطوح یکدست، مدرن و خالص سفید و مشکی",
-    "veinedEffectSeries": "سری رگه‌دار",
-    "veinedEffectDesc": "بافت‌های نرم و الهام‌گرفته از بافت طبیعی سنگ",
-    "calacattaSeries": "سری کالاکاتا",
-    "calacattaDesc": "طرح‌های لوکس با رگه‌های برجسته و چشم‌نواز",
-    "applications": "کاربردها",
-    "kitchenCountertops": "کانترتاپ و جزیره آشپزخانه",
-    "vanitiesAndBathrooms": "روشویی و سرویس بهداشتی",
-    "commercialProjects": "پروژه‌های تجاری و اداری",
-    "catalogs": "کاتالوگ‌",
-    "dealers": "نمایندگی‌ها",
-    "careAndMaintenance": "نگهداری و مراقبت",
-    "about": "درباره ما",
-    "contactUs": "تماس با ما"
-  },
-  "Footer": {
-    "description": "تولیدکننده سطوح کوارتز مهندسی‌شده با استانداردهای جهانی؛ تلفیقی از استحکام بی‌نظیر و زیبایی معماری.",
-    "address": "شهرکرد، قطب صنعتی، فاز ۳، اندیشه ۶، پلاک ۳۶۹",
-    "phone": "۰۳۸-۳۲۲۸۱۷۵۲",
-    "email": "info@persisquartz.com",
-    "productsTitle": "کالکشن‌ها",
-    "monocolorSeries": "سری تک‌رنگ (Monocolor)",
-    "veinedEffectSeries": "سری افکت رگه‌دار (Veined)",
-    "calacattaSeries": "سری کالاکاتا (Calacatta)",
-    "quickLinksTitle": "دسترسی سریع",
-    "findDealers": "نمایندگی‌ها",
-    "downloadCatalog": "دانلود کاتالوگ",
-    "aboutUs": "درباره ما",
-    "contactUs": "تماس با ما",
-    "infoAndLegalTitle": "اطلاعات و قوانین",
-    "termsAndConditions": "شرایط و قوانین استفاده",
-    "faq": "سوالات متداول",
-    "copyright": "تمامی حقوق مادی و معنوی محفوظ است."
-  },
-  "Hero": {
-    "tagline": "PERSIS QUARTZ",
-    "title": "دقت مهندسی برای آفرینش زیبایی ماندگار",
-    "subtitle": "سطوحی فراتر از یک پوشش؛ خلق هارمونی و اصالت در معماری مدرن"
-  },
-  "BrandIntro": {
-    "tagline": "آمیزه‌ای از هنر معماری و ماندگاری کوارتز",
-    "description": "پرسیس کوارتز با بهره‌گیری از تکنولوژی روز و متریال لوکس، سطوحی با کیفیت بی‌نظیر برای فضاهای مدرن و معمارانه خلق می‌کند.",
-    "ctaProducts": "مشاهده محصولات",
-    "ctaCatalogs": "دانلود کاتالوگ",
-    "feature1Title": "کیفیت ساختاری و متریال",
-    "feature1Desc": "مقاومت فوق‌العاده در برابر خط و خش، حرارت و لکه‌های محیطی.",
-    "feature2Title": "طراحی پیشرو و معمارانه",
-    "feature2Desc": "تنوع در بافت و رنگ‌بندی طبق آخرین استانداردهای دیزاین روز دنیا.",
-    "feature3Title": "ضمانت و اصالت برند",
-    "feature3Desc": "تضمین اصالت کالا و پشتوانه خدمات پس از فروش مطمئن."
-  },
-  "FeaturedProducts": {
-    "tagline": "PERSIS QUARTZ COLLECTION",
-    "title": "محصولات منتخب",
-    "viewAll": "مشاهده همه محصولات",
-    "viewDetails": "مشاهده جزئیات"
-  },
-  "InfoCards": {
-    "tagline": "PERSIS QUARTZ INSIGHTS",
-    "title": "معماری، کیفیت و خدمات پرسیس کوارتز",
-    "card1Category": "ویژگی‌های ساختاری",
-    "card1Title": "مزایا و استانداردهای مهندسی پرسیس کوارتز",
-    "featScratch": "مقاومت در برابر خراشیدگی",
-    "featStain": "مقاومت در برابر لکه",
-    "featImpact": "مقاومت در برابر ضربه",
-    "featImpermeable": "متراکم و نفوذناپذیر",
-    "featAntibacterial": "سطح آنتی‌باکتریال",
-    "featEasyClean": "نظافت و نگهداری آسان",
-    "card2Category": "نگهداری و مراقبت",
-    "card2Title": "درخشش ماندگار با ساده‌ترین روش نظافت",
-    "card2Desc": "حفظ زیبایی بدون نیاز به مواد شوینده خاص، پولیش یا واکس؛ تنها با آب گرم و چند قطره شوینده ملایم روزمره.",
-    "card2Cta": "راهنمای کامل نگهداری",
-    "card3Category": "اسناد فنی",
-    "card3Title": "کاتالوگ جامع و مشخصات مهندسی",
-    "card3Desc": "مشاهده ابعاد استاندارد اسلب‌ها (۳۲۰×۷۵ و ۳۲۰×۹۲ سانتی‌متر)، کاتالوگ رنگ‌بندی و کدهای اختصاصی برند.",
-    "card3Cta": "دانلود کاتالوگ محصولات",
-    "card4Category": "خدمات معماران",
-    "card4Title": "درخواست نمونه محصول (Sample Box)",
-    "card4Desc": "ارسال پکیج نمونه‌های لمسی سنگ کوارتز ویژه معماران، طراحان و پروژه‌های ساختمانی جهت بررسی بافت و کیفیت از نزدیک.",
-    "card4Cta": "ثبت سفارش Sample Box"
-  },
-  "InteractiveTools": {
-    "tagline": "PERSIS QUARTZ SERVICES",
-    "title": "خدمات و پشتیبانی پروژه‌ها",
-    "dealerTitle": "نمایندگی‌ها و شبکه فروش",
-    "dealerDesc": "مشاهده فهرست عاملیت‌ها و نمایندگی‌های رسمی پرسیس کوارتز در استان‌ها و شهرهای مختلف.",
-    "viewDealersBtn": "لیست نمایندگی‌ها",
-    "projectTitle": "مشاوره تخصصی و تامین پروژه",
-    "projectDesc": "جهت مشاوره فنی، دریافت مشخصات اسلب‌ها یا استعلام متریال پروژه‌های معماری.",
-    "fullNameLabel": "نام و نام خانوادگی",
-    "countryLabel": "کشور / شهر",
-    "phoneLabel": "شماره تماس / واتس‌اپ",
-    "messageLabel": "توضیحات پروژه",
-    "submitBtn": "ارسال درخواست",
-    "submittingBtn": "",
-    "successMessage": "درخواست شما ثبت شد.",
-    "successSubtext": "کارشناسان پرسیس کوارتز به‌زودی با شما تماس خواهند گرفت.",
-    "newRequestBtn": "ثبت درخواست جدید",
-    "fullNameError": "لطفاً نام خود را وارد کنید.",
-    "countryError": "لطفاً کشور یا شهر را وارد کنید.",
-    "phoneError": "شماره تماس معتبر وارد کنید.",
-    "messageError": "توضیحات پروژه را وارد کنید."
-  },
-  "ProductsFilter": {
-    "title": "فیلتر محصولات",
-    "reset": "پاک‌سازی",
-    "collections": "کالکشن‌ها",
-    "all": "همه کدهای سنگ",
-    "colorFamily": "طیف رنگی",
-    "veinPattern": "الگوی رگه",
-    "viewResults": "مشاهده نتایج"
-  },
-  "ProductsGrid": {
-    "showingCount": "نمایش {count} کد از مجموع {total} اسلب",
-    "noProductsFound": "محصولی با این مشخصات یافت نشد.",
-    "tryResettingFilters": "لطفاً فیلترهای انتخابی را تغییر داده یا پاک‌سازی کنید.",
-    "onDemand": "تولید سفارشی"
-  },
-  "ProductDetail": {
-    "home": "صفحه اصلی",
-    "products": "کاتالوگ محصولات",
-    "thickness": "ضخامت",
-    "finish": "پرداخت سطح",
-    "inStock": "کد فعال در خط تولید",
-    "onDemand": "تولید سفارشی پروژه",
-    "requestSample": "درخواست نمونه اسلب (Sample)",
-    "requestSampleDesc": "ارسال نمونه لمسی ویژه معماران و سازندگان",
-    "findDealer": "عاملیت‌ها و مراکز فروش",
-    "downloadSpecs": "کاتالوگ و مشخصات",
-    "share": "اشتراک‌گذاری",
-    "copied": "کپی شد!",
-    "fullScan": "اسکن کامل اسلب",
-    "textureZoom": "نمای نزدیک بافت",
-    "techTitle": "Technical Details",
-    "techSubtitle": "مشخصات فنی و استانداردهای مهندسی",
-    "specDimensionsTitle": "ابعاد اسلب",
-    "specThicknessTitle": "ضخامت استاندارد",
-    "specFinishesTitle": "فینیش و پرداخت",
-    "applicationsTitle": "کاربردهای پیشنهادی",
-    "appKitchen": "رویه کابینت و جزیره",
-    "appKitchenDesc": "مقاومت بالا در برابر سایش، حرارت ظروف و لکه‌های سرسخت.",
-    "appVanity": "روشویی و حمام",
-    "appVanityDesc": "نفوذناپذیری کامل در برابر رطوبت مداوم.",
-    "appCommercial": "پروژه‌های تجاری",
-    "appCommercialDesc": "دوام بالا در فضاهای پرتردد و میزهای آزمایشگاهی."
-  },
-  "Catalogs": {
-    "title": "کاتالوگ‌های دیجیتال",
-    "view": "مشاهده آنلاین",
-    "download": "دانلود فایل PDF",
-    "allCategories": "همه دسته‌ها",
-    "searchPlaceholder": "جستجوی عنوان کاتالوگ...",
-    "noCatalogsFound": "هیچ کاتالوگی با این مشخصات یافت نشد.",
-    "resetFilters": "پاک‌سازی فیلترها",
-    "previewNotAvailable": "امکان پیش‌نمایش برای این فایل وجود ندارد."
-  }
-}
-</file>
-
 <file path="src/messages/ar.json">
 {
   "Index": {
@@ -8471,7 +8726,7 @@ export default async function HomePage({
     "calacattaSeries": "سلسلة كالاكاتا",
     "quickLinksTitle": "روابط سريعة",
     "findDealers": "الموزعون",
-    "downloadCatalog": "تحميل الكتالوج",
+    "downloadCatalog": "الكتالوج",
     "aboutUs": "من نحن",
     "contactUs": "اتصل بنا",
     "infoAndLegalTitle": "المعلومات والأحكام",
@@ -8605,6 +8860,48 @@ export default async function HomePage({
     "noCatalogsFound": "لم يتم العثور على كتالوجات تطابق بحثك.",
     "resetFilters": "إعادة ضبط",
     "previewNotAvailable": "المعاينة غير متاحة لهذا الملف."
+  },
+  "CareMaintenance": {
+    "metaTitle": "دليل العناية والصيانة لأسطح الكوارتز | برسيس كوارتز",
+    "metaDescription": "الدليل الرسمي للعناية اليومية وإزالة البقع والحفاظ على متانة ولمعان أسطح برسيس كوارتز.",
+    "tagline": "PERSIS QUARTZ CARE GUIDE",
+    "title": "العناية والصيانة",
+    "subtitle": "جمال يدوم بأبسط طرق التنظيف",
+    "intro": "تتميز أسطح برسيس كوارتز بتركيبة هندسية كثيفة وغير مسامية توفر أعلى مستويات المتانة والمقاومة للبقع والخدوش دون الحاجة إلى تشميع أو صقل مستمر.",
+
+    "featuresSectionTitle": "المعايير والخصائص الهندسية",
+    "featScratch": "مقاوم للخدش والاهتراء",
+    "featStain": "مقاوم ممتاز للبقع",
+    "featImpact": "مقاومة عالية للصدمات",
+    "featImpermeable": "كثيف وغير منفذ للماء تماماً",
+    "featAntibacterial": "سطح صحي ومضاد للبكتيريا",
+    "featEasyClean": "سهولة التنظيف والعناية",
+
+    "routineSectionTitle": "إرشادات التنظيف الأساسية",
+    "firstCleanTitle": "التنظيف الأول بعد التركيب",
+    "firstCleanDesc": "بعد الانتهاء من التركيب، نظف السطح بالكامل بالماء الدافئ وصابون لطيف وقطعة قماش ناعمة، ثم جفف السطح تماماً لإزالة أي غبار ناتج عن التركيب.",
+    "dailyCareTitle": "التنظيف الروتيني اليومي",
+    "dailyCareDesc": "يكفي استخدام الماء الدافئ وبضع قطرات من منظف لطيف غير زيتي، مع المسح بقطعة قماش جافة لمنع تراكم الرواسب الكلسية.",
+    "stainsTitle": "التعامل مع البقع الصعبة",
+    "stainsDesc": "نظف انسكابات الشاي والقهوة والزيوت سريعاً. بالنسبة للبقع الجافة، استخدم منظفاً لطيفاً بحركات دائرية ناعمة، ثم اغسل بالماء وجفف.",
+
+    "dosAndDontsTitle": "قواعد الحماية والإرشادات الوقائية",
+    "scratchProtTitle": "الحماية من الخدوش",
+    "scratchProtDesc": "رغم صلابة الكوارتز العالية (درجة 7 موهس)، استخدم دائماً ألواح التقطيع وتجنب سحب الأدوات المعدنية الحادة مباشرة على السطح.",
+
+    "heatProtTitle": "الحماية من الصدمات الحرارية",
+    "heatProtDesc": "لا تضع الأواني والمقالي الساخنة مباشرة من الموقد أو الفرن على السطح، واحرص دائماً على استخدام القواعد الواقية من الحرارة.",
+
+    "chemicalsProtTitle": "المواد الكيميائية الضارة والمذيبات",
+    "chemicalsProtDesc": "تجنب ملامسة السطح للمذيبات القوية ومزيلات الطلاء والأحماض المركزة، واغسل السطح فوراً بالماء في حال حدوث تلامس غير مقصود.",
+
+    "edgesProtTitle": "سلامة الحواف والزوايا",
+    "edgesProtDesc": "تجنب توجيه صدمات قوية بالأدوات الثقيلة إلى الحواف المشطوفة وزوايا القص حول الأحواض.",
+
+    "ctaTitle": "هل تحتاج إلى استشارة فنية أو مستندات؟",
+    "ctaDesc": "فريق الدعم الفني والمعماري في برسيس كوارتز جاهز للإجابة على كافة استفساراتكم.",
+    "ctaCatalogBtn": "تحميل الكتالوجات",
+    "ctaContactBtn": "التواصل مع الدعم الفني"
   }
 }
 </file>
@@ -8645,7 +8942,7 @@ export default async function HomePage({
     "calacattaSeries": "Calacatta Series",
     "quickLinksTitle": "Quick Links",
     "findDealers": "Find Dealers",
-    "downloadCatalog": "Download Catalog",
+    "downloadCatalog": "Catalog",
     "aboutUs": "About Us",
     "contactUs": "Contact Us",
     "infoAndLegalTitle": "Info & Legal",
@@ -8773,12 +9070,223 @@ export default async function HomePage({
   "Catalogs": {
     "title": "Digital Catalogs",
     "view": "Preview",
-    "download": "Download PDF",
+    "download": "Download",
     "allCategories": "All Categories",
     "searchPlaceholder": "Search catalogs...",
     "noCatalogsFound": "No catalogs found matching your search.",
     "resetFilters": "Reset Filters",
     "previewNotAvailable": "Preview is not available for this file."
+  }
+}
+</file>
+
+<file path="src/messages/fa.json">
+{
+  "Index": {
+    "title": "پرسیس کوارتز"
+  },
+  "Header": {
+    "products": "محصولات",
+    "collections": "کالکشن‌ها",
+    "viewAllProducts": "مشاهده تمام اسلب‌ها",
+    "monocolorSeries": "سری تک‌رنگ",
+    "monocolorDesc": "سطوح یکدست، مدرن و خالص سفید و مشکی",
+    "veinedEffectSeries": "سری رگه‌دار",
+    "veinedEffectDesc": "بافت‌های نرم و الهام‌گرفته از بافت طبیعی سنگ",
+    "calacattaSeries": "سری کالاکاتا",
+    "calacattaDesc": "طرح‌های لوکس با رگه‌های برجسته و چشم‌نواز",
+    "applications": "کاربردها",
+    "kitchenCountertops": "کانترتاپ و جزیره آشپزخانه",
+    "vanitiesAndBathrooms": "روشویی و سرویس بهداشتی",
+    "commercialProjects": "پروژه‌های تجاری و اداری",
+    "catalogs": "کاتالوگ‌",
+    "dealers": "نمایندگی‌ها",
+    "careAndMaintenance": "نگهداری و مراقبت",
+    "about": "درباره ما",
+    "contactUs": "تماس با ما"
+  },
+  "Footer": {
+    "description": "تولیدکننده سطوح کوارتز مهندسی‌شده با استانداردهای جهانی؛ تلفیقی از استحکام بی‌نظیر و زیبایی معماری.",
+    "address": "شهرکرد، قطب صنعتی، فاز ۳، اندیشه ۶، پلاک ۳۶۹",
+    "phone": "۰۳۸-۳۲۲۸۱۷۵۲",
+    "email": "info@persisquartz.com",
+    "productsTitle": "کالکشن‌ها",
+    "monocolorSeries": "سری تک‌رنگ (Monocolor)",
+    "veinedEffectSeries": "سری افکت رگه‌دار (Veined)",
+    "calacattaSeries": "سری کالاکاتا (Calacatta)",
+    "quickLinksTitle": "دسترسی سریع",
+    "findDealers": "نمایندگی‌ها",
+    "downloadCatalog": "کاتالوگ",
+    "aboutUs": "درباره ما",
+    "contactUs": "تماس با ما",
+    "infoAndLegalTitle": "اطلاعات و قوانین",
+    "termsAndConditions": "شرایط و قوانین استفاده",
+    "faq": "سوالات متداول",
+    "copyright": "تمامی حقوق مادی و معنوی محفوظ است."
+  },
+  "Hero": {
+    "tagline": "PERSIS QUARTZ",
+    "title": "دقت مهندسی برای آفرینش زیبایی ماندگار",
+    "subtitle": "سطوحی فراتر از یک پوشش؛ خلق هارمونی و اصالت در معماری مدرن"
+  },
+  "BrandIntro": {
+    "tagline": "آمیزه‌ای از هنر معماری و ماندگاری کوارتز",
+    "description": "پرسیس کوارتز با بهره‌گیری از تکنولوژی روز و متریال لوکس، سطوحی با کیفیت بی‌نظیر برای فضاهای مدرن و معمارانه خلق می‌کند.",
+    "ctaProducts": "مشاهده محصولات",
+    "ctaCatalogs": "دانلود کاتالوگ",
+    "feature1Title": "کیفیت ساختاری و متریال",
+    "feature1Desc": "مقاومت فوق‌العاده در برابر خط و خش، حرارت و لکه‌های محیطی.",
+    "feature2Title": "طراحی پیشرو و معمارانه",
+    "feature2Desc": "تنوع در بافت و رنگ‌بندی طبق آخرین استانداردهای دیزاین روز دنیا.",
+    "feature3Title": "ضمانت و اصالت برند",
+    "feature3Desc": "تضمین اصالت کالا و پشتوانه خدمات پس از فروش مطمئن."
+  },
+  "FeaturedProducts": {
+    "tagline": "PERSIS QUARTZ COLLECTION",
+    "title": "محصولات منتخب",
+    "viewAll": "مشاهده همه محصولات",
+    "viewDetails": "مشاهده جزئیات"
+  },
+  "InfoCards": {
+    "tagline": "PERSIS QUARTZ INSIGHTS",
+    "title": "معماری، کیفیت و خدمات پرسیس کوارتز",
+    "card1Category": "ویژگی‌های ساختاری",
+    "card1Title": "مزایا و استانداردهای مهندسی پرسیس کوارتز",
+    "featScratch": "مقاومت در برابر خراشیدگی",
+    "featStain": "مقاومت در برابر لکه",
+    "featImpact": "مقاومت در برابر ضربه",
+    "featImpermeable": "متراکم و نفوذناپذیر",
+    "featAntibacterial": "سطح آنتی‌باکتریال",
+    "featEasyClean": "نظافت و نگهداری آسان",
+    "card2Category": "نگهداری و مراقبت",
+    "card2Title": "درخشش ماندگار با ساده‌ترین روش نظافت",
+    "card2Desc": "حفظ زیبایی بدون نیاز به مواد شوینده خاص، پولیش یا واکس؛ تنها با آب گرم و چند قطره شوینده ملایم روزمره.",
+    "card2Cta": "راهنمای کامل نگهداری",
+    "card3Category": "اسناد فنی",
+    "card3Title": "کاتالوگ جامع و مشخصات مهندسی",
+    "card3Desc": "مشاهده ابعاد استاندارد اسلب‌ها (۳۲۰×۷۵ و ۳۲۰×۹۲ سانتی‌متر)، کاتالوگ رنگ‌بندی و کدهای اختصاصی برند.",
+    "card3Cta": "دانلود کاتالوگ محصولات",
+    "card4Category": "خدمات معماران",
+    "card4Title": "درخواست نمونه محصول (Sample Box)",
+    "card4Desc": "ارسال پکیج نمونه‌های لمسی سنگ کوارتز ویژه معماران، طراحان و پروژه‌های ساختمانی جهت بررسی بافت و کیفیت از نزدیک.",
+    "card4Cta": "ثبت سفارش Sample Box"
+  },
+  "InteractiveTools": {
+    "tagline": "PERSIS QUARTZ SERVICES",
+    "title": "خدمات و پشتیبانی پروژه‌ها",
+    "dealerTitle": "نمایندگی‌ها و شبکه فروش",
+    "dealerDesc": "مشاهده فهرست عاملیت‌ها و نمایندگی‌های رسمی پرسیس کوارتز در استان‌ها و شهرهای مختلف.",
+    "viewDealersBtn": "لیست نمایندگی‌ها",
+    "projectTitle": "مشاوره تخصصی و تامین پروژه",
+    "projectDesc": "جهت مشاوره فنی، دریافت مشخصات اسلب‌ها یا استعلام متریال پروژه‌های معماری.",
+    "fullNameLabel": "نام و نام خانوادگی",
+    "countryLabel": "کشور / شهر",
+    "phoneLabel": "شماره تماس / واتس‌اپ",
+    "messageLabel": "توضیحات پروژه",
+    "submitBtn": "ارسال درخواست",
+    "submittingBtn": "",
+    "successMessage": "درخواست شما ثبت شد.",
+    "successSubtext": "کارشناسان پرسیس کوارتز به‌زودی با شما تماس خواهند گرفت.",
+    "newRequestBtn": "ثبت درخواست جدید",
+    "fullNameError": "لطفاً نام خود را وارد کنید.",
+    "countryError": "لطفاً کشور یا شهر را وارد کنید.",
+    "phoneError": "شماره تماس معتبر وارد کنید.",
+    "messageError": "توضیحات پروژه را وارد کنید."
+  },
+  "ProductsFilter": {
+    "title": "فیلتر محصولات",
+    "reset": "پاک‌سازی",
+    "collections": "کالکشن‌ها",
+    "all": "همه کدهای سنگ",
+    "colorFamily": "طیف رنگی",
+    "veinPattern": "الگوی رگه",
+    "viewResults": "مشاهده نتایج"
+  },
+  "ProductsGrid": {
+    "showingCount": "نمایش {count} کد از مجموع {total} اسلب",
+    "noProductsFound": "محصولی با این مشخصات یافت نشد.",
+    "tryResettingFilters": "لطفاً فیلترهای انتخابی را تغییر داده یا پاک‌سازی کنید.",
+    "onDemand": "تولید سفارشی"
+  },
+  "ProductDetail": {
+    "home": "صفحه اصلی",
+    "products": "کاتالوگ محصولات",
+    "thickness": "ضخامت",
+    "finish": "پرداخت سطح",
+    "inStock": "کد فعال در خط تولید",
+    "onDemand": "تولید سفارشی پروژه",
+    "requestSample": "درخواست نمونه اسلب (Sample)",
+    "requestSampleDesc": "ارسال نمونه لمسی ویژه معماران و سازندگان",
+    "findDealer": "عاملیت‌ها و مراکز فروش",
+    "downloadSpecs": "کاتالوگ و مشخصات",
+    "share": "اشتراک‌گذاری",
+    "copied": "کپی شد!",
+    "fullScan": "اسکن کامل اسلب",
+    "textureZoom": "نمای نزدیک بافت",
+    "techTitle": "Technical Details",
+    "techSubtitle": "مشخصات فنی و استانداردهای مهندسی",
+    "specDimensionsTitle": "ابعاد اسلب",
+    "specThicknessTitle": "ضخامت استاندارد",
+    "specFinishesTitle": "فینیش و پرداخت",
+    "applicationsTitle": "کاربردهای پیشنهادی",
+    "appKitchen": "رویه کابینت و جزیره",
+    "appKitchenDesc": "مقاومت بالا در برابر سایش، حرارت ظروف و لکه‌های سرسخت.",
+    "appVanity": "روشویی و حمام",
+    "appVanityDesc": "نفوذناپذیری کامل در برابر رطوبت مداوم.",
+    "appCommercial": "پروژه‌های تجاری",
+    "appCommercialDesc": "دوام بالا در فضاهای پرتردد و میزهای آزمایشگاهی."
+  },
+  "Catalogs": {
+    "title": "کاتالوگ‌های دیجیتال",
+    "view": "مشاهده آنلاین",
+    "download": "دانلود PDF",
+    "allCategories": "همه دسته‌ها",
+    "searchPlaceholder": "جستجوی عنوان کاتالوگ...",
+    "noCatalogsFound": "هیچ کاتالوگی با این مشخصات یافت نشد.",
+    "resetFilters": "پاک‌سازی فیلترها",
+    "previewNotAvailable": "امکان پیش‌نمایش برای این فایل وجود ندارد."
+  },
+  "CareMaintenance": {
+    "metaTitle": "راهنمای جامع نگهداری و مراقبت از سطوح کوارتز | پرسیس کوارتز",
+    "metaDescription": "دستورالعمل‌های استاندارد نظافت روزمره، مقابله با لکه‌های سخت و اصول نگهداری و حفظ درخشش سطوح مهندسی‌شده پرسیس کوارتز.",
+    "tagline": "PERSIS QUARTZ CARE GUIDE",
+    "title": "نگهداری و مراقبت",
+    "subtitle": "درخشش ماندگار و اصالت ساختاری با ساده‌ترین اصول نظافت",
+    "intro": "سطوح پرسیس کوارتز به لطف ساختار متراکم، فاقد خلل و فرج و پیوند مولکولی پیشرفته، بالاترین سطح مقاومت را در برابر لکه و سایش ارائه می‌دهند. این سطوح نیازی به پولیش مجدد، واکس یا سیلر ندارند و با رعایت چند نکته ساده، همیشه مانند روز اول می‌درخشند.",
+
+    "featuresSectionTitle": "ویژگی‌های ساختاری و مهندسی",
+    "featScratch": "مقاومت در برابر خط و خش",
+    "featStain": "مقاومت در برابر لکه",
+    "featImpact": "مقاومت بالا در برابر ضربه",
+    "featImpermeable": "متراکم و نفوذناپذیر (جذب آب نزدیک به صفر)",
+    "featAntibacterial": "سطح کاملاً آنتی‌باکتریال و بهداشتی",
+    "featEasyClean": "نظافت و نگهداری آسان",
+
+    "routineSectionTitle": "دستورالعمل نظافت و نگهداری",
+    "firstCleanTitle": "اولین نظافت پس از نصب",
+    "firstCleanDesc": "پس از اتمام نصب، تمام سطح را با آب گرم، شوینده ملایم و یک دستمال مایکروفایبر یا اسفنج غیرساینده تمیز کرده و سپس کاملاً خشک نمایید تا ذرات و گردوغبار نصبی پاک شوند.",
+    "dailyCareTitle": "نظافت و شستشوی روزمره",
+    "dailyCareDesc": "برای پاکسازی روزانه تنها مقداری آب گرم و چند قطره مایع شوینده ملایم (فاقد چربی یا روغن‌های گیاهی) کافی است. جهت جلوگیری از تشکیل رسوبات آهکی آب، سطح را پس از شستشو با دستمال خشک کنید.",
+    "stainsTitle": "مقابله با لکه‌های سخت و خشک‌شده",
+    "stainsDesc": "لکه‌های چای، قهوه، سرکه یا روغن را در سریع‌ترین زمان پاک کنید. برای لکه‌های سرسخت، از یک شوینده استاندارد غیرساینده با حرکات ملایم دایره‌ای استفاده نموده و سپس سطح را آبکشی و خشک نمایید.",
+
+    "dosAndDontsTitle": "راهنمای محافظت و مراقبت‌های ویژه",
+    "scratchProtTitle": "محافظت در برابر سایش و خط",
+    "scratchProtDesc": "اگرچه کوارتز با درجه سختی ۷ موهس از سخت‌ترین کانی‌هاست، همواره از تخته برش آشپزخانه استفاده کنید و از کشیدن مستقیم تیغه‌ها و وسایل بسیار سنگین و تیز روی آن بپرهیزید.",
+
+    "heatProtTitle": "محافظت در برابر شوک حرارتی",
+    "heatProtDesc": "از قرار دادن مستقیم قابلمه، ماهیتابه یا ظروف داغی که از روی شعله یا فر برداشته شده‌اند خودداری فرمایید. همواره از زیرقابلمه‌ای یا پدهای محافظ حرارتی استفاده کنید.",
+
+    "chemicalsProtTitle": "مواد شیمیایی آسیب‌رسان و حلال‌ها",
+    "chemicalsProtDesc": "از تماس سطح با حلال‌های صنعتی قوی، تینر، استون غلیظ، رنگ‌برها، اسید هیدروفلوئوریک و ترکیبات تری‌کلرواتان و جوهر نمک غلیظ خودداری کنید. در صورت تماس تصادفی، فوراً با آب فراوان شستشو دهید.",
+
+    "edgesProtTitle": "مراقبت از سلامت لبه‌ها و گوشه‌ها",
+    "edgesProtDesc": "از وارد آوردن ضربه‌های ناگهانی و سنگین با اجسام فلزی یا ابزار سنگین به لبه‌های ابزارخورده، پخ‌ها و گوشه‌های برش‌خورده دور سینک و کانترتاپ پرهیز نمایید.",
+
+    "ctaTitle": "نیاز به مشاوره فنی یا دریافت مستندات دارید؟",
+    "ctaDesc": "تیم کارشناسان فنی پرسیس کوارتز آماده پاسخگویی و ارائه کاتالوگ‌های تخصصی به شما هستند.",
+    "ctaCatalogBtn": "مشاهده و دانلود کاتالوگ‌ها",
+    "ctaContactBtn": "تماس با پشتیبانی فنی"
   }
 }
 </file>
