@@ -1,15 +1,17 @@
+// مسیر جدید: src/services/hero.service.ts
 import { cache } from "react";
+import "server-only";
 import { getPayload } from "payload";
 import configPromise from "@/payload.config";
 
-export const getHeroBanners = cache(async (locale: string = "fa") => {
+export const getHeroBannersService = cache(async (locale: string = "fa") => {
   try {
     const payload = await getPayload({ config: configPromise });
 
     const response = await payload.find({
       collection: "hero-banners",
       locale: locale as "fa" | "en" | "ar",
-      depth: 1, // <-- این خط کلیدی است: باعث می‌شود url ویدیوها و عکس‌ها دریافت شود
+      depth: 1,
       where: {
         status: {
           equals: "published",

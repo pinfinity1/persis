@@ -172,416 +172,6 @@ tsconfig.json
 <files>
 This section contains the contents of the repository's files.
 
-<file path="src/app/[locale]/care-and-maintenance/page.tsx">
-import React from "react";
-import type { Metadata } from "next";
-import Image from "next/image";
-import { getTranslations } from "next-intl/server";
-import { Link } from "@/i18n/routing";
-import { Button } from "@/components/ui/button";
-import { RoutineAccordion } from "@/components/care/routine-accordion";
-import {
-  Sparkles,
-  Droplets,
-  ShieldCheck,
-  ChefHat,
-  ThermometerSun,
-  TestTubeDiagonal,
-  ShieldAlert,
-  ArrowUpRight,
-  FileText,
-} from "lucide-react";
-
-interface PageProps {
-  params: Promise<{ locale: string }>;
-}
-
-export async function generateMetadata({
-  params,
-}: PageProps): Promise<Metadata> {
-  const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "CareMaintenance" });
-
-  return {
-    title: t("metaTitle"),
-    description: t("metaDescription"),
-    openGraph: {
-      title: t("metaTitle"),
-      description: t("metaDescription"),
-      images: ["/PersisQuartz-Red.png"],
-    },
-  };
-}
-
-export default async function CareAndMaintenancePage({ params }: PageProps) {
-  const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "CareMaintenance" });
-
-  // فیچرهای یکپارچه شده با آیکون‌های استاندارد پروژه
-  const engineeredFeatures = [
-    { label: t("featScratch"), icon: "/icons/scratch.png" },
-    { label: t("featStain"), icon: "/icons/stain.png" },
-    { label: t("featImpact"), icon: "/icons/impact.png" },
-    { label: t("featImpermeable"), icon: "/icons/layerbarrier.png" },
-    { label: t("featAntibacterial"), icon: "/icons/antibacterial.png" },
-    { label: t("featEasyClean"), icon: "/icons/easyclean.png" },
-  ];
-
-  // مراحل روتین برای ارسال به کامپوننت آکاردئون
-  // داخل کامپوننت CareAndMaintenancePage:
-  const routineSteps: StepItem[] = [
-    {
-      id: "step-1",
-      stepNumber: "Step 01 • Post Installation",
-      title: t("firstCleanTitle"),
-      desc: t("firstCleanDesc"),
-      iconName: "sparkles",
-    },
-    {
-      id: "step-2",
-      stepNumber: "Step 02 • Daily Maintenance",
-      title: t("dailyCareTitle"),
-      desc: t("dailyCareDesc"),
-      iconName: "droplets",
-    },
-    {
-      id: "step-3",
-      stepNumber: "Step 03 • Stain Handling",
-      title: t("stainsTitle"),
-      desc: t("stainsDesc"),
-      iconName: "shieldCheck",
-    },
-  ];
-
-  return (
-    <main className="min-h-screen bg-background pb-20 sm:pb-32 select-none">
-      {/* ۱. هدر مینیمال */}
-      <section className="relative pt-32 pb-16 sm:pt-40 sm:pb-20 bg-muted/20 border-b border-border/40 overflow-hidden">
-        <div
-          aria-hidden="true"
-          dir="ltr"
-          className="absolute inset-0 pointer-events-none flex items-center justify-center overflow-hidden opacity-[0.03] select-none"
-        >
-          <span className="text-[15vw] font-black uppercase tracking-tighter text-foreground leading-none whitespace-nowrap block">
-            MAINTENANCE
-          </span>
-        </div>
-
-        <div className="container mx-auto px-6 sm:px-12 relative z-10 text-center max-w-4xl space-y-5">
-          <div className="flex items-center justify-center gap-3">
-            <span className="h-px w-6 bg-primary" />
-            <span className="text-[11px] sm:text-xs uppercase tracking-[0.25em] text-primary font-mono font-medium">
-              {t("tagline")}
-            </span>
-            <span className="h-px w-6 bg-primary" />
-          </div>
-
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-light text-foreground tracking-tight">
-            {t("title")}
-          </h1>
-
-          <p className="text-xs sm:text-base font-light text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-            {t("intro")}
-          </p>
-        </div>
-      </section>
-
-      {/* ۲. گرید آیکون‌های ساختاری متریال */}
-      <section className="container mx-auto px-6 sm:px-12 pt-16 sm:pt-20">
-        <div className="mb-8 space-y-1">
-          <span className="text-[10px] sm:text-xs uppercase tracking-widest text-primary font-mono block">
-            01 / Engineering DNA
-          </span>
-          <h2 className="text-xl sm:text-2xl font-light text-foreground">
-            {t("featuresSectionTitle")}
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-          {engineeredFeatures.map((item, idx) => (
-            <div
-              key={idx}
-              className="p-5 bg-card border border-border/60 flex flex-col items-center text-center gap-3.5 group hover:border-primary/60 transition-all duration-300"
-            >
-              <div className="relative h-9 w-9 shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
-                <Image
-                  src={item.icon}
-                  alt={item.label}
-                  fill
-                  sizes="36px"
-                  className="object-contain dark:invert"
-                />
-              </div>
-              <span className="text-xs font-light text-foreground leading-snug">
-                {item.label}
-              </span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ۳. آکاردئون تعاملی همراه با مدیا */}
-      <RoutineAccordion
-        sectionTitle={t("routineSectionTitle")}
-        items={routineSteps}
-        mediaSrc="/PersisQuartz-Red.png"
-      />
-
-      {/* ۴. باکس استانداردهای محافظتی تیره */}
-      <section className="container mx-auto px-6 sm:px-12 pt-20 sm:pt-24">
-        <div className="bg-neutral-950 text-neutral-200 border border-neutral-800 p-8 sm:p-14 lg:p-16">
-          <div className="max-w-2xl mb-12 sm:mb-16 space-y-2">
-            <span className="text-[10px] sm:text-xs uppercase tracking-widest text-primary font-mono block">
-              03 / Preventive Rules
-            </span>
-            <h2 className="text-2xl sm:text-4xl font-light text-white tracking-tight">
-              {t("dosAndDontsTitle")}
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12">
-            <div className="flex gap-5 items-start p-6 bg-neutral-900/50 border border-neutral-800/80">
-              <div className="shrink-0 p-3 bg-neutral-900 border border-neutral-700/60 text-neutral-300">
-                <ChefHat className="h-5 w-5 text-primary" />
-              </div>
-              <div className="space-y-2">
-                <h4 className="text-sm sm:text-base font-medium text-white tracking-wide">
-                  {t("scratchProtTitle")}
-                </h4>
-                <p className="text-xs sm:text-sm font-light text-neutral-400 leading-relaxed">
-                  {t("scratchProtDesc")}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-5 items-start p-6 bg-neutral-900/50 border border-neutral-800/80">
-              <div className="shrink-0 p-3 bg-neutral-900 border border-neutral-700/60 text-neutral-300">
-                <ThermometerSun className="h-5 w-5 text-primary" />
-              </div>
-              <div className="space-y-2">
-                <h4 className="text-sm sm:text-base font-medium text-white tracking-wide">
-                  {t("heatProtTitle")}
-                </h4>
-                <p className="text-xs sm:text-sm font-light text-neutral-400 leading-relaxed">
-                  {t("heatProtDesc")}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-5 items-start p-6 bg-neutral-900/50 border border-neutral-800/80">
-              <div className="shrink-0 p-3 bg-neutral-900 border border-neutral-700/60 text-neutral-300">
-                <TestTubeDiagonal className="h-5 w-5 text-primary" />
-              </div>
-              <div className="space-y-2">
-                <h4 className="text-sm sm:text-base font-medium text-white tracking-wide">
-                  {t("chemicalsProtTitle")}
-                </h4>
-                <p className="text-xs sm:text-sm font-light text-neutral-400 leading-relaxed">
-                  {t("chemicalsProtDesc")}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-5 items-start p-6 bg-neutral-900/50 border border-neutral-800/80">
-              <div className="shrink-0 p-3 bg-neutral-900 border border-neutral-700/60 text-neutral-300">
-                <ShieldAlert className="h-5 w-5 text-primary" />
-              </div>
-              <div className="space-y-2">
-                <h4 className="text-sm sm:text-base font-medium text-white tracking-wide">
-                  {t("edgesProtTitle")}
-                </h4>
-                <p className="text-xs sm:text-sm font-light text-neutral-400 leading-relaxed">
-                  {t("edgesProtDesc")}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ۵. بخش فراخوان به عمل (CTA) */}
-      <section className="container mx-auto px-6 sm:px-12 pt-16 sm:pt-20">
-        <div className="p-8 sm:p-12 bg-card border border-border/60 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="space-y-2 text-center md:text-start">
-            <h3 className="text-lg sm:text-xl font-medium text-foreground">
-              {t("ctaTitle")}
-            </h3>
-            <p className="text-xs sm:text-sm text-muted-foreground font-light max-w-xl">
-              {t("ctaDesc")}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3 sm:gap-4 shrink-0">
-            <Button
-              asChild
-              variant="outline"
-              size="lg"
-              className="rounded-none text-xs uppercase tracking-wider h-11 px-6 border-border hover:bg-muted"
-            >
-              <Link href="/catalogs" className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-muted-foreground" />
-                <span>{t("ctaCatalogBtn")}</span>
-              </Link>
-            </Button>
-
-            <Button
-              asChild
-              size="lg"
-              className="rounded-none text-xs uppercase tracking-wider h-11 px-6 bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              <Link href="/contact" className="flex items-center gap-2">
-                <span>{t("ctaContactBtn")}</span>
-                <ArrowUpRight className="h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </section>
-    </main>
-  );
-}
-</file>
-
-<file path="src/components/care/routine-accordion.tsx">
-"use client";
-
-import React, { useState } from "react";
-import Image from "next/image";
-import { Sparkles, Droplets, ShieldCheck, ChevronDown } from "lucide-react";
-import { cn } from "@/lib/utils";
-
-// مپ کردن نام متنی آیکون به کامپوننت مربوطه در سمت کلاینت
-const ICON_MAP: Record<string, React.ElementType> = {
-  sparkles: Sparkles,
-  droplets: Droplets,
-  shieldCheck: ShieldCheck,
-};
-
-export interface StepItem {
-  id: string;
-  stepNumber: string;
-  title: string;
-  desc: string;
-  iconName: "sparkles" | "droplets" | "shieldCheck";
-}
-
-interface RoutineAccordionProps {
-  sectionTitle: string;
-  items: StepItem[];
-  mediaSrc?: string;
-}
-
-export const RoutineAccordion: React.FC<RoutineAccordionProps> = ({
-  sectionTitle,
-  items,
-  mediaSrc = "/PersisQuartz-Red.png",
-}) => {
-  const [openId, setOpenId] = useState<string>(items[0]?.id || "");
-
-  const toggleItem = (id: string) => {
-    setOpenId((prev) => (prev === id ? "" : id));
-  };
-
-  return (
-    <section className="container mx-auto px-6 sm:px-12 pt-20 sm:pt-24">
-      <div className="mb-10 space-y-1">
-        <span className="text-[10px] sm:text-xs uppercase tracking-widest text-primary font-mono block">
-          02 / Routine Protocol
-        </span>
-        <h2 className="text-2xl sm:text-3xl font-light text-foreground">
-          {sectionTitle}
-        </h2>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-        {/* ستون مدیا */}
-        <div className="lg:col-span-5 w-full">
-          <div className="relative aspect-[4/3] sm:aspect-square w-full bg-muted/40 border border-border/60 overflow-hidden">
-            <Image
-              src={mediaSrc}
-              alt="Persis Quartz Routine Care"
-              fill
-              sizes="(max-width: 1024px) 100vw, 40vw"
-              className="object-cover"
-            />
-            <div className="absolute inset-0 bg-black/10 pointer-events-none" />
-          </div>
-        </div>
-
-        {/* ستون آکاردئون */}
-        <div className="lg:col-span-7 space-y-3">
-          {items.map((item) => {
-            const isOpen = openId === item.id;
-            const Icon = ICON_MAP[item.iconName] || Droplets;
-
-            return (
-              <div
-                key={item.id}
-                className={cn(
-                  "border bg-card transition-colors duration-200",
-                  isOpen
-                    ? "border-primary/60"
-                    : "border-border/60 hover:border-border",
-                )}
-              >
-                <button
-                  type="button"
-                  onClick={() => toggleItem(item.id)}
-                  className="w-full p-5 sm:p-6 flex items-center justify-between text-start gap-4 cursor-pointer focus:outline-none"
-                >
-                  <div className="flex items-center gap-4 min-w-0">
-                    <div
-                      className={cn(
-                        "p-2.5 shrink-0 border transition-colors",
-                        isOpen
-                          ? "bg-primary text-primary-foreground border-primary"
-                          : "bg-muted/50 text-primary border-border/50",
-                      )}
-                    >
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest block">
-                        {item.stepNumber}
-                      </span>
-                      <h3 className="text-sm sm:text-base font-medium text-foreground truncate">
-                        {item.title}
-                      </h3>
-                    </div>
-                  </div>
-
-                  <ChevronDown
-                    className={cn(
-                      "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200",
-                      isOpen && "rotate-180 text-primary",
-                    )}
-                  />
-                </button>
-
-                <div
-                  className={cn(
-                    "grid transition-all duration-200 ease-in-out px-5 sm:px-6",
-                    isOpen
-                      ? "grid-rows-[1fr] pb-6 opacity-100"
-                      : "grid-rows-[0fr] pb-0 opacity-0",
-                  )}
-                >
-                  <div className="overflow-hidden">
-                    <p className="text-xs sm:text-sm font-light text-muted-foreground leading-relaxed pt-2 border-t border-border/30">
-                      {item.desc}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
-};
-</file>
-
 <file path="docs/content.md">
 .۱
 کاور، لوگو و نام برند
@@ -726,6 +316,274 @@ const Layout = ({ children }: { children: React.ReactNode }) => (
 );
 
 export default Layout;
+</file>
+
+<file path="src/app/[locale]/care-and-maintenance/page.tsx">
+import React from "react";
+import type { Metadata } from "next";
+import Image from "next/image";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/routing";
+import { Button } from "@/components/ui/button";
+import {
+  RoutineAccordion,
+  type StepItem,
+} from "@/components/care/routine-accordion";
+import {
+  ChefHat,
+  ThermometerSun,
+  TestTubeDiagonal,
+  ShieldAlert,
+  ArrowUpRight,
+  FileText,
+} from "lucide-react";
+
+interface PageProps {
+  params: Promise<{ locale: string }>;
+}
+
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "CareMaintenance" });
+
+  return {
+    title: t("metaTitle"),
+    description: t("metaDescription"),
+    openGraph: {
+      title: t("metaTitle"),
+      description: t("metaDescription"),
+      images: ["/PersisQuartz-Red.png"],
+    },
+  };
+}
+
+export default async function CareAndMaintenancePage({ params }: PageProps) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "CareMaintenance" });
+
+  const engineeredFeatures = [
+    { label: t("featScratch"), icon: "/icons/scratch.png" },
+    { label: t("featStain"), icon: "/icons/stain.png" },
+    { label: t("featImpact"), icon: "/icons/impact.png" },
+    { label: t("featImpermeable"), icon: "/icons/layerbarrier.png" },
+    { label: t("featAntibacterial"), icon: "/icons/antibacterial.png" },
+    { label: t("featEasyClean"), icon: "/icons/easyclean.png" },
+  ];
+
+  const routineSteps: StepItem[] = [
+    {
+      id: "step-1",
+      stepNumber: t("step1Tag"),
+      title: t("firstCleanTitle"),
+      desc: t("firstCleanDesc"),
+      iconName: "CheckCheck",
+    },
+    {
+      id: "step-2",
+      stepNumber: t("step2Tag"),
+      title: t("dailyCareTitle"),
+      desc: t("dailyCareDesc"),
+      iconName: "droplets",
+    },
+    {
+      id: "step-3",
+      stepNumber: t("step3Tag"),
+      title: t("stainsTitle"),
+      desc: t("stainsDesc"),
+      iconName: "shieldCheck",
+    },
+  ];
+
+  return (
+    <main className="min-h-screen bg-background pb-20 sm:pb-32 select-none">
+      {/* 1. Header Hero */}
+      <section className="relative pt-32 pb-16 sm:pt-40 sm:pb-20 bg-muted/20 border-b border-border/40 overflow-hidden">
+        <div
+          aria-hidden="true"
+          dir="ltr"
+          className="absolute inset-0 pointer-events-none flex items-center justify-center overflow-hidden opacity-[0.03] select-none"
+        >
+          <span className="text-[13.5vw] font-black uppercase tracking-tighter text-foreground leading-none whitespace-nowrap block">
+            MAINTENANCE
+          </span>
+        </div>
+
+        <div className="container mx-auto px-6 sm:px-12 relative z-10 text-center max-w-4xl space-y-5">
+          <div className="flex items-center justify-center gap-3">
+            <span className="h-px w-6 bg-primary" />
+            <span className="text-[11px] sm:text-xs uppercase tracking-[0.25em] text-primary font-medium">
+              {t("tagline")}
+            </span>
+            <span className="h-px w-6 bg-primary" />
+          </div>
+
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-light text-foreground tracking-tight">
+            {t("title")}
+          </h1>
+
+          <p className="text-xs sm:text-base font-light text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+            {t("intro")}
+          </p>
+        </div>
+      </section>
+
+      {/* 2. Material DNA Grid */}
+      <section className="container mx-auto px-6 sm:px-12 pt-16 sm:pt-20">
+        <div className="mb-8 space-y-1">
+          <span className="text-[10px] sm:text-xs uppercase tracking-widest text-primary block">
+            {t("sectionDnaTag")}
+          </span>
+          <h2 className="text-xl sm:text-2xl font-light text-foreground">
+            {t("featuresSectionTitle")}
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+          {engineeredFeatures.map((item, idx) => (
+            <div
+              key={idx}
+              className="p-5 bg-card border border-border/60 flex flex-col items-center text-center gap-3.5 group hover:border-primary/60 transition-all duration-300"
+            >
+              <div className="relative h-9 w-9 shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
+                <Image
+                  src={item.icon}
+                  alt={item.label}
+                  fill
+                  sizes="36px"
+                  className="object-contain dark:invert"
+                />
+              </div>
+              <span className="text-xs font-light text-foreground leading-snug">
+                {item.label}
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 3. Routine Accordion */}
+      <RoutineAccordion
+        sectionTag={t("sectionRoutineTag")}
+        sectionTitle={t("routineSectionTitle")}
+        items={routineSteps}
+        mediaSrc="/PersisQuartz-Red.png"
+      />
+
+      {/* 4. Dark Preventive Rules Box */}
+      <section className="container mx-auto px-6 sm:px-12 pt-20 sm:pt-24">
+        <div className="bg-neutral-950 text-neutral-200 border border-neutral-800 p-8 sm:p-14 lg:p-16">
+          <div className="max-w-2xl mb-12 sm:mb-16 space-y-2">
+            <span className="text-[10px] sm:text-xs uppercase tracking-widest text-primary block">
+              {t("sectionRulesTag")}
+            </span>
+            <h2 className="text-2xl sm:text-4xl font-light text-white tracking-tight">
+              {t("dosAndDontsTitle")}
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12">
+            <div className="flex gap-5 items-start p-6 bg-neutral-900/50 border border-neutral-800/80">
+              <div className="shrink-0 p-3 bg-neutral-900 border border-neutral-700/60 text-neutral-300">
+                <ChefHat className="h-5 w-5 text-primary" />
+              </div>
+              <div className="space-y-2">
+                <h4 className="text-sm sm:text-base font-medium text-white tracking-wide">
+                  {t("scratchProtTitle")}
+                </h4>
+                <p className="text-xs sm:text-sm font-light text-neutral-400 leading-relaxed">
+                  {t("scratchProtDesc")}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-5 items-start p-6 bg-neutral-900/50 border border-neutral-800/80">
+              <div className="shrink-0 p-3 bg-neutral-900 border border-neutral-700/60 text-neutral-300">
+                <ThermometerSun className="h-5 w-5 text-primary" />
+              </div>
+              <div className="space-y-2">
+                <h4 className="text-sm sm:text-base font-medium text-white tracking-wide">
+                  {t("heatProtTitle")}
+                </h4>
+                <p className="text-xs sm:text-sm font-light text-neutral-400 leading-relaxed">
+                  {t("heatProtDesc")}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-5 items-start p-6 bg-neutral-900/50 border border-neutral-800/80">
+              <div className="shrink-0 p-3 bg-neutral-900 border border-neutral-700/60 text-neutral-300">
+                <TestTubeDiagonal className="h-5 w-5 text-primary" />
+              </div>
+              <div className="space-y-2">
+                <h4 className="text-sm sm:text-base font-medium text-white tracking-wide">
+                  {t("chemicalsProtTitle")}
+                </h4>
+                <p className="text-xs sm:text-sm font-light text-neutral-400 leading-relaxed">
+                  {t("chemicalsProtDesc")}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-5 items-start p-6 bg-neutral-900/50 border border-neutral-800/80">
+              <div className="shrink-0 p-3 bg-neutral-900 border border-neutral-700/60 text-neutral-300">
+                <ShieldAlert className="h-5 w-5 text-primary" />
+              </div>
+              <div className="space-y-2">
+                <h4 className="text-sm sm:text-base font-medium text-white tracking-wide">
+                  {t("edgesProtTitle")}
+                </h4>
+                <p className="text-xs sm:text-sm font-light text-neutral-400 leading-relaxed">
+                  {t("edgesProtDesc")}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. CTA Section */}
+      <section className="container mx-auto px-6 sm:px-12 pt-16 sm:pt-20">
+        <div className="p-8 sm:p-12 bg-card border border-border/60 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="space-y-2 text-center md:text-start">
+            <h3 className="text-lg sm:text-xl font-medium text-foreground">
+              {t("ctaTitle")}
+            </h3>
+            <p className="text-xs sm:text-sm text-muted-foreground font-light max-w-xl">
+              {t("ctaDesc")}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4 shrink-0">
+            <Button
+              asChild
+              variant="outline"
+              size="lg"
+              className="rounded-none text-xs uppercase tracking-wider h-11 px-6 border-border hover:bg-muted"
+            >
+              <Link href="/catalogs" className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-muted-foreground" />
+                <span>{t("ctaCatalogBtn")}</span>
+              </Link>
+            </Button>
+
+            <Button
+              asChild
+              size="lg"
+              className="rounded-none text-xs uppercase tracking-wider h-11 px-6 bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              <Link href="/contact" className="flex items-center gap-2">
+                <span>{t("ctaContactBtn")}</span>
+                <ArrowUpRight className="h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
 </file>
 
 <file path="src/app/[locale]/catalogs/page.tsx">
@@ -1489,6 +1347,145 @@ export const ExcelProductImportControl: React.FC = () => {
         </div>
       )}
     </div>
+  );
+};
+</file>
+
+<file path="src/components/care/routine-accordion.tsx">
+"use client";
+
+import React, { useState } from "react";
+import Image from "next/image";
+import { CheckCheck, Droplets, ShieldCheck, ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const ICON_MAP: Record<string, React.ElementType> = {
+  CheckCheck: CheckCheck,
+  droplets: Droplets,
+  shieldCheck: ShieldCheck,
+};
+
+export interface StepItem {
+  id: string;
+  stepNumber: string;
+  title: string;
+  desc: string;
+  iconName: "CheckCheck" | "droplets" | "shieldCheck";
+}
+
+interface RoutineAccordionProps {
+  sectionTag: string;
+  sectionTitle: string;
+  items: StepItem[];
+  mediaSrc?: string;
+}
+
+export const RoutineAccordion: React.FC<RoutineAccordionProps> = ({
+  sectionTag,
+  sectionTitle,
+  items,
+  mediaSrc = "/PersisQuartz-Red.png",
+}) => {
+  const [openId, setOpenId] = useState<string>(items[0]?.id || "");
+
+  const toggleItem = (id: string) => {
+    setOpenId((prev) => (prev === id ? "" : id));
+  };
+
+  return (
+    <section className="container mx-auto px-6 sm:px-12 pt-20 sm:pt-24">
+      <div className="mb-10 space-y-1">
+        <span className="text-[10px] sm:text-xs uppercase tracking-widest text-primary block">
+          {sectionTag}
+        </span>
+        <h2 className="text-2xl sm:text-3xl font-light text-foreground">
+          {sectionTitle}
+        </h2>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+        <div className="lg:col-span-5 w-full">
+          <div className="relative aspect-[4/3] sm:aspect-square w-full bg-muted/40 border border-border/60 overflow-hidden">
+            <Image
+              src={mediaSrc}
+              alt="Persis Quartz Routine Care"
+              fill
+              sizes="(max-width: 1024px) 100vw, 40vw"
+              className="object-cover"
+            />
+            <div className="absolute inset-0 bg-black/10 pointer-events-none" />
+          </div>
+        </div>
+
+        <div className="lg:col-span-7 space-y-3">
+          {items.map((item) => {
+            const isOpen = openId === item.id;
+            const Icon = ICON_MAP[item.iconName] || Droplets;
+
+            return (
+              <div
+                key={item.id}
+                className={cn(
+                  "border bg-card transition-colors duration-200",
+                  isOpen
+                    ? "border-primary/60"
+                    : "border-border/60 hover:border-border",
+                )}
+              >
+                <button
+                  type="button"
+                  onClick={() => toggleItem(item.id)}
+                  className="w-full p-5 sm:p-6 flex items-center justify-between text-start gap-4 cursor-pointer focus:outline-none"
+                >
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div
+                      className={cn(
+                        "p-2.5 shrink-0 border transition-colors",
+                        isOpen
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-muted/50 text-primary border-border/50",
+                      )}
+                    >
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-muted-foreground uppercase tracking-widest block">
+                        {item.stepNumber}
+                      </span>
+                      <h3 className="text-sm sm:text-base font-medium text-foreground truncate">
+                        {item.title}
+                      </h3>
+                    </div>
+                  </div>
+
+                  <ChevronDown
+                    className={cn(
+                      "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200",
+                      isOpen && "rotate-180 text-primary",
+                    )}
+                  />
+                </button>
+
+                <div
+                  className={cn(
+                    "grid transition-all duration-200 ease-in-out px-5 sm:px-6",
+                    isOpen
+                      ? "grid-rows-[1fr] pb-6 opacity-100"
+                      : "grid-rows-[0fr] pb-0 opacity-0",
+                  )}
+                >
+                  <div className="overflow-hidden">
+                    <p className="text-xs sm:text-sm font-light text-muted-foreground leading-relaxed pt-2 border-t border-border/30">
+                      {item.desc}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
   );
 };
 </file>
@@ -8868,7 +8865,7 @@ export default async function HomePage({
     "title": "العناية والصيانة",
     "subtitle": "جمال يدوم بأبسط طرق التنظيف",
     "intro": "تتميز أسطح برسيس كوارتز بتركيبة هندسية كثيفة وغير مسامية توفر أعلى مستويات المتانة والمقاومة للبقع والخدوش دون الحاجة إلى تشميع أو صقل مستمر.",
-
+    "sectionDnaTag": "٠١ / الخصائص الهندسية",
     "featuresSectionTitle": "المعايير والخصائص الهندسية",
     "featScratch": "مقاوم للخدش والاهتراء",
     "featStain": "مقاوم ممتاز للبقع",
@@ -8876,28 +8873,27 @@ export default async function HomePage({
     "featImpermeable": "كثيف وغير منفذ للماء تماماً",
     "featAntibacterial": "سطح صحي ومضاد للبكتيريا",
     "featEasyClean": "سهولة التنظيف والعناية",
-
+    "sectionRoutineTag": "٠٢ / بروتوكول التنظيف",
     "routineSectionTitle": "إرشادات التنظيف الأساسية",
+    "step1Tag": "الخطوة الأولى • بعد التركيب",
     "firstCleanTitle": "التنظيف الأول بعد التركيب",
     "firstCleanDesc": "بعد الانتهاء من التركيب، نظف السطح بالكامل بالماء الدافئ وصابون لطيف وقطعة قماش ناعمة، ثم جفف السطح تماماً لإزالة أي غبار ناتج عن التركيب.",
+    "step2Tag": "الخطوة الثانية • العناية اليومية",
     "dailyCareTitle": "التنظيف الروتيني اليومي",
     "dailyCareDesc": "يكفي استخدام الماء الدافئ وبضع قطرات من منظف لطيف غير زيتي، مع المسح بقطعة قماش جافة لمنع تراكم الرواسب الكلسية.",
+    "step3Tag": "الخطوة الثالثة • معالجة البقع",
     "stainsTitle": "التعامل مع البقع الصعبة",
     "stainsDesc": "نظف انسكابات الشاي والقهوة والزيوت سريعاً. بالنسبة للبقع الجافة، استخدم منظفاً لطيفاً بحركات دائرية ناعمة، ثم اغسل بالماء وجفف.",
-
+    "sectionRulesTag": "٠٣ / قواعد الحماية",
     "dosAndDontsTitle": "قواعد الحماية والإرشادات الوقائية",
     "scratchProtTitle": "الحماية من الخدوش",
     "scratchProtDesc": "رغم صلابة الكوارتز العالية (درجة 7 موهس)، استخدم دائماً ألواح التقطيع وتجنب سحب الأدوات المعدنية الحادة مباشرة على السطح.",
-
     "heatProtTitle": "الحماية من الصدمات الحرارية",
     "heatProtDesc": "لا تضع الأواني والمقالي الساخنة مباشرة من الموقد أو الفرن على السطح، واحرص دائماً على استخدام القواعد الواقية من الحرارة.",
-
     "chemicalsProtTitle": "المواد الكيميائية الضارة والمذيبات",
     "chemicalsProtDesc": "تجنب ملامسة السطح للمذيبات القوية ومزيلات الطلاء والأحماض المركزة، واغسل السطح فوراً بالماء في حال حدوث تلامس غير مقصود.",
-
     "edgesProtTitle": "سلامة الحواف والزوايا",
     "edgesProtDesc": "تجنب توجيه صدمات قوية بالأدوات الثقيلة إلى الحواف المشطوفة وزوايا القص حول الأحواض.",
-
     "ctaTitle": "هل تحتاج إلى استشارة فنية أو مستندات؟",
     "ctaDesc": "فريق الدعم الفني والمعماري في برسيس كوارتز جاهز للإجابة على كافة استفساراتكم.",
     "ctaCatalogBtn": "تحميل الكتالوجات",
@@ -9076,6 +9072,47 @@ export default async function HomePage({
     "noCatalogsFound": "No catalogs found matching your search.",
     "resetFilters": "Reset Filters",
     "previewNotAvailable": "Preview is not available for this file."
+  },
+  "CareMaintenance": {
+    "metaTitle": "Care & Maintenance Guide | Persis Quartz",
+    "metaDescription": "Official guide for daily cleaning, stain removal, and maintaining the timeless beauty of Persis Quartz surfaces.",
+    "tagline": "PERSIS QUARTZ CARE GUIDE",
+    "title": "Care & Maintenance",
+    "subtitle": "Lasting Beauty with Minimal Maintenance",
+    "intro": "Persis Quartz surfaces are engineered with ultra-dense, non-porous physical properties offering superior resistance to everyday wear, stains, and impact. No sealing, waxing, or repolishing is required.",
+    "sectionDnaTag": "01 / Engineering DNA",
+    "featuresSectionTitle": "Engineered Properties",
+    "featScratch": "Scratch Resistant",
+    "featStain": "Stain Resistant",
+    "featImpact": "Impact Resistant",
+    "featImpermeable": "Non-Porous (Near Zero Absorption)",
+    "featAntibacterial": "Antibacterial & Hygienic",
+    "featEasyClean": "Easy to Clean",
+    "sectionRoutineTag": "02 / Routine Protocol",
+    "routineSectionTitle": "Cleaning Guidelines",
+    "step1Tag": "Step 01 • Post Installation",
+    "firstCleanTitle": "Initial Clean Post-Installation",
+    "firstCleanDesc": "After installation, clean the surface thoroughly with warm water, mild soap, and a soft microfiber cloth or non-abrasive sponge, then dry completely.",
+    "step2Tag": "Step 02 • Daily Maintenance",
+    "dailyCareTitle": "Daily Routine Cleaning",
+    "dailyCareDesc": "Simply use warm water and a few drops of mild neutral dishwashing liquid. Rinse thoroughly and wipe dry with a soft cloth to avoid hard water limescale.",
+    "step3Tag": "Step 03 • Stain Handling",
+    "stainsTitle": "Tackling Stubborn Stains",
+    "stainsDesc": "Clean spills like coffee, tea, and oils promptly. For dried residue, apply a mild non-abrasive cleaner in gentle circular motions, rinse with clean water, and dry.",
+    "sectionRulesTag": "03 / Preventive Rules",
+    "dosAndDontsTitle": "Protection & Preventive Measures",
+    "scratchProtTitle": "Scratch Protection",
+    "scratchProtDesc": "While quartz has a Mohs hardness of 7, always use cutting boards and avoid dragging heavy, sharp metallic utensils directly across the surface.",
+    "heatProtTitle": "Thermal Shock Prevention",
+    "heatProtDesc": "Never place boiling pots, hot skillets, or oven trays directly onto the quartz slab. Always use trivets or heat-resistant protective pads.",
+    "chemicalsProtTitle": "Harmful Chemicals & Solvents",
+    "chemicalsProtDesc": "Avoid contact with strong solvents, paint strippers, trichloroethane, concentrated hydrochloric acid, or high-alkaline degreasers. Rinse immediately if spilled.",
+    "edgesProtTitle": "Edge & Corner Protection",
+    "edgesProtDesc": "Avoid high-impact blows with heavy pots or equipment against fabricated edges, corners, and sink cutouts.",
+    "ctaTitle": "Need Technical Advice or Documentation?",
+    "ctaDesc": "Our technical and architectural support teams are always available to assist with your project specifications.",
+    "ctaCatalogBtn": "Download Catalogs",
+    "ctaContactBtn": "Contact Technical Support"
   }
 }
 </file>
@@ -9253,7 +9290,7 @@ export default async function HomePage({
     "title": "نگهداری و مراقبت",
     "subtitle": "درخشش ماندگار و اصالت ساختاری با ساده‌ترین اصول نظافت",
     "intro": "سطوح پرسیس کوارتز به لطف ساختار متراکم، فاقد خلل و فرج و پیوند مولکولی پیشرفته، بالاترین سطح مقاومت را در برابر لکه و سایش ارائه می‌دهند. این سطوح نیازی به پولیش مجدد، واکس یا سیلر ندارند و با رعایت چند نکته ساده، همیشه مانند روز اول می‌درخشند.",
-
+    "sectionDnaTag": "۰۱ / ویژگی‌های مهندسی",
     "featuresSectionTitle": "ویژگی‌های ساختاری و مهندسی",
     "featScratch": "مقاومت در برابر خط و خش",
     "featStain": "مقاومت در برابر لکه",
@@ -9261,28 +9298,27 @@ export default async function HomePage({
     "featImpermeable": "متراکم و نفوذناپذیر (جذب آب نزدیک به صفر)",
     "featAntibacterial": "سطح کاملاً آنتی‌باکتریال و بهداشتی",
     "featEasyClean": "نظافت و نگهداری آسان",
-
+    "sectionRoutineTag": "۰۲ / دستورالعمل نظافت",
     "routineSectionTitle": "دستورالعمل نظافت و نگهداری",
+    "step1Tag": "مرحله اول • پس از نصب",
     "firstCleanTitle": "اولین نظافت پس از نصب",
     "firstCleanDesc": "پس از اتمام نصب، تمام سطح را با آب گرم، شوینده ملایم و یک دستمال مایکروفایبر یا اسفنج غیرساینده تمیز کرده و سپس کاملاً خشک نمایید تا ذرات و گردوغبار نصبی پاک شوند.",
+    "step2Tag": "مرحله دوم • نگهداری روزمره",
     "dailyCareTitle": "نظافت و شستشوی روزمره",
     "dailyCareDesc": "برای پاکسازی روزانه تنها مقداری آب گرم و چند قطره مایع شوینده ملایم (فاقد چربی یا روغن‌های گیاهی) کافی است. جهت جلوگیری از تشکیل رسوبات آهکی آب، سطح را پس از شستشو با دستمال خشک کنید.",
+    "step3Tag": "مرحله سوم • رفع لکه‌ها",
     "stainsTitle": "مقابله با لکه‌های سخت و خشک‌شده",
     "stainsDesc": "لکه‌های چای، قهوه، سرکه یا روغن را در سریع‌ترین زمان پاک کنید. برای لکه‌های سرسخت، از یک شوینده استاندارد غیرساینده با حرکات ملایم دایره‌ای استفاده نموده و سپس سطح را آبکشی و خشک نمایید.",
-
+    "sectionRulesTag": "۰۳ / اصول پیشگیرانه",
     "dosAndDontsTitle": "راهنمای محافظت و مراقبت‌های ویژه",
     "scratchProtTitle": "محافظت در برابر سایش و خط",
     "scratchProtDesc": "اگرچه کوارتز با درجه سختی ۷ موهس از سخت‌ترین کانی‌هاست، همواره از تخته برش آشپزخانه استفاده کنید و از کشیدن مستقیم تیغه‌ها و وسایل بسیار سنگین و تیز روی آن بپرهیزید.",
-
     "heatProtTitle": "محافظت در برابر شوک حرارتی",
     "heatProtDesc": "از قرار دادن مستقیم قابلمه، ماهیتابه یا ظروف داغی که از روی شعله یا فر برداشته شده‌اند خودداری فرمایید. همواره از زیرقابلمه‌ای یا پدهای محافظ حرارتی استفاده کنید.",
-
     "chemicalsProtTitle": "مواد شیمیایی آسیب‌رسان و حلال‌ها",
     "chemicalsProtDesc": "از تماس سطح با حلال‌های صنعتی قوی، تینر، استون غلیظ، رنگ‌برها، اسید هیدروفلوئوریک و ترکیبات تری‌کلرواتان و جوهر نمک غلیظ خودداری کنید. در صورت تماس تصادفی، فوراً با آب فراوان شستشو دهید.",
-
     "edgesProtTitle": "مراقبت از سلامت لبه‌ها و گوشه‌ها",
     "edgesProtDesc": "از وارد آوردن ضربه‌های ناگهانی و سنگین با اجسام فلزی یا ابزار سنگین به لبه‌های ابزارخورده، پخ‌ها و گوشه‌های برش‌خورده دور سینک و کانترتاپ پرهیز نمایید.",
-
     "ctaTitle": "نیاز به مشاوره فنی یا دریافت مستندات دارید؟",
     "ctaDesc": "تیم کارشناسان فنی پرسیس کوارتز آماده پاسخگویی و ارائه کاتالوگ‌های تخصصی به شما هستند.",
     "ctaCatalogBtn": "مشاهده و دانلود کاتالوگ‌ها",

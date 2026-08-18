@@ -1,3 +1,4 @@
+import { cache } from "react";
 import "server-only";
 import { getPayload } from "payload";
 import configPromise from "@/payload.config";
@@ -16,37 +17,39 @@ export interface CatalogItem {
   status: "published" | "draft";
 }
 
-export async function getGroupedCatalogsService(
-  locale: "fa" | "en" | "ar",
-): Promise<Record<number, CatalogItem[]>> {
-  try {
-    const payload = await getPayload({ config: configPromise });
+export const getGroupedCatalogsService = cache(
+  async (
+    locale: "fa" | "en" | "ar",
+  ): Promise<Record<number, CatalogItem[]>> => {
+    try {
+      const payload = await getPayload({ config: configPromise });
 
-    const response = await payload.find({
-      collection: "catalogs",
-      locale,
-      limit: 100,
-      where: {
-        status: { equals: "published" },
-      },
-      sort: "-year",
-      depth: 2,
-    });
+      const response = await payload.find({
+        collection: "catalogs",
+        locale,
+        limit: 100,
+        where: {
+          status: { equals: "published" },
+        },
+        sort: "-year",
+        depth: 2,
+      });
 
-    const docs = (response.docs as unknown as CatalogItem[]) || [];
+      const docs = (response.docs as unknown as CatalogItem[]) || [];
 
-    // گروه بندی سالیانه
-    return docs.reduce(
-      (acc, catalog) => {
-        const year = catalog.year || new Date().getFullYear();
-        if (!acc[year]) acc[year] = [];
-        acc[year].push(catalog);
-        return acc;
-      },
-      {} as Record<number, CatalogItem[]>,
-    );
-  } catch (error) {
-    console.error("Error fetching grouped catalogs:", error);
-    return {};
-  }
-}
+      // گروه بندی سالیانه
+      return docs.reduce(
+        (acc, catalog) => {
+          const year = catalog.year || new Date().getFullYear();
+          if (!acc[year]) acc[year] = [];
+          acc[year].push(catalog);
+          return acc;
+        },
+        {} as Record<number, CatalogItem[]>,
+      );
+    } catch (error) {
+      console.error("Error fetching grouped catalogs:", error);
+      return {};
+    }
+  },
+);
