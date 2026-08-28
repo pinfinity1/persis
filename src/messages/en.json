@@ -166,7 +166,15 @@
     "searchPlaceholder": "Search catalogs...",
     "noCatalogsFound": "No catalogs found matching your search.",
     "resetFilters": "Reset Filters",
-    "previewNotAvailable": "Preview is not available for this file."
+    "previewNotAvailable": "Preview is not available for this file.",
+    "toc": "Index",
+    "pages": "Pages",
+    "prev": "Prev",
+    "next": "Next",
+    "loadingPdf": "Loading catalog...",
+    "pdfError": "Failed to load catalog document.",
+    "shortcutsHint": "Shortcuts: Arrow keys (Navigate) • +/- (Zoom)",
+    "reset": "Reset"
   },
   "CareMaintenance": {
     "metaTitle": "Care & Maintenance Guide | Persis Quartz",
