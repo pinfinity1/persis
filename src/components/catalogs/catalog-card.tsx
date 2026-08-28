@@ -2,8 +2,9 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
-import { Download, Eye, FileText } from "lucide-react";
+import { Download, Eye, FileText, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,6 +14,15 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import type { CatalogItem } from "@/services/catalog.service";
+
+const PdfViewer = dynamic(() => import("./pdf-viewer-studio"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex flex-col items-center justify-center h-full gap-3 text-xs font-mono text-muted-foreground p-12">
+      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+    </div>
+  ),
+});
 
 const TYPE_LABELS: Record<string, string> = {
   full_catalog: "Full Catalog",
@@ -56,7 +66,7 @@ export const CatalogCard: React.FC<{ catalog: CatalogItem }> = ({
   return (
     <>
       <div className="group flex flex-row sm:flex-col bg-card border border-border/60 hover:border-primary/80 transition-all duration-300 overflow-hidden h-36 sm:h-auto select-none">
-        {/* کاور */}
+        {/* کاور کاتالوگ */}
         <div className="relative w-28 sm:w-full shrink-0 sm:aspect-[4/3] overflow-hidden bg-muted/40 flex items-center justify-center">
           <Image
             src={coverUrl}
@@ -113,9 +123,9 @@ export const CatalogCard: React.FC<{ catalog: CatalogItem }> = ({
         </div>
       </div>
 
-      {/* مدال پیش‌نمایش */}
+      {/* مدال پیش‌نمایش کاتالوگ */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="sm:max-w-5xl h-[85vh] flex flex-col p-4 sm:p-6 rounded-none bg-background">
+        <DialogContent className="sm:max-w-5xl h-[88vh] flex flex-col p-4 sm:p-6 rounded-none bg-background">
           <DialogHeader className="pb-3 border-b border-border/40 shrink-0">
             <div className="flex items-center gap-2">
               <FileText className="h-4 w-4 text-primary shrink-0" />
@@ -129,13 +139,10 @@ export const CatalogCard: React.FC<{ catalog: CatalogItem }> = ({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex-1 w-full h-full bg-muted/20 border border-border/40 overflow-hidden relative mt-2">
-            {pdfUrl ? (
-              <iframe
-                src={`${pdfUrl}#toolbar=1&navpanes=0`}
-                className="w-full h-full border-0"
-                title={catalog.title}
-              />
+          {/* محفظه اختصاصی رندر PDF با رویکرد بهینه و Lazy Loading */}
+          <div className="flex-1 w-full h-full bg-muted/10 border border-border/40 overflow-hidden relative mt-2">
+            {isPreviewOpen && pdfUrl ? (
+              <PdfViewer url={pdfUrl} />
             ) : (
               <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
                 {t("previewNotAvailable")}
