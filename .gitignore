@@ -46,4 +46,6 @@ public/media/*
 media/*
 !**/media/.gitkeep
 
+
+#repomix
 repomix-output.xml
