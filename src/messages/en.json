@@ -232,5 +232,15 @@
     "craftsmanshipTag": "Design & Inspiration",
     "craftsmanshipTitle": "Inspired by Nature, Crafted for Life",
     "craftsmanshipDesc": "Every Persis Quartz slab reflects natural majesty, precision-engineered for modern living. From dramatic Calacatta veining to minimal solid tones, our collections elevate residential and commercial environments. We perceive stone not as a material, but as an architectural canvas."
+  },
+  "Dealers": {
+    "metaTitle": "Dealers & Showrooms | Persis Quartz",
+    "metaDescription": "Find official authorized distributors and exclusive showrooms of Persis Quartz.",
+    "filterTag": "Select Province / State",
+    "allProvinces": "All Regions",
+    "searchProvince": "Search region...",
+    "noResults": "No regions found.",
+    "viewOnMap": "View on Map",
+    "noDealersFound": "No active dealers found in this region."
   }
 }

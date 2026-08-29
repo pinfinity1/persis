@@ -68,6 +68,8 @@ src/
         page.tsx
       catalogs/
         page.tsx
+      dealers/
+        page.tsx
       products/
         [slug]/
           page.tsx
@@ -81,9 +83,13 @@ src/
       admin/
         download-category-template/
           route.ts
+        download-dealer-template/
+          route.ts
         download-product-template/
           route.ts
         import-categories/
+          route.ts
+        import-dealers/
           route.ts
         import-products/
           route.ts
@@ -92,11 +98,16 @@ src/
   components/
     admin/
       ExcelCategoryImportControl.tsx
+      ExcelDealerImportControl.tsx
       ExcelProductImportControl.tsx
     care/
       routine-accordion.tsx
     catalogs/
       catalog-card.tsx
+      pdf-viewer-studio.tsx
+    dealers/
+      dealer-card.tsx
+      dealer-filter-client.tsx
     home/
       brand-intro.tsx
       hero-banner.tsx
@@ -129,9 +140,12 @@ src/
     request.ts
     routing.ts
   lib/
+    constants/
+      provinces.ts
     validations/
       contact.ts
       excel-category-import.ts
+      excel-dealer-import.ts
       excel-product-import.ts
     catalog-utils.ts
     utils.ts
@@ -144,6 +158,7 @@ src/
       Catalogs.ts
       Categories.ts
       Colors.ts
+      Dealers.ts
       Dimensions.ts
       Finishes.ts
       HeroBanner.ts
@@ -157,6 +172,7 @@ src/
   services/
     about.service.ts
     catalog.service.ts
+    dealer.service.ts
     hero.service.ts
     product.service.ts
   types/
@@ -175,6 +191,1016 @@ tsconfig.json
 
 <files>
 This section contains the contents of the repository's files.
+
+<file path="src/app/[locale]/dealers/page.tsx">
+import React, { Suspense } from "react";
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+import {
+  getDealersService,
+  getActiveProvincesService,
+} from "@/services/dealer.service";
+import { DealerFilterClient } from "@/components/dealers/dealer-filter-client";
+import { DealerCard } from "@/components/dealers/dealer-card";
+import SkeletonLoader from "@/components/products/skeleton-loader";
+
+interface PageProps {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "Dealers" });
+
+  return {
+    title: t("metaTitle"),
+    description: t("metaDescription"),
+    openGraph: {
+      title: t("metaTitle"),
+      description: t("metaDescription"),
+      images: ["/PersisQuartz-Red.png"],
+    },
+  };
+}
+
+export default async function DealersPage({ params, searchParams }: PageProps) {
+  const { locale } = await params;
+  const sParams = await searchParams;
+  const currentLocale = locale as "fa" | "en" | "ar";
+
+  const selectedProvince =
+    typeof sParams.province === "string" ? sParams.province : undefined;
+
+  const [dealers, provinces, t] = await Promise.all([
+    getDealersService({ locale: currentLocale, province: selectedProvince }),
+    getActiveProvincesService(currentLocale),
+    getTranslations({ locale: currentLocale, namespace: "Dealers" }),
+  ]);
+
+  return (
+    <main className="container mx-auto px-4 sm:px-12 py-24 sm:py-28 min-h-screen space-y-12 select-none">
+      <div
+        dir="ltr"
+        className="relative pt-4 pb-2 overflow-hidden border-b border-border/30"
+      >
+        <h1 className="sr-only">Dealers & Showrooms</h1>
+        <span className="text-4xl sm:text-7xl lg:text-9xl font-black text-foreground/[0.03] uppercase tracking-tighter leading-none block">
+          SHOWROOMS
+        </span>
+        <div className="absolute bottom-4 start-0 z-10 flex items-center gap-3">
+          <span className="h-px w-6 bg-primary" />
+          <span className="text-[10px] sm:text-[11px] font-mono tracking-[0.25em] text-primary uppercase">
+            Official Sales Network & Dealers
+          </span>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between gap-4 flex-wrap pb-2 border-b border-border/20">
+        <span className="text-xs uppercase tracking-widest text-primary font-mono block">
+          {t("filterTag")}
+        </span>
+        {provinces.length > 0 && <DealerFilterClient provinces={provinces} />}
+      </div>
+
+      <Suspense fallback={<SkeletonLoader />}>
+        {dealers.length > 0 ? (
+          <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {dealers.map((dealer) => (
+              <DealerCard key={dealer.id} dealer={dealer} />
+            ))}
+          </section>
+        ) : (
+          <div className="p-12 text-center bg-card border border-border/40 space-y-2">
+            <p className="text-sm text-foreground font-medium">
+              {t("noDealersFound")}
+            </p>
+          </div>
+        )}
+      </Suspense>
+    </main>
+  );
+}
+</file>
+
+<file path="src/app/api/admin/download-dealer-template/route.ts">
+import { NextResponse } from "next/server";
+import * as XLSX from "xlsx";
+
+export async function GET() {
+  const sampleData = [
+    {
+      province: "تهران",
+      city_fa: "تهران",
+      city_en: "Tehran",
+      city_ar: "طهران",
+      title_fa: "شوروم مرکزی پرسیس (فرمانیه)",
+      title_en: "Persis Central Showroom (Farmanieh)",
+      title_ar: "صالة عرض برسيس المركزية (فرمانية)",
+      address_fa: "تهران، خیابان فرمانیه، نرسیده به دیباجی، پلاک ۲۰",
+      address_en: "No. 20, Farmanieh Ave, Before Dibaji St, Tehran, Iran",
+      address_ar: "طهران، شارع فرمانية، قبل شارع ديباجي، رقم ۲۰",
+      phone: "021-22889900",
+      order: 1,
+    },
+    {
+      province: "اصفهان",
+      city_fa: "اصفهان",
+      city_en: "Isfahan",
+      city_ar: "أصفهان",
+      title_fa: "عاملیت مجاز اصفهان (سنگ سپاهان)",
+      title_en: "Isfahan Authorized Center (Sepahan Stone)",
+      title_ar: "وكالة أصفهان المعتمدة (حجر سباهان)",
+      address_fa: "اصفهان، خیابان شیخ کلینی، مجتمع مروارید، واحد ۴",
+      address_en: "Unit 4, Morvarid Complex, Sheikh Koleini St, Isfahan, Iran",
+      address_ar: "أصفهان، شارع الشيخ كليني، مجمع مرواريد، شقة ۴",
+      phone: "031-36654321",
+      order: 2,
+    },
+  ];
+
+  const guideData = [
+    {
+      "نام ستون (Header)": "province",
+      وضعیت: "اجباری",
+      توضیح: "نام استان یا اسلاگ استان (مثلاً: تهران یا اصفهان).",
+    },
+    {
+      "نام ستون (Header)": "city_fa / city_en / city_ar",
+      وضعیت: "اجباری",
+      توضیح: "نام شهر به ۳ زبان.",
+    },
+    {
+      "نام ستون (Header)": "title_fa / title_en / title_ar",
+      وضعیت: "اجباری",
+      توضیح: "نام عاملیت یا شوروم به ۳ زبان.",
+    },
+    {
+      "نام ستون (Header)": "address_fa / address_en / address_ar",
+      وضعیت: "اجباری",
+      توضیح: "آدرس کامل فیزیکی به ۳ زبان.",
+    },
+    {
+      "نام ستون (Header)": "phone",
+      وضعیت: "اجباری",
+      توضیح: "شماره تماس دفتر یا عاملیت.",
+    },
+    {
+      "نام ستون (Header)": "order",
+      وضعیت: "اختیاری",
+      توضیح: "ترتیب اولویت نمایش.",
+    },
+  ];
+
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(
+    workbook,
+    XLSX.utils.json_to_sheet(sampleData),
+    "Dealers Template",
+  );
+  XLSX.utils.book_append_sheet(
+    workbook,
+    XLSX.utils.json_to_sheet(guideData),
+    "راهنمای تکمیل (Guide)",
+  );
+
+  const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
+
+  return new NextResponse(buffer, {
+    status: 200,
+    headers: {
+      "Content-Type":
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "Content-Disposition":
+        'attachment; filename="PersisQuartz_Dealers_Template.xlsx"',
+    },
+  });
+}
+</file>
+
+<file path="src/app/api/admin/import-dealers/route.ts">
+import { NextRequest, NextResponse } from "next/server";
+import { getPayload } from "payload";
+import configPromise from "@/payload.config";
+import * as XLSX from "xlsx";
+import { excelDealerRowSchema } from "@/lib/validations/excel-dealer-import";
+import { normalizeProvinceToSlug } from "@/lib/constants/provinces";
+
+export async function POST(req: NextRequest) {
+  try {
+    const payload = await getPayload({ config: configPromise });
+
+    const { user } = await payload.auth({ headers: req.headers });
+    if (!user) {
+      return NextResponse.json({ error: "عدم دسترسی!" }, { status: 401 });
+    }
+
+    const formData = await req.formData();
+    const file = formData.get("file") as File | null;
+    if (!file) {
+      return NextResponse.json({ error: "فایلی دریافت نشد." }, { status: 400 });
+    }
+
+    const arrayBuffer = await file.arrayBuffer();
+    const workbook = XLSX.read(arrayBuffer, { type: "array" });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const rawData = XLSX.utils.sheet_to_json<Record<string, any>>(worksheet, {
+      defval: "",
+    });
+
+    let createdCount = 0;
+    let updatedCount = 0;
+    const errors: string[] = [];
+
+    for (let index = 0; index < rawData.length; index++) {
+      const rowNum = index + 2;
+      const row = rawData[index];
+
+      if (!row.province && !row.title_fa && !row.phone) continue;
+
+      const parseResult = excelDealerRowSchema.safeParse(row);
+      if (!parseResult.success) {
+        const errorMsgs = parseResult.error.errors
+          .map((e) => e.message)
+          .join(" | ");
+        errors.push(`ردیف ${rowNum}: ${errorMsgs}`);
+        continue;
+      }
+
+      const item = parseResult.data;
+      const provinceSlug = normalizeProvinceToSlug(item.province);
+
+      const existing = await payload.find({
+        collection: "dealers" as any,
+        where: { phone: { equals: item.phone } },
+        limit: 1,
+      });
+
+      const commonData = {
+        province: provinceSlug,
+        phone: item.phone,
+        order: item.order,
+        status: "published" as const,
+      };
+
+      if (existing.docs.length > 0) {
+        const dealerId = existing.docs[0].id;
+        await payload.update({
+          collection: "dealers" as any,
+          id: dealerId,
+          locale: "fa",
+          data: {
+            ...commonData,
+            title: item.title_fa,
+            city: item.city_fa,
+            address: item.address_fa,
+          },
+        });
+        await payload.update({
+          collection: "dealers" as any,
+          id: dealerId,
+          locale: "en",
+          data: {
+            title: item.title_en,
+            city: item.city_en,
+            address: item.address_en,
+          },
+        });
+        await payload.update({
+          collection: "dealers" as any,
+          id: dealerId,
+          locale: "ar",
+          data: {
+            title: item.title_ar,
+            city: item.city_ar,
+            address: item.address_ar,
+          },
+        });
+        updatedCount++;
+      } else {
+        const createdDoc = await payload.create({
+          collection: "dealers" as any,
+          locale: "fa",
+          data: {
+            ...commonData,
+            title: item.title_fa,
+            city: item.city_fa,
+            address: item.address_fa,
+          },
+        });
+        await payload.update({
+          collection: "dealers" as any,
+          id: createdDoc.id,
+          locale: "en",
+          data: {
+            title: item.title_en,
+            city: item.city_en,
+            address: item.address_en,
+          },
+        });
+        await payload.update({
+          collection: "dealers" as any,
+          id: createdDoc.id,
+          locale: "ar",
+          data: {
+            title: item.title_ar,
+            city: item.city_ar,
+            address: item.address_ar,
+          },
+        });
+        createdCount++;
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      summary: {
+        createdCount,
+        updatedCount,
+        failedCount: errors.length,
+        errors,
+      },
+    });
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: "خطا در پردازش فایل", details: error.message },
+      { status: 500 },
+    );
+  }
+}
+</file>
+
+<file path="src/components/admin/ExcelDealerImportControl.tsx">
+"use client";
+
+import React, { useState } from "react";
+
+export const ExcelDealerImportControl: React.FC = () => {
+  const [loading, setLoading] = useState(false);
+  const [report, setReport] = useState<any>(null);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setLoading(true);
+    setReport(null);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/admin/import-dealers", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setReport(data.summary);
+      } else {
+        alert(data.error || "خطا در آپلود فایل اکسل نمایندگی‌ها");
+      }
+    } catch {
+      alert("ارتباط با سرور برقرار نشد.");
+    } finally {
+      setLoading(false);
+      e.target.value = "";
+    }
+  };
+
+  return (
+    <div
+      style={{
+        padding: "16px",
+        marginBottom: "20px",
+        background: "#18181b",
+        borderRadius: "8px",
+        border: "1px solid #27272a",
+        color: "#fff",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          gap: "12px",
+          alignItems: "center",
+          flexWrap: "wrap",
+        }}
+      >
+        <a
+          href="/api/admin/download-dealer-template"
+          download
+          style={{
+            padding: "8px 16px",
+            fontSize: "12px",
+            background: "#27272a",
+            color: "#fff",
+            borderRadius: "4px",
+            textDecoration: "none",
+            border: "1px solid #3f3f46",
+          }}
+        >
+          📥 دانلود قالب اکسل نمایندگی‌ها (FA/EN/AR)
+        </a>
+
+        <label
+          style={{
+            padding: "8px 16px",
+            fontSize: "12px",
+            background: "#9b0737",
+            color: "#fff",
+            borderRadius: "4px",
+            cursor: loading ? "wait" : "pointer",
+            fontWeight: "500",
+          }}
+        >
+          {loading
+            ? "در حال پردازش داده‌ها..."
+            : "📤 آپلود اکسل و بروزرسانی نمایندگی‌ها"}
+          <input
+            type="file"
+            accept=".xlsx, .csv"
+            onChange={handleFileUpload}
+            disabled={loading}
+            style={{ display: "none" }}
+          />
+        </label>
+      </div>
+
+      {report && (
+        <div
+          style={{
+            marginTop: "12px",
+            fontSize: "12px",
+            padding: "10px",
+            background: "#09090b",
+            borderRadius: "4px",
+          }}
+        >
+          <p style={{ color: "#22c55e", margin: "2px 0" }}>
+            ✅ نمایندگی‌های جدید: {report.createdCount} مورد
+          </p>
+          <p style={{ color: "#3b82f6", margin: "2px 0" }}>
+            🔄 نمایندگی‌های بروزرسانی‌شده: {report.updatedCount} مورد
+          </p>
+          {report.failedCount > 0 && (
+            <div style={{ color: "#ef4444", marginTop: "6px" }}>
+              <p>⚠️ موارد نادیده گرفته شده ({report.failedCount} مورد):</p>
+              <ul style={{ paddingRight: "16px", margin: "4px 0" }}>
+                {report.errors.map((err: string, i: number) => (
+                  <li key={i}>{err}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+</file>
+
+<file path="src/components/dealers/dealer-card.tsx">
+import React from "react";
+import { MapPin, PhoneCall } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import type { DealerItem } from "@/services/dealer.service";
+
+interface DealerCardProps {
+  dealer: DealerItem;
+}
+
+export function DealerCard({ dealer }: DealerCardProps) {
+  return (
+    <div className="group flex flex-col justify-between h-full p-6 sm:p-8 bg-card/40 hover:bg-card border border-border/40 hover:border-primary/50 transition-all duration-300">
+      <div>
+        <div className="flex items-center gap-2.5 mb-3">
+          <span className="h-px w-4 bg-primary transition-all duration-300 group-hover:w-7" />
+          <span className="text-[11px] font-medium uppercase tracking-widest text-primary">
+            {dealer.city}
+          </span>
+        </div>
+
+        <h3 className="text-lg sm:text-xl font-medium text-foreground leading-snug min-h-[3.25rem] flex items-start mb-3">
+          {dealer.title}
+        </h3>
+
+        <p className="flex items-start gap-2.5 text-xs sm:text-sm text-muted-foreground font-light leading-relaxed min-h-[3rem]">
+          <MapPin className="h-4 w-4 text-primary/70 shrink-0 mt-0.5" />
+          <span>{dealer.address}</span>
+        </p>
+      </div>
+
+      <div className="pt-6 mt-6 border-t border-border/20">
+        <Button
+          asChild
+          variant="outline"
+          className="w-full sm:w-auto h-11 px-6 rounded-none border-border/60 group-hover:border-primary group-hover:bg-primary group-hover:text-primary-foreground text-foreground text-xs tracking-widest uppercase transition-all duration-300"
+        >
+          <a
+            href={`tel:${dealer.phone}`}
+            className="flex items-center justify-center gap-2.5"
+          >
+            <PhoneCall className="h-3.5 w-3.5" />
+            <span dir="ltr" className="text-sm tracking-wider">
+              {dealer.phone}
+            </span>
+          </a>
+        </Button>
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="src/components/dealers/dealer-filter-client.tsx">
+"use client";
+
+import React, { useState, useRef, useEffect, useTransition } from "react";
+import { usePathname, useRouter } from "@/i18n/routing";
+import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { Search, MapPin, ChevronDown, Check } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import type { ProvinceOption } from "@/services/dealer.service";
+
+interface DealerFilterProps {
+  provinces: ProvinceOption[];
+}
+
+export const DealerFilterClient: React.FC<DealerFilterProps> = ({
+  provinces,
+}) => {
+  const t = useTranslations("Dealers");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
+
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const currentProvinceSlug = searchParams.get("province") || "all";
+  const selectedProvince = provinces.find(
+    (p) => p.slug === currentProvinceSlug,
+  );
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSelect = (slug: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (slug === "all") {
+      params.delete("province");
+    } else {
+      params.set("province", slug);
+    }
+
+    startTransition(() => {
+      router.push(`${pathname}?${params.toString()}`);
+    });
+    setIsOpen(false);
+    setSearchQuery("");
+  };
+
+  const filteredProvinces = provinces.filter((p) =>
+    p.label.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
+
+  return (
+    <div
+      className={`relative w-full sm:w-60 ${isPending ? "opacity-50" : ""}`}
+      ref={dropdownRef}
+    >
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between pb-2 border-b border-border/60 hover:border-primary transition-colors outline-none group cursor-pointer"
+      >
+        <div className="flex items-center gap-2 overflow-hidden">
+          <MapPin className="h-4 w-4 text-primary shrink-0 transition-transform group-hover:-translate-y-0.5" />
+          <span className="text-sm font-light text-foreground truncate">
+            {currentProvinceSlug === "all"
+              ? t("allProvinces")
+              : selectedProvince?.label || currentProvinceSlug}
+          </span>
+        </div>
+        <ChevronDown
+          className={`h-4 w-4 text-muted-foreground transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {isOpen && (
+        <div className="absolute top-full start-0 w-full mt-1.5 bg-background border border-border/50 shadow-2xl z-50 rounded-none overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+          <div className="p-1.5 border-b border-border/30 bg-muted/20">
+            <div className="relative flex items-center">
+              <Search className="absolute start-2.5 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder={t("searchProvince")}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-8 ps-8 border-none shadow-none focus-visible:ring-0 text-xs bg-transparent rounded-none"
+              />
+            </div>
+          </div>
+
+          <ul className="max-h-56 overflow-y-auto py-1 scrollbar-none">
+            <li
+              onClick={() => handleSelect("all")}
+              className={`px-4 py-2.5 text-xs cursor-pointer flex items-center justify-between transition-colors ${
+                currentProvinceSlug === "all"
+                  ? "bg-primary/10 text-primary font-medium"
+                  : "hover:bg-muted text-foreground"
+              }`}
+            >
+              <span>{t("allProvinces")}</span>
+              {currentProvinceSlug === "all" && (
+                <Check className="h-3.5 w-3.5" />
+              )}
+            </li>
+
+            {filteredProvinces.length === 0 ? (
+              <li className="px-4 py-3 text-xs text-muted-foreground text-center">
+                {t("noResults")}
+              </li>
+            ) : (
+              filteredProvinces.map((prov) => (
+                <li
+                  key={prov.slug}
+                  onClick={() => handleSelect(prov.slug)}
+                  className={`px-4 py-2.5 text-xs cursor-pointer flex items-center justify-between transition-colors ${
+                    currentProvinceSlug === prov.slug
+                      ? "bg-primary/10 text-primary font-medium"
+                      : "hover:bg-muted text-foreground"
+                  }`}
+                >
+                  <span>{prov.label}</span>
+                  {currentProvinceSlug === prov.slug && (
+                    <Check className="h-3.5 w-3.5" />
+                  )}
+                </li>
+              ))
+            )}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};
+</file>
+
+<file path="src/lib/constants/provinces.ts">
+export interface ProvinceDefinition {
+  slug: string;
+  fa: string;
+  en: string;
+  ar: string;
+}
+
+export const IRAN_PROVINCES: ProvinceDefinition[] = [
+  { slug: "alborz", fa: "البرز", en: "Alborz", ar: "ألبرز" },
+  { slug: "ardabil", fa: "اردبیل", en: "Ardabil", ar: "أردبيل" },
+  {
+    slug: "azerbaijan-east",
+    fa: "آذربایجان شرقی",
+    en: "East Azerbaijan",
+    ar: "أذربيجان الشرقية",
+  },
+  {
+    slug: "azerbaijan-west",
+    fa: "آذربایجان غربی",
+    en: "West Azerbaijan",
+    ar: "أذربيجان الغربية",
+  },
+  { slug: "bushehr", fa: "بوشهر", en: "Bushehr", ar: "بوشهر" },
+  {
+    slug: "chaharmahal-and-bakhtiari",
+    fa: "چهارمحال و بختیاری",
+    en: "Chaharmahal and Bakhtiari",
+    ar: "تشهارمحال وبختياري",
+  },
+  { slug: "fars", fa: "فارس", en: "Fars", ar: "فارس" },
+  { slug: "gilan", fa: "گیلان", en: "Gilan", ar: "جيلان" },
+  { slug: "golestan", fa: "گلستان", en: "Golestan", ar: "جلستان" },
+  { slug: "hamadan", fa: "همدان", en: "Hamadan", ar: "همدان" },
+  { slug: "hormozgan", fa: "هرمزگان", en: "Hormozgan", ar: "هرمزغان" },
+  { slug: "ilam", fa: "ایلام", en: "Ilam", ar: "إيلام" },
+  { slug: "isfahan", fa: "اصفهان", en: "Isfahan", ar: "أصفهان" },
+  { slug: "kerman", fa: "کرمان", en: "Kerman", ar: "كرمان" },
+  { slug: "kermanshah", fa: "کرمانشاه", en: "Kermanshah", ar: "كرمانشاه" },
+  {
+    slug: "khorasan-north",
+    fa: "خراسان شمالی",
+    en: "North Khorasan",
+    ar: "خراسان الشمالية",
+  },
+  {
+    slug: "khorasan-razavi",
+    fa: "خراسان رضوی",
+    en: "Razavi Khorasan",
+    ar: "خراسان الرضوية",
+  },
+  {
+    slug: "khorasan-south",
+    fa: "خراسان جنوبی",
+    en: "South Khorasan",
+    ar: "خراسان الجنوبية",
+  },
+  { slug: "khuzestan", fa: "خوزستان", en: "Khuzestan", ar: "خوزستان" },
+  {
+    slug: "kohgiluyeh-and-boyer-ahmad",
+    fa: "کهگیلویه و بویراحمد",
+    en: "Kohgiluyeh and Boyer-Ahmad",
+    ar: "كهكيلويه وبوير أحمد",
+  },
+  { slug: "kurdistan", fa: "کردستان", en: "Kurdistan", ar: "كردستان" },
+  { slug: "lorestan", fa: "لرستان", en: "Lorestan", ar: "لرستان" },
+  { slug: "markazi", fa: "مرکزی", en: "Markazi", ar: "مركزي" },
+  { slug: "mazandaran", fa: "مازندران", en: "Mazandaran", ar: "مازندران" },
+  { slug: "qazvin", fa: "قزوین", en: "Qazvin", ar: "قزوين" },
+  { slug: "qom", fa: "قم", en: "Qom", ar: "قم" },
+  { slug: "semnan", fa: "سمنان", en: "Semnan", ar: "سمنان" },
+  {
+    slug: "sistan-and-baluchestan",
+    fa: "سیستان و بلوچستان",
+    en: "Sistan and Baluchestan",
+    ar: "سيستان وبلوشستان",
+  },
+  { slug: "tehran", fa: "تهران", en: "Tehran", ar: "طهران" },
+  { slug: "yazd", fa: "یزد", en: "Yazd", ar: "يزد" },
+  { slug: "zanjan", fa: "زنجان", en: "Zanjan", ar: "زنجان" },
+];
+
+export function normalizeProvinceToSlug(input: string): string {
+  const clean = input.trim().toLowerCase();
+  const match = IRAN_PROVINCES.find(
+    (p) =>
+      p.slug === clean ||
+      p.fa === input.trim() ||
+      p.en.toLowerCase() === clean ||
+      p.ar === input.trim(),
+  );
+  return match ? match.slug : clean;
+}
+
+export function getProvinceLabel(
+  slug: string,
+  locale: "fa" | "en" | "ar",
+): string {
+  const match = IRAN_PROVINCES.find((p) => p.slug === slug);
+  return match ? match[locale] || match.fa : slug;
+}
+</file>
+
+<file path="src/lib/validations/excel-dealer-import.ts">
+import { z } from "zod";
+
+export const excelDealerRowSchema = z.object({
+  province: z.preprocess(
+    (val) => String(val ?? "").trim(),
+    z.string().min(2, "استان الزامی است"),
+  ),
+  city_fa: z.preprocess(
+    (val) => String(val ?? "").trim(),
+    z.string().min(2, "شهر فارسی الزامی است"),
+  ),
+  city_en: z.preprocess(
+    (val) => String(val ?? "").trim(),
+    z.string().min(2, "شهر انگلیسی الزامی است"),
+  ),
+  city_ar: z.preprocess(
+    (val) => String(val ?? "").trim(),
+    z.string().min(2, "شهر عربی الزامی است"),
+  ),
+
+  title_fa: z.preprocess(
+    (val) => String(val ?? "").trim(),
+    z.string().min(2, "عنوان فارسی الزامی است"),
+  ),
+  title_en: z.preprocess(
+    (val) => String(val ?? "").trim(),
+    z.string().min(2, "عنوان انگلیسی الزامی است"),
+  ),
+  title_ar: z.preprocess(
+    (val) => String(val ?? "").trim(),
+    z.string().min(2, "عنوان عربی الزامی است"),
+  ),
+
+  address_fa: z.preprocess(
+    (val) => String(val ?? "").trim(),
+    z.string().min(5, "آدرس فارسی الزامی است"),
+  ),
+  address_en: z.preprocess(
+    (val) => String(val ?? "").trim(),
+    z.string().min(5, "آدرس انگلیسی الزامی است"),
+  ),
+  address_ar: z.preprocess(
+    (val) => String(val ?? "").trim(),
+    z.string().min(5, "آدرس عربی الزامی است"),
+  ),
+
+  phone: z.preprocess(
+    (val) => String(val ?? "").trim(),
+    z.string().min(5, "شماره تماس الزامی است"),
+  ),
+  order: z.preprocess((val) => {
+    const num = Number(val);
+    return isNaN(num) ? 0 : num;
+  }, z.number().default(0)),
+});
+
+export type ExcelDealerRow = z.infer<typeof excelDealerRowSchema>;
+</file>
+
+<file path="src/payload/collections/Dealers.ts">
+import type { CollectionConfig } from "payload";
+import { IRAN_PROVINCES } from "@/lib/constants/provinces";
+
+export const Dealers: CollectionConfig = {
+  slug: "dealers",
+  admin: {
+    useAsTitle: "title",
+    group: "Catalog",
+    defaultColumns: ["title", "province", "city", "phone"],
+    components: {
+      beforeListTable: [
+        "@/components/admin/ExcelDealerImportControl#ExcelDealerImportControl",
+      ],
+    },
+  },
+  access: {
+    read: () => true,
+  },
+  fields: [
+    {
+      name: "title",
+      type: "text",
+      required: true,
+      localized: true,
+    },
+    {
+      type: "row",
+      fields: [
+        {
+          name: "province",
+          type: "select",
+          required: true,
+          index: true,
+          options: IRAN_PROVINCES.map((p) => ({
+            label: `${p.fa} (${p.en})`,
+            value: p.slug,
+          })),
+          admin: { width: "50%" },
+        },
+        {
+          name: "city",
+          type: "text",
+          required: true,
+          localized: true,
+          admin: { width: "50%" },
+        },
+      ],
+    },
+    {
+      name: "address",
+      type: "textarea",
+      required: true,
+      localized: true,
+    },
+    {
+      type: "row",
+      fields: [
+        {
+          name: "phone",
+          type: "text",
+          required: true,
+          admin: { width: "50%" },
+        },
+        {
+          name: "order",
+          type: "number",
+          defaultValue: 0,
+          admin: { width: "50%" },
+        },
+      ],
+    },
+    {
+      name: "status",
+      type: "select",
+      defaultValue: "published",
+      options: [
+        { label: "منتشر شده (Published)", value: "published" },
+        { label: "پیش‌نویس (Draft)", value: "draft" },
+      ],
+    },
+  ],
+};
+</file>
+
+<file path="src/services/dealer.service.ts">
+import { cache } from "react";
+import "server-only";
+import { getPayload } from "payload";
+import configPromise from "@/payload.config";
+import { getProvinceLabel } from "@/lib/constants/provinces";
+
+export interface ProvinceOption {
+  slug: string;
+  label: string;
+}
+
+export interface DealerItem {
+  id: string;
+  title: string;
+  province: string;
+  city: string;
+  address: string;
+  phone: string;
+  order?: number;
+  status?: "published" | "draft";
+}
+
+export interface GetDealersParams {
+  locale: "fa" | "en" | "ar";
+  province?: string;
+}
+
+export const getDealersService = cache(
+  async ({
+    locale = "fa",
+    province,
+  }: GetDealersParams): Promise<DealerItem[]> => {
+    try {
+      const payload = await getPayload({ config: configPromise });
+      const where: Record<string, any> = {
+        status: { equals: "published" },
+      };
+
+      if (province && province !== "all") {
+        where.province = { equals: province };
+      }
+
+      const response = await payload.find({
+        collection: "dealers",
+        locale: (locale as "fa" | "en" | "ar") || "fa",
+        limit: 100,
+        where,
+        sort: "order",
+        depth: 0,
+      });
+
+      return (response.docs as unknown as DealerItem[]) || [];
+    } catch (error) {
+      console.error("Payload find error details in getDealersService:", error);
+      return [];
+    }
+  },
+);
+
+export const getActiveProvincesService = cache(
+  async (locale: "fa" | "en" | "ar" = "fa"): Promise<ProvinceOption[]> => {
+    try {
+      const payload = await getPayload({ config: configPromise });
+      const response = await payload.find({
+        collection: "dealers",
+        limit: 200,
+        where: { status: { equals: "published" } },
+        depth: 0,
+      });
+
+      const rawSlugs = response.docs
+        .map((doc: any) => doc.province)
+        .filter(Boolean);
+
+      const uniqueSlugs = Array.from(new Set(rawSlugs));
+
+      return uniqueSlugs.map((slug) => ({
+        slug,
+        label: getProvinceLabel(slug, locale),
+      }));
+    } catch (error) {
+      console.error("Payload find error in getActiveProvincesService:", error);
+      return [];
+    }
+  },
+);
+</file>
 
 <file path="docs/content.md">
 .۱
@@ -1701,158 +2727,6 @@ export const RoutineAccordion: React.FC<RoutineAccordionProps> = ({
         </div>
       </div>
     </section>
-  );
-};
-</file>
-
-<file path="src/components/catalogs/catalog-card.tsx">
-"use client";
-
-import React, { useState } from "react";
-import Image from "next/image";
-import { useTranslations } from "next-intl";
-import { Download, Eye, FileText } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import type { CatalogItem } from "@/services/catalog.service";
-
-const TYPE_LABELS: Record<string, string> = {
-  full_catalog: "Full Catalog",
-  technical: "Technical Specs",
-  collection: "Collection Brochure",
-  guide: "Care & Installation Guide",
-};
-
-export const CatalogCard: React.FC<{ catalog: CatalogItem }> = ({
-  catalog,
-}) => {
-  const t = useTranslations("Catalogs");
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-
-  const coverUrl =
-    typeof catalog.cover_image === "object" && catalog.cover_image?.url
-      ? catalog.cover_image.url
-      : typeof catalog.cover_image === "string" && catalog.cover_image
-        ? catalog.cover_image
-        : "/PersisQuartz-Red.png";
-
-  const pdfUrl =
-    typeof catalog.pdf_file === "object" && catalog.pdf_file?.url
-      ? catalog.pdf_file.url
-      : typeof catalog.pdf_file === "string"
-        ? catalog.pdf_file
-        : "";
-
-  const handleDownload = () => {
-    if (!pdfUrl) return;
-    const link = document.createElement("a");
-    link.href = pdfUrl;
-    link.download = `${catalog.slug || "catalog"}.pdf`;
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  return (
-    <>
-      <div className="group flex flex-row sm:flex-col bg-card border border-border/60 hover:border-primary/80 transition-all duration-300 overflow-hidden h-36 sm:h-auto select-none">
-        {/* کاور */}
-        <div className="relative w-28 sm:w-full shrink-0 sm:aspect-[4/3] overflow-hidden bg-muted/40 flex items-center justify-center">
-          <Image
-            src={coverUrl}
-            alt={catalog.title || "Catalog"}
-            fill
-            sizes="(max-width: 640px) 112px, (max-width: 1024px) 50vw, 33vw"
-            className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-          />
-          {catalog.file_size_mb && (
-            <div className="absolute top-2 end-2 bg-background/90 backdrop-blur-md px-1.5 py-0.5 border border-border/50 text-[9px] sm:text-[10px] font-mono text-muted-foreground">
-              {catalog.file_size_mb} MB
-            </div>
-          )}
-        </div>
-
-        {/* محتوا و دکمه‌ها */}
-        <div className="p-3 sm:p-5 flex flex-col flex-1 justify-between min-w-0">
-          <div className="space-y-1">
-            <span className="text-[9px] sm:text-[10px] uppercase tracking-wider text-primary font-mono block truncate">
-              {TYPE_LABELS[catalog.catalog_type] ||
-                catalog.catalog_type ||
-                "Documentation"}
-            </span>
-            <h4 className="text-xs sm:text-base font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1 sm:line-clamp-2 leading-snug">
-              {catalog.title}
-            </h4>
-            {catalog.description && (
-              <p className="hidden sm:block text-xs text-muted-foreground font-light line-clamp-2 leading-relaxed pt-1">
-                {catalog.description}
-              </p>
-            )}
-          </div>
-
-          <div className="flex items-center gap-1.5 sm:grid sm:grid-cols-2 sm:gap-2 pt-2 sm:pt-3 border-t border-border/40">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsPreviewOpen(true)}
-              className="rounded-none text-[11px] sm:text-xs h-7 sm:h-9 flex-1 px-2 tracking-wider uppercase border-border/70 hover:bg-muted"
-            >
-              <Eye className="h-3 w-3 sm:h-3.5 sm:w-3.5 me-1.5 text-muted-foreground" />
-              <span>{t("view")}</span>
-            </Button>
-
-            <Button
-              size="sm"
-              onClick={handleDownload}
-              className="rounded-none text-[11px] sm:text-xs h-7 sm:h-9 flex-1 px-2 tracking-wider uppercase bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              <Download className="h-3 w-3 sm:h-3.5 sm:w-3.5 me-1.5" />
-              <span>{t("download")}</span>
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* مدال پیش‌نمایش */}
-      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="sm:max-w-5xl h-[85vh] flex flex-col p-4 sm:p-6 rounded-none bg-background">
-          <DialogHeader className="pb-3 border-b border-border/40 shrink-0">
-            <div className="flex items-center gap-2">
-              <FileText className="h-4 w-4 text-primary shrink-0" />
-              <DialogTitle className="text-sm sm:text-base font-normal truncate">
-                {catalog.title}
-              </DialogTitle>
-            </div>
-            <DialogDescription className="text-xs text-muted-foreground">
-              {catalog.file_size_mb ? `${catalog.file_size_mb} MB` : ""}
-              {catalog.page_count ? ` • ${catalog.page_count} Pages` : ""}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="flex-1 w-full h-full bg-muted/20 border border-border/40 overflow-hidden relative mt-2">
-            {pdfUrl ? (
-              <iframe
-                src={`${pdfUrl}#toolbar=1&navpanes=0`}
-                className="w-full h-full border-0"
-                title={catalog.title}
-              />
-            ) : (
-              <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
-                {t("previewNotAvailable")}
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
   );
 };
 </file>
@@ -4155,6 +5029,580 @@ export default async function ProductsPage({
 }
 </file>
 
+<file path="src/components/catalogs/catalog-card.tsx">
+"use client";
+
+import React, { useState } from "react";
+import Image from "next/image";
+import dynamic from "next/dynamic";
+import { useTranslations } from "next-intl";
+import { Download, Eye, FileText, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import type { CatalogItem } from "@/services/catalog.service";
+
+const PdfViewer = dynamic(() => import("./pdf-viewer-studio"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex flex-col items-center justify-center h-full gap-3 text-xs font-mono text-muted-foreground p-12">
+      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+    </div>
+  ),
+});
+
+const TYPE_LABELS: Record<string, string> = {
+  full_catalog: "Full Catalog",
+  technical: "Technical Specs",
+  collection: "Collection Brochure",
+  guide: "Care & Installation Guide",
+};
+
+export const CatalogCard: React.FC<{ catalog: CatalogItem }> = ({
+  catalog,
+}) => {
+  const t = useTranslations("Catalogs");
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
+  const coverUrl =
+    typeof catalog.cover_image === "object" && catalog.cover_image?.url
+      ? catalog.cover_image.url
+      : typeof catalog.cover_image === "string" && catalog.cover_image
+        ? catalog.cover_image
+        : "/PersisQuartz-Red.png";
+
+  const pdfUrl =
+    typeof catalog.pdf_file === "object" && catalog.pdf_file?.url
+      ? catalog.pdf_file.url
+      : typeof catalog.pdf_file === "string"
+        ? catalog.pdf_file
+        : "";
+
+  const handleDownload = () => {
+    if (!pdfUrl) return;
+    const link = document.createElement("a");
+    link.href = pdfUrl;
+    link.download = `${catalog.slug || "catalog"}.pdf`;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  return (
+    <>
+      <div className="group flex flex-row sm:flex-col bg-card border border-border/60 hover:border-primary/80 transition-all duration-300 overflow-hidden h-36 sm:h-auto select-none">
+        {/* کاور کاتالوگ */}
+        <div className="relative w-28 sm:w-full shrink-0 sm:aspect-[4/3] overflow-hidden bg-muted/40 flex items-center justify-center">
+          <Image
+            src={coverUrl}
+            alt={catalog.title || "Catalog"}
+            fill
+            sizes="(max-width: 640px) 112px, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+          />
+          {catalog.file_size_mb && (
+            <div className="absolute top-2 end-2 bg-background/90 backdrop-blur-md px-1.5 py-0.5 border border-border/50 text-[9px] sm:text-[10px] font-mono text-muted-foreground">
+              {catalog.file_size_mb} MB
+            </div>
+          )}
+        </div>
+
+        {/* محتوا و دکمه‌ها */}
+        <div className="p-3 sm:p-5 flex flex-col flex-1 justify-between min-w-0">
+          <div className="space-y-1">
+            <span className="text-[9px] sm:text-[10px] uppercase tracking-wider text-primary font-mono block truncate">
+              {TYPE_LABELS[catalog.catalog_type] ||
+                catalog.catalog_type ||
+                "Documentation"}
+            </span>
+            <h4 className="text-xs sm:text-base font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1 sm:line-clamp-2 leading-snug">
+              {catalog.title}
+            </h4>
+            {catalog.description && (
+              <p className="hidden sm:block text-xs text-muted-foreground font-light line-clamp-2 leading-relaxed pt-1">
+                {catalog.description}
+              </p>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1.5 sm:grid sm:grid-cols-2 sm:gap-2 pt-2 sm:pt-3 border-t border-border/40">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsPreviewOpen(true)}
+              className="rounded-none text-[11px] sm:text-xs h-7 sm:h-9 flex-1 px-2 tracking-wider uppercase border-border/70 hover:bg-muted"
+            >
+              <Eye className="h-3 w-3 sm:h-3.5 sm:w-3.5 me-1.5 text-muted-foreground" />
+              <span>{t("view")}</span>
+            </Button>
+
+            <Button
+              size="sm"
+              onClick={handleDownload}
+              className="rounded-none text-[11px] sm:text-xs h-7 sm:h-9 flex-1 px-2 tracking-wider uppercase bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              <Download className="h-3 w-3 sm:h-3.5 sm:w-3.5 me-1.5" />
+              <span>{t("download")}</span>
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* مدال پیش‌نمایش کاتالوگ */}
+      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+        <DialogContent className="sm:max-w-5xl h-[88vh] flex flex-col p-4 sm:p-6 rounded-none bg-background">
+          <DialogHeader className="pb-3 border-b border-border/40 shrink-0">
+            <div className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-primary shrink-0" />
+              <DialogTitle className="text-sm sm:text-base font-normal truncate">
+                {catalog.title}
+              </DialogTitle>
+            </div>
+            <DialogDescription className="text-xs text-muted-foreground">
+              {catalog.file_size_mb ? `${catalog.file_size_mb} MB` : ""}
+              {catalog.page_count ? ` • ${catalog.page_count} Pages` : ""}
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* محفظه اختصاصی رندر PDF با رویکرد بهینه و Lazy Loading */}
+          <div className="flex-1 w-full h-full bg-muted/10 border border-border/40 overflow-hidden relative mt-2">
+            {isPreviewOpen && pdfUrl ? (
+              <PdfViewer url={pdfUrl} />
+            ) : (
+              <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
+                {t("previewNotAvailable")}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};
+</file>
+
+<file path="src/components/catalogs/pdf-viewer-studio.tsx">
+"use client";
+
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { Document, Page, pdfjs } from "react-pdf";
+import { useTranslations, useLocale } from "next-intl";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ZoomIn,
+  ZoomOut,
+  RotateCw,
+  Maximize2,
+  Minimize2,
+  LayoutGrid,
+  Loader2,
+  RotateCcw,
+  X,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+
+import "react-pdf/dist/Page/AnnotationLayer.css";
+import "react-pdf/dist/Page/TextLayer.css";
+
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+
+interface StudioPdfViewerProps {
+  url: string;
+  title?: string;
+}
+
+export default function StudioPdfViewer({ url, title }: StudioPdfViewerProps) {
+  const t = useTranslations("Catalogs");
+  const locale = useLocale();
+  const isRtl = locale === "fa" || locale === "ar";
+
+  const [numPages, setNumPages] = useState<number>(0);
+  const [pageNumber, setPageNumber] = useState<number>(1);
+  const [scale, setScale] = useState<number>(1.0);
+  const [rotation, setRotation] = useState<number>(0);
+  const [showThumbnails, setShowThumbnails] = useState<boolean>(false);
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [inputPage, setInputPage] = useState<string>("1");
+  const [containerWidth, setContainerWidth] = useState<number>(600);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mainAreaRef = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef<number | null>(null);
+
+  // آیکون‌ها و متدهای نویگیشن بر اساس جهت زبان
+  const PrevIcon = isRtl ? ChevronRight : ChevronLeft;
+  const NextIcon = isRtl ? ChevronLeft : ChevronRight;
+
+  const goNext = useCallback(() => {
+    setPageNumber((p) => Math.min(p + 1, numPages || p));
+  }, [numPages]);
+
+  const goPrev = useCallback(() => {
+    setPageNumber((p) => Math.max(p - 1, 1));
+  }, []);
+
+  // محاسبه ابعاد صفحه برای ریسپانسیو بودن
+  useEffect(() => {
+    const updateWidth = () => {
+      if (mainAreaRef.current) {
+        const padding = window.innerWidth < 640 ? 16 : 48;
+        setContainerWidth(mainAreaRef.current.clientWidth - padding);
+      }
+    };
+
+    updateWidth();
+    window.addEventListener("resize", updateWidth);
+    return () => window.removeEventListener("resize", updateWidth);
+  }, [showThumbnails]);
+
+  useEffect(() => {
+    setInputPage(String(pageNumber));
+  }, [pageNumber]);
+
+  // کنترل میانبرهای کیبورد
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement) return;
+      if (e.key === "ArrowRight" || e.key === "PageDown") {
+        isRtl ? goPrev() : goNext();
+      } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
+        isRtl ? goNext() : goPrev();
+      } else if (e.key === "+" || e.key === "=") {
+        setScale((s) => Math.min(s + 0.2, 2.5));
+      } else if (e.key === "-") {
+        setScale((s) => Math.max(s - 0.2, 0.6));
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isRtl, goNext, goPrev]);
+
+  // کنترل Swipe لمسی برای موبایل
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (scale > 1.1) return;
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null || scale > 1.1) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX.current - touchEndX;
+
+    if (Math.abs(diff) > 45) {
+      if (diff > 0) {
+        isRtl ? goPrev() : goNext();
+      } else {
+        isRtl ? goNext() : goPrev();
+      }
+    }
+    touchStartX.current = null;
+  };
+
+  const toggleFullscreen = useCallback(() => {
+    if (!containerRef.current) return;
+    if (!document.fullscreenElement) {
+      containerRef.current
+        .requestFullscreen()
+        .then(() => setIsFullscreen(true));
+    } else {
+      document.exitFullscreen().then(() => setIsFullscreen(false));
+    }
+  }, []);
+
+  const handlePageJump = (e: React.FormEvent) => {
+    e.preventDefault();
+    const p = parseInt(inputPage, 10);
+    if (!isNaN(p) && p >= 1 && p <= numPages) {
+      setPageNumber(p);
+    } else {
+      setInputPage(String(pageNumber));
+    }
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      dir={isRtl ? "rtl" : "ltr"}
+      className={cn(
+        "relative flex flex-col w-full h-full bg-neutral-950 text-neutral-100 select-none overflow-hidden",
+        isFullscreen ? "fixed inset-0 z-50 p-0" : "",
+      )}
+    >
+      {/* ۱. تولبار بالا */}
+      <div className="h-12 sm:h-14 border-b border-neutral-800/80 bg-neutral-900/90 backdrop-blur-md px-3 sm:px-4 flex items-center justify-between shrink-0 z-20">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowThumbnails(!showThumbnails)}
+            className={cn(
+              "rounded-none h-8 px-2 text-xs text-neutral-300 hover:text-white hover:bg-neutral-800",
+              showThumbnails && "bg-neutral-800 text-primary",
+            )}
+            title={t("toc")}
+          >
+            <LayoutGrid className="h-4 w-4 me-0 sm:me-1.5" />
+            <span className="hidden sm:inline">{t("toc")}</span>
+          </Button>
+
+          {/* نویگیشن در تبلت و دسکتاپ */}
+          <div className="hidden sm:flex items-center gap-1">
+            <div className="h-4 w-px bg-neutral-800 mx-1" />
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              disabled={pageNumber <= 1}
+              onClick={goPrev}
+              className="text-neutral-300 hover:text-white disabled:opacity-30"
+              title={t("prev")}
+            >
+              <PrevIcon className="h-4 w-4" />
+            </Button>
+
+            <form
+              onSubmit={handlePageJump}
+              className="flex items-center gap-1 font-mono text-xs"
+            >
+              <Input
+                value={inputPage}
+                onChange={(e) => setInputPage(e.target.value)}
+                onBlur={() => setInputPage(String(pageNumber))}
+                className="w-10 h-7 text-center text-xs bg-neutral-950 border-neutral-700 text-white rounded-none p-0 focus-visible:ring-1 focus-visible:ring-primary"
+              />
+              <span className="text-neutral-500">/</span>
+              <span className="text-neutral-400 min-w-5">
+                {numPages || "..."}
+              </span>
+            </form>
+
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              disabled={pageNumber >= numPages}
+              onClick={goNext}
+              className="text-neutral-300 hover:text-white disabled:opacity-30"
+              title={t("next")}
+            >
+              <NextIcon className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        {title && (
+          <div className="text-xs font-mono text-neutral-400 truncate max-w-[140px] sm:max-w-xs text-center">
+            {title}
+          </div>
+        )}
+
+        {/* اکشن‌های سمت راست (زوم، ریست و فول‌اسکرین) */}
+        <div className="flex items-center gap-1 sm:gap-2">
+          <div className="hidden sm:flex items-center bg-neutral-950 border border-neutral-800 px-1 py-0.5">
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => setScale((s) => Math.max(s - 0.2, 0.6))}
+              disabled={scale <= 0.6}
+              className="text-neutral-400 hover:text-white"
+            >
+              <ZoomOut className="h-3.5 w-3.5" />
+            </Button>
+            <span className="text-[11px] font-mono px-1.5 text-neutral-300 min-w-10 text-center">
+              {Math.round(scale * 100)}%
+            </span>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => setScale((s) => Math.min(s + 0.2, 2.5))}
+              disabled={scale >= 2.5}
+              className="text-neutral-400 hover:text-white"
+            >
+              <ZoomIn className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => {
+              setScale(1.0);
+              setRotation(0);
+            }}
+            title={t("reset")}
+            className="text-neutral-400 hover:text-white"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => setRotation((r) => (r + 90) % 360)}
+            className="text-neutral-400 hover:text-white hidden sm:inline-flex"
+          >
+            <RotateCw className="h-3.5 w-3.5" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={toggleFullscreen}
+            className="text-neutral-400 hover:text-white"
+          >
+            {isFullscreen ? (
+              <Minimize2 className="h-4 w-4" />
+            ) : (
+              <Maximize2 className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+      </div>
+
+      {/* ۲. بدنه اصلی و رندر PDF */}
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* کشوی فهرست صفحات */}
+        {showThumbnails && (
+          <aside className="absolute sm:relative inset-y-0 start-0 w-60 sm:w-56 border-e border-neutral-800 bg-neutral-900/95 backdrop-blur-md overflow-y-auto p-3 space-y-3 shrink-0 z-30 animate-in slide-in-from-start duration-200">
+            <div className="flex items-center justify-between pb-2 border-b border-neutral-800">
+              <span className="text-[10px] uppercase font-mono tracking-widest text-neutral-400">
+                {t("pages")} ({numPages})
+              </span>
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                onClick={() => setShowThumbnails(false)}
+                className="text-neutral-400 sm:hidden"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            {Array.from(new Array(numPages), (_, index) => {
+              const pageIdx = index + 1;
+              const isCurrent = pageNumber === pageIdx;
+              return (
+                <div
+                  key={`thumb-${pageIdx}`}
+                  onClick={() => {
+                    setPageNumber(pageIdx);
+                    if (window.innerWidth < 640) setShowThumbnails(false);
+                  }}
+                  className={cn(
+                    "cursor-pointer border p-1 bg-neutral-950 transition-all flex flex-col items-center gap-1",
+                    isCurrent
+                      ? "border-primary ring-2 ring-primary/30"
+                      : "border-neutral-800 opacity-60 hover:opacity-100",
+                  )}
+                >
+                  <Document file={url} loading={null}>
+                    <Page
+                      pageNumber={pageIdx}
+                      width={140}
+                      renderTextLayer={false}
+                      renderAnnotationLayer={false}
+                    />
+                  </Document>
+                  <span className="text-[10px] font-mono text-neutral-400">
+                    {pageIdx}
+                  </span>
+                </div>
+              );
+            })}
+          </aside>
+        )}
+
+        {/* بوم لمسی و نمایش صفحه */}
+        <main
+          ref={mainAreaRef}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          className="flex-1 overflow-auto flex items-center justify-center p-2 sm:p-8 bg-neutral-950"
+        >
+          <Document
+            file={url}
+            onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+            loading={
+              <div className="flex flex-col items-center gap-3 text-neutral-400 py-16">
+                <Loader2 className="h-7 w-7 animate-spin text-primary" />
+                <span className="text-xs font-mono">{t("loadingPdf")}</span>
+              </div>
+            }
+            error={
+              <div className="text-xs text-destructive font-mono py-12">
+                {t("pdfError")}
+              </div>
+            }
+          >
+            <div
+              style={{
+                transform: `scale(${scale}) rotate(${rotation}deg)`,
+                transformOrigin: "center center",
+                transition: "transform 0.15s ease-out",
+              }}
+              className="shadow-2xl border border-neutral-800 bg-white"
+            >
+              <Page
+                pageNumber={pageNumber}
+                renderTextLayer={false}
+                renderAnnotationLayer={false}
+                className="max-w-full"
+                width={Math.min(containerWidth, 800)}
+              />
+            </div>
+          </Document>
+        </main>
+      </div>
+
+      {/* ۳. فوتر راهنما در دسکتاپ */}
+      <div className="hidden sm:flex h-7 border-t border-neutral-800/80 bg-neutral-900/60 px-4 items-center justify-between text-[10px] font-mono text-neutral-400 shrink-0">
+        <span>{t("shortcutsHint")}</span>
+        <span className="text-primary tracking-widest font-semibold uppercase">
+          PERSIS QUARTZ STUDIO
+        </span>
+      </div>
+
+      {/* ۴. نوار لمسی ورق زدن پایین در موبایل */}
+      <div className="sm:hidden h-12 border-t border-neutral-800 bg-neutral-900/95 px-4 flex items-center justify-between shrink-0 z-20">
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={pageNumber <= 1}
+          onClick={goPrev}
+          className="h-8 rounded-none border-neutral-700 bg-neutral-950 text-xs px-2.5"
+        >
+          <PrevIcon className="h-4 w-4 me-1" />
+          <span>{t("prev")}</span>
+        </Button>
+
+        <span className="text-xs font-mono text-neutral-300">
+          {pageNumber} <span className="text-neutral-500">/</span>{" "}
+          {numPages || "..."}
+        </span>
+
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={pageNumber >= numPages}
+          onClick={goNext}
+          className="h-8 rounded-none border-neutral-700 bg-neutral-950 text-xs px-2.5"
+        >
+          <span>{t("next")}</span>
+          <NextIcon className="h-4 w-4 ms-1" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+</file>
+
 <file path="src/components/home/interactive-tools.tsx">
 // src/components/home/interactive-tools.tsx
 "use client";
@@ -5917,6 +7365,7 @@ When generating code for this project, you MUST follow these rules:
 <file path="src/app/(payload)/admin/importMap.js">
 import { ExcelCategoryImportControl as ExcelCategoryImportControl_4382766527adc79553646109e995ca58 } from '@/components/admin/ExcelCategoryImportControl'
 import { ExcelProductImportControl as ExcelProductImportControl_9c4b4526906d26e64e9447c8643cce10 } from '@/components/admin/ExcelProductImportControl'
+import { ExcelDealerImportControl as ExcelDealerImportControl_592f1cf1c8df4c52c1c1fc611404db98 } from '@/components/admin/ExcelDealerImportControl'
 import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
@@ -5924,6 +7373,7 @@ import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } f
 export const importMap = {
   "@/components/admin/ExcelCategoryImportControl#ExcelCategoryImportControl": ExcelCategoryImportControl_4382766527adc79553646109e995ca58,
   "@/components/admin/ExcelProductImportControl#ExcelProductImportControl": ExcelProductImportControl_9c4b4526906d26e64e9447c8643cce10,
+  "@/components/admin/ExcelDealerImportControl#ExcelDealerImportControl": ExcelDealerImportControl_592f1cf1c8df4c52c1c1fc611404db98,
   "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }
@@ -8780,6 +10230,7 @@ import { Thicknesses } from "./payload/collections/Thicknesses";
 import { Finishes } from "./payload/collections/Finishes";
 import { Catalogs } from "./payload/collections/Catalogs";
 import { AboutPage } from "./payload/globals/AboutPage";
+import { Dealers } from "./payload/collections/Dealers";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -8801,6 +10252,7 @@ export default buildConfig({
     Finishes,
     Products,
     Catalogs,
+    Dealers,
   ],
   globals: [AboutPage],
 
@@ -8927,7 +10379,7 @@ export default async function RootLayout({
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbo",
+    "dev": "next dev",
     "clean": "rm -rf .next && next dev",
     "build": "next build",
     "start": "next start",
@@ -8949,10 +10401,12 @@ export default async function RootLayout({
     "next": "15.4.11",
     "next-intl": "^4.13.4",
     "payload": "^3.86.0",
+    "pdfjs-dist": "^6.2.108",
     "radix-ui": "^1.6.7",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-hook-form": "^7.83.0",
+    "react-pdf": "^10.5.0",
     "shadcn": "^4.15.0",
     "sharp": "^0.35.3",
     "tailwind-merge": "^3.6.0",
@@ -8964,6 +10418,7 @@ export default async function RootLayout({
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20.19.43",
+    "@types/pdfjs-dist": "^2.10.377",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
@@ -9184,7 +10639,15 @@ export default async function HomePage({
     "searchPlaceholder": "البحث في الكتالوجات...",
     "noCatalogsFound": "لم يتم العثور على كتالوجات تطابق بحثك.",
     "resetFilters": "إعادة ضبط",
-    "previewNotAvailable": "المعاينة غير متاحة لهذا الملف."
+    "previewNotAvailable": "المعاينة غير متاحة لهذا الملف.",
+    "toc": "الفهرس",
+    "pages": "الصفحات",
+    "prev": "السابق",
+    "next": "التالي",
+    "loadingPdf": "جاري تجهيز الكتالوج...",
+    "pdfError": "خطأ في تحميل ملف الكتالوج.",
+    "shortcutsHint": "اختصارات لوحة المفاتيح: الأسهم (التنقل) • +/- (التكبير)",
+    "reset": "إعادة ضبط"
   },
   "CareMaintenance": {
     "metaTitle": "دليل العناية والصيانة لأسطح الكوارتز | برسيس كوارتز",
@@ -9242,6 +10705,16 @@ export default async function HomePage({
     "craftsmanshipTag": "التصميم والإلهام",
     "craftsmanshipTitle": "مستوحى من الطبيعة، صُمم ليدوم",
     "craftsmanshipDesc": "كل لوح من ألواح برسيس كوارتز يجسد عظمة الطبيعة بدقة هندسية متناهية. من تعريقات كالاكاتا البارزة إلى الألوان الأحادية النقية، صُممت منتجاتنا لتلبي أدق متطلبات التصميم الداخلي وترتقي بالمشاريع السكنية والتجارية. نحن نرى الحجر كلوحة فنية معمارية وليس مجرد مادة بناء."
+  },
+  "Dealers": {
+    "metaTitle": "الوكلاء والموزعون المعتمدون | برسيس كوارتز",
+    "metaDescription": "دليل صالات العرض وشبكة الموزعين المعتمدين لأسطح برسیس كوارتز.",
+    "filterTag": "تحديد المنطقة / المحافظة",
+    "allProvinces": "جميع المناطق",
+    "searchProvince": "البحث عن محافظة...",
+    "noResults": "لم يتم العثور على نتائج.",
+    "viewOnMap": "الموقع على الخريطة",
+    "noDealersFound": "لم يتم العثور على وكلاء نشطين."
   }
 }
 </file>
@@ -9415,7 +10888,15 @@ export default async function HomePage({
     "searchPlaceholder": "Search catalogs...",
     "noCatalogsFound": "No catalogs found matching your search.",
     "resetFilters": "Reset Filters",
-    "previewNotAvailable": "Preview is not available for this file."
+    "previewNotAvailable": "Preview is not available for this file.",
+    "toc": "Index",
+    "pages": "Pages",
+    "prev": "Prev",
+    "next": "Next",
+    "loadingPdf": "Loading catalog...",
+    "pdfError": "Failed to load catalog document.",
+    "shortcutsHint": "Shortcuts: Arrow keys (Navigate) • +/- (Zoom)",
+    "reset": "Reset"
   },
   "CareMaintenance": {
     "metaTitle": "Care & Maintenance Guide | Persis Quartz",
@@ -9473,6 +10954,16 @@ export default async function HomePage({
     "craftsmanshipTag": "Design & Inspiration",
     "craftsmanshipTitle": "Inspired by Nature, Crafted for Life",
     "craftsmanshipDesc": "Every Persis Quartz slab reflects natural majesty, precision-engineered for modern living. From dramatic Calacatta veining to minimal solid tones, our collections elevate residential and commercial environments. We perceive stone not as a material, but as an architectural canvas."
+  },
+  "Dealers": {
+    "metaTitle": "Dealers & Showrooms | Persis Quartz",
+    "metaDescription": "Find official authorized distributors and exclusive showrooms of Persis Quartz.",
+    "filterTag": "Select Province / State",
+    "allProvinces": "All Regions",
+    "searchProvince": "Search region...",
+    "noResults": "No regions found.",
+    "viewOnMap": "View on Map",
+    "noDealersFound": "No active dealers found in this region."
   }
 }
 </file>
@@ -9641,7 +11132,15 @@ export default async function HomePage({
     "searchPlaceholder": "جستجوی عنوان کاتالوگ...",
     "noCatalogsFound": "هیچ کاتالوگی با این مشخصات یافت نشد.",
     "resetFilters": "پاک‌سازی فیلترها",
-    "previewNotAvailable": "امکان پیش‌نمایش برای این فایل وجود ندارد."
+    "previewNotAvailable": "امکان پیش‌نمایش برای این فایل وجود ندارد.",
+    "toc": "فهرست",
+    "pages": "صفحات",
+    "prev": "قبلی",
+    "next": "بعدی",
+    "loadingPdf": "در حال آماده‌سازی کاتالوگ...",
+    "pdfError": "خطا در بارگذاری فایل کاتالوگ.",
+    "shortcutsHint": "کلیدهای میانبر: جهت‌نماها (ورق زدن) • +/- (زوم)",
+    "reset": "تنظیم مجدد"
   },
   "CareMaintenance": {
     "metaTitle": "راهنمای جامع نگهداری و مراقبت از سطوح کوارتز | پرسیس کوارتز",
@@ -9699,6 +11198,16 @@ export default async function HomePage({
     "craftsmanshipTag": "طراحی و الهام",
     "craftsmanshipTitle": "الهام‌گرفته از طبیعت، ساخته‌شده برای زندگی",
     "craftsmanshipDesc": "هر اسلب پرسیس کوارتز، بازتابی از شکوه طبیعت است که با دقت مهندسی بازآفرینی شده است. از رگه‌های ظریف و باشکوه کالاکاتا تا عمق رنگ‌های یکدست و مینیمال، محصولات ما با هدف پاسخگویی به پیچیده‌ترین نیازهای معماری داخلی و ارتقای سطح کیفی فضاهای مسکونی و تجاری طراحی می‌شوند. ما سنگ را نه به عنوان یک مصالح، بلکه به عنوان بوم نقاشی معماری می‌بینیم."
+  },
+  "Dealers": {
+    "metaTitle": "نمایندگی‌ها و شبکه فروش | پرسیس کوارتز",
+    "metaDescription": "فهرست عاملیت‌های مجاز و شوروم‌های انحصاری سنگ مهندسی پرسیس کوارتز در سراسر کشور.",
+    "filterTag": "انتخاب استان",
+    "allProvinces": "همه استان‌ها",
+    "searchProvince": "جستجوی استان...",
+    "noResults": "موردی یافت نشد.",
+    "viewOnMap": "مسیریابی روی نقشه",
+    "noDealersFound": "در حال حاضر نمایندگی فعالی در این استان ثبت نشده است."
   }
 }
 </file>

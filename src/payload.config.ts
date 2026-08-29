@@ -17,6 +17,7 @@ import { Thicknesses } from "./payload/collections/Thicknesses";
 import { Finishes } from "./payload/collections/Finishes";
 import { Catalogs } from "./payload/collections/Catalogs";
 import { AboutPage } from "./payload/globals/AboutPage";
+import { Dealers } from "./payload/collections/Dealers";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -38,6 +39,7 @@ export default buildConfig({
     Finishes,
     Products,
     Catalogs,
+    Dealers,
   ],
   globals: [AboutPage],
 
