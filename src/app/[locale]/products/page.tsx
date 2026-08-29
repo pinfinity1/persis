@@ -77,7 +77,7 @@ export default async function ProductsPage({
 
         <div className="absolute bottom-2 start-0 z-10 flex items-center gap-3">
           <span className="h-px w-6 bg-primary" />
-          <span className="text-[11px] font-mono tracking-[0.3em] text-primary uppercase">
+          <span className="text-[11px] tracking-[0.3em] text-primary uppercase">
             Persis Quartz Catalog
           </span>
         </div>

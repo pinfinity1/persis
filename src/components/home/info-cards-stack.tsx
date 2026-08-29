@@ -120,7 +120,7 @@ export const InfoCardsStack: React.FC = () => {
       <div className="container mx-auto px-6 sm:px-12">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-12 gap-4 max-w-4xl mx-auto">
           <div>
-            <span className="text-[11px] sm:text-xs uppercase tracking-widest text-primary font-mono block mb-1">
+            <span className="text-[11px] sm:text-xs uppercase tracking-widest text-primary block mb-1">
               {t("tagline")}
             </span>
             <h3 className="text-2xl sm:text-3xl font-light text-foreground">
@@ -197,7 +197,7 @@ export const InfoCardsStack: React.FC = () => {
                       className="object-cover"
                       priority={isFront}
                     />
-                    <div className="absolute top-3 start-3 bg-background/90 backdrop-blur-md px-2.5 py-1 border border-border/50 text-[10px] font-mono tracking-widest uppercase text-foreground">
+                    <div className="absolute top-3 start-3 bg-background/90 backdrop-blur-md px-2.5 py-1 border border-border/50 text-[10px] tracking-widest uppercase text-foreground">
                       0{card.id} / 0{CARDS_DATA.length}
                     </div>
                   </div>
@@ -206,7 +206,7 @@ export const InfoCardsStack: React.FC = () => {
                     {card.type === "features" ? (
                       <div className="space-y-4 my-auto">
                         <div>
-                          <span className="text-[11px] uppercase tracking-widest font-mono text-primary font-semibold block mb-1">
+                          <span className="text-[11px] uppercase tracking-widest text-primary font-semibold block mb-1">
                             {t(card.categoryKey as any)}
                           </span>
                           <h4 className="text-lg sm:text-xl font-light text-foreground">

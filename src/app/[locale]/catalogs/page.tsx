@@ -49,7 +49,7 @@ export default async function CatalogsPage({ params }: PageProps) {
         </span>
         <div className="absolute bottom-4 start-0 z-10 flex items-center gap-3">
           <span className="h-px w-6 bg-primary" />
-          <span className="text-[10px] sm:text-[11px] font-mono tracking-[0.25em] text-primary uppercase">
+          <span className="text-[10px] sm:text-[11px] tracking-[0.25em] text-primary uppercase">
             Official Catalogs & Tech Specs
           </span>
         </div>
@@ -60,10 +60,10 @@ export default async function CatalogsPage({ params }: PageProps) {
           {years.map((year) => (
             <section key={year} className="space-y-4 sm:space-y-6">
               <div className="flex items-center gap-3 pb-2">
-                <span className="text-xl sm:text-3xl font-light font-mono text-primary">
+                <span className="text-xl sm:text-3xl font-light text-primary">
                   {year}
                 </span>
-                <span className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-widest font-mono pt-1">
+                <span className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-widest pt-1">
                   Collection & Manuals
                 </span>
               </div>

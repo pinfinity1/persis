@@ -180,7 +180,7 @@ export default function StudioPdfViewer({ url, title }: StudioPdfViewerProps) {
 
             <form
               onSubmit={handlePageJump}
-              className="flex items-center gap-1 font-mono text-xs"
+              className="flex items-center gap-1 text-xs"
             >
               <Input
                 value={inputPage}
@@ -208,7 +208,7 @@ export default function StudioPdfViewer({ url, title }: StudioPdfViewerProps) {
         </div>
 
         {title && (
-          <div className="text-xs font-mono text-neutral-400 truncate max-w-[140px] sm:max-w-xs text-center">
+          <div className="text-xs text-neutral-400 truncate max-w-[140px] sm:max-w-xs text-center">
             {title}
           </div>
         )}
@@ -225,7 +225,7 @@ export default function StudioPdfViewer({ url, title }: StudioPdfViewerProps) {
             >
               <ZoomOut className="h-3.5 w-3.5" />
             </Button>
-            <span className="text-[11px] font-mono px-1.5 text-neutral-300 min-w-10 text-center">
+            <span className="text-[11px] px-1.5 text-neutral-300 min-w-10 text-center">
               {Math.round(scale * 100)}%
             </span>
             <Button
@@ -282,7 +282,7 @@ export default function StudioPdfViewer({ url, title }: StudioPdfViewerProps) {
         {showThumbnails && (
           <aside className="absolute sm:relative inset-y-0 start-0 w-60 sm:w-56 border-e border-neutral-800 bg-neutral-900/95 backdrop-blur-md overflow-y-auto p-3 space-y-3 shrink-0 z-30 animate-in slide-in-from-start duration-200">
             <div className="flex items-center justify-between pb-2 border-b border-neutral-800">
-              <span className="text-[10px] uppercase font-mono tracking-widest text-neutral-400">
+              <span className="text-[10px] uppercase tracking-widest text-neutral-400">
                 {t("pages")} ({numPages})
               </span>
               <Button
@@ -319,7 +319,7 @@ export default function StudioPdfViewer({ url, title }: StudioPdfViewerProps) {
                       renderAnnotationLayer={false}
                     />
                   </Document>
-                  <span className="text-[10px] font-mono text-neutral-400">
+                  <span className="text-[10px] text-neutral-400">
                     {pageIdx}
                   </span>
                 </div>
@@ -341,11 +341,11 @@ export default function StudioPdfViewer({ url, title }: StudioPdfViewerProps) {
             loading={
               <div className="flex flex-col items-center gap-3 text-neutral-400 py-16">
                 <Loader2 className="h-7 w-7 animate-spin text-primary" />
-                <span className="text-xs font-mono">{t("loadingPdf")}</span>
+                <span className="text-xs">{t("loadingPdf")}</span>
               </div>
             }
             error={
-              <div className="text-xs text-destructive font-mono py-12">
+              <div className="text-xs text-destructive py-12">
                 {t("pdfError")}
               </div>
             }
@@ -371,7 +371,7 @@ export default function StudioPdfViewer({ url, title }: StudioPdfViewerProps) {
       </div>
 
       {/* ۳. فوتر راهنما در دسکتاپ */}
-      <div className="hidden sm:flex h-7 border-t border-neutral-800/80 bg-neutral-900/60 px-4 items-center justify-between text-[10px] font-mono text-neutral-400 shrink-0">
+      <div className="hidden sm:flex h-7 border-t border-neutral-800/80 bg-neutral-900/60 px-4 items-center justify-between text-[10px] text-neutral-400 shrink-0">
         <span>{t("shortcutsHint")}</span>
         <span className="text-primary tracking-widest font-semibold uppercase">
           PERSIS QUARTZ STUDIO
@@ -391,7 +391,7 @@ export default function StudioPdfViewer({ url, title }: StudioPdfViewerProps) {
           <span>{t("prev")}</span>
         </Button>
 
-        <span className="text-xs font-mono text-neutral-300">
+        <span className="text-xs text-neutral-300">
           {pageNumber} <span className="text-neutral-500">/</span>{" "}
           {numPages || "..."}
         </span>

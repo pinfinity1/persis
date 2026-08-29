@@ -94,7 +94,7 @@ export const ProductGridClient: React.FC<ProductGridProps> = ({
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between pb-4 border-b border-border/40">
-        <span className="text-xs font-mono text-muted-foreground uppercase">
+        <span className="text-xs text-muted-foreground uppercase">
           {t("showingCount", {
             count: products.length,
             total: meta.total_items,
@@ -110,13 +110,13 @@ export const ProductGridClient: React.FC<ProductGridProps> = ({
 
       <div ref={observerRef} className="pt-6 flex justify-center">
         {isLoadingMore && (
-          <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground py-4">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground py-4">
             <Loader2 className="h-4 w-4 animate-spin text-primary" />
           </div>
         )}
 
         {!meta.has_next_page && products.length > 9 && (
-          <p className="text-[11px] font-mono text-muted-foreground/60 uppercase tracking-widest pt-4">
+          <p className="text-[11px] text-muted-foreground/60 uppercase tracking-widest pt-4">
             — END OF CATALOG —
           </p>
         )}

@@ -53,7 +53,7 @@ export const ProductShowcase: React.FC<ProductShowcaseProps> = ({
       <div className="container mx-auto px-6 sm:px-12">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-12 gap-5">
           <div>
-            <span className="text-[11px] sm:text-xs uppercase tracking-widest text-primary font-mono block mb-1.5">
+            <span className="text-[11px] sm:text-xs uppercase tracking-widest text-primary block mb-1.5">
               {t("tagline")}
             </span>
             <h3 className="text-2xl sm:text-4xl font-light text-foreground">

@@ -18,7 +18,7 @@ import type { CatalogItem } from "@/services/catalog.service";
 const PdfViewer = dynamic(() => import("./pdf-viewer-studio"), {
   ssr: false,
   loading: () => (
-    <div className="flex flex-col items-center justify-center h-full gap-3 text-xs font-mono text-muted-foreground p-12">
+    <div className="flex flex-col items-center justify-center h-full gap-3 text-xs text-muted-foreground p-12">
       <Loader2 className="h-6 w-6 animate-spin text-primary" />
     </div>
   ),
@@ -76,7 +76,7 @@ export const CatalogCard: React.FC<{ catalog: CatalogItem }> = ({
             className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
           />
           {catalog.file_size_mb && (
-            <div className="absolute top-2 end-2 bg-background/90 backdrop-blur-md px-1.5 py-0.5 border border-border/50 text-[9px] sm:text-[10px] font-mono text-muted-foreground">
+            <div className="absolute top-2 end-2 bg-background/90 backdrop-blur-md px-1.5 py-0.5 border border-border/50 text-[9px] sm:text-[10px] text-muted-foreground">
               {catalog.file_size_mb} MB
             </div>
           )}
@@ -85,7 +85,7 @@ export const CatalogCard: React.FC<{ catalog: CatalogItem }> = ({
         {/* محتوا و دکمه‌ها */}
         <div className="p-3 sm:p-5 flex flex-col flex-1 justify-between min-w-0">
           <div className="space-y-1">
-            <span className="text-[9px] sm:text-[10px] uppercase tracking-wider text-primary font-mono block truncate">
+            <span className="text-[9px] sm:text-[10px] uppercase tracking-wider text-primary block truncate">
               {TYPE_LABELS[catalog.catalog_type] ||
                 catalog.catalog_type ||
                 "Documentation"}

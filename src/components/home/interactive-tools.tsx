@@ -99,7 +99,7 @@ export const InteractiveTools: React.FC = () => {
       <div className="container mx-auto px-4 sm:px-12">
         {/* عنوان بخش */}
         <div className="max-w-3xl mb-6 sm:mb-10">
-          <span className="text-[10px] sm:text-xs uppercase tracking-widest text-primary font-mono block mb-1">
+          <span className="text-[10px] sm:text-xs uppercase tracking-widest text-primary block mb-1">
             {t("tagline")}
           </span>
           <h3 className="text-lg sm:text-2xl lg:text-3xl font-light text-foreground">

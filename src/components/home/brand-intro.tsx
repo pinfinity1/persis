@@ -65,7 +65,7 @@ export const BrandIntro: React.FC = () => {
         {/* بخش آماری / ارزش‌های سه گانه */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 pt-16 sm:pt-24 mt-16 border-t border-border/30 max-w-5xl mx-auto">
           <div className="group space-y-2 text-center sm:text-start">
-            <span className="text-[11px] font-mono tracking-widest text-muted-foreground uppercase group-hover:text-primary">
+            <span className="text-[11px] tracking-widest text-muted-foreground uppercase group-hover:text-primary">
               01 / Material
             </span>
             <h4 className="text-sm font-medium text-foreground">
@@ -77,7 +77,7 @@ export const BrandIntro: React.FC = () => {
           </div>
 
           <div className="group space-y-2 text-center sm:text-start">
-            <span className="text-[11px] font-mono tracking-widest text-muted-foreground uppercase group-hover:text-primary">
+            <span className="text-[11px] tracking-widest text-muted-foreground uppercase group-hover:text-primary">
               02 / Design
             </span>
             <h4 className="text-sm font-medium text-foreground">
@@ -89,7 +89,7 @@ export const BrandIntro: React.FC = () => {
           </div>
 
           <div className="group space-y-2 text-center sm:text-start">
-            <span className="text-[11px] font-mono tracking-widest text-muted-foreground uppercase group-hover:text-primary">
+            <span className="text-[11px] tracking-widest text-muted-foreground uppercase group-hover:text-primary">
               03 / Guarantee
             </span>
             <h4 className="text-sm font-medium text-foreground">

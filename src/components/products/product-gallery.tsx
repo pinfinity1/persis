@@ -112,7 +112,7 @@ export function ProductGallery({
                 sizes="80px"
                 className="object-cover"
               />
-              <span className="absolute bottom-1 end-1 bg-black/70 text-white text-[10px] px-1.5 font-mono">
+              <span className="absolute bottom-1 end-1 bg-black/70 text-white text-[10px] px-1.5">
                 0{idx + 1}
               </span>
             </button>

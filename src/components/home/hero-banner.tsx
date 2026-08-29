@@ -176,7 +176,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ slides = [] }) => {
         <div className="max-w-3xl space-y-5 border-s border-white/20 ps-6 sm:ps-8">
           <div className="flex items-center gap-3">
             <span className="h-[1px] w-8 bg-primary"></span>
-            <span className="text-[11px] sm:text-xs uppercase tracking-[0.25em] font-mono text-neutral-300 font-light">
+            <span className="text-[11px] sm:text-xs uppercase tracking-[0.25em] text-neutral-300 font-light">
               {tagline}
             </span>
           </div>
