@@ -93,7 +93,7 @@ export default async function ContactPage({ params }: PageProps) {
                     <a
                       href="tel:+983832281752"
                       dir="ltr"
-                      className="text-xs font-mono text-foreground hover:text-primary transition-colors"
+                      className="text-xs text-foreground hover:text-primary transition-colors"
                     >
                       +98 38 3228 1752
                     </a>
@@ -113,7 +113,7 @@ export default async function ContactPage({ params }: PageProps) {
                     <a
                       href="mailto:info@persisquartz.com"
                       dir="ltr"
-                      className="text-xs font-mono text-foreground hover:text-primary transition-colors"
+                      className="text-xs text-foreground hover:text-primary transition-colors"
                     >
                       info@persisquartz.com
                     </a>

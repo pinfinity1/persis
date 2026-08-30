@@ -57,14 +57,14 @@ export default async function DealersPage({ params, searchParams }: PageProps) {
         </span>
         <div className="absolute bottom-4 start-0 z-10 flex items-center gap-3">
           <span className="h-px w-6 bg-primary" />
-          <span className="text-[10px] sm:text-[11px] font-mono tracking-[0.25em] text-primary uppercase">
+          <span className="text-[10px] sm:text-[11px] tracking-[0.25em] text-primary uppercase">
             Official Sales Network & Dealers
           </span>
         </div>
       </div>
 
       <div className="flex items-center justify-between gap-4 flex-wrap pb-2 border-b border-border/20">
-        <span className="text-xs uppercase tracking-widest text-primary font-mono block">
+        <span className="text-xs uppercase tracking-widest text-primary block">
           {t("filterTag")}
         </span>
         {provinces.length > 0 && <DealerFilterClient provinces={provinces} />}
