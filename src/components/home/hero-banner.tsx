@@ -17,9 +17,6 @@ interface HeroBannerProps {
   slides?: HeroSlideData[];
 }
 
-/**
- * استخراج ایمن URL از فیلدهای Media در Payload CMS
- */
 const getMediaUrl = (media?: MediaFile | string | null): string | undefined => {
   if (!media) return undefined;
   if (typeof media === "string") return media;
@@ -37,8 +34,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ slides = [] }) => {
   const currentSlide = slides[0];
 
   const mediaUrls = useMemo(() => {
-    const desktopPoster =
-      getMediaUrl(currentSlide?.desktopPoster) || "/PersisQuartz-Red.png";
+    const desktopPoster = getMediaUrl(currentSlide?.desktopPoster);
     const mobilePoster =
       getMediaUrl(currentSlide?.mobilePoster) || desktopPoster;
     const desktopVideo = getMediaUrl(currentSlide?.desktopVideo);
@@ -53,8 +49,13 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ slides = [] }) => {
   }, [currentSlide]);
 
   const hasVideo = Boolean(mediaUrls.desktopVideo || mediaUrls.mobileVideo);
+  const hasCustomMedia = Boolean(
+    mediaUrls.desktopPoster ||
+    mediaUrls.mobilePoster ||
+    mediaUrls.desktopVideo ||
+    mediaUrls.mobileVideo,
+  );
 
-  // لود صریح و پخش اجباری Muted برای دور زدن محدودیت مرورگرها
   useEffect(() => {
     if (!hasVideo || hasVideoError) return;
 
@@ -63,15 +64,14 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ slides = [] }) => {
       try {
         videoEl.muted = true;
         videoEl.defaultMuted = true;
-        videoEl.load(); // الزام مرورگر به بارگذاری مجدد ویدیو
+        videoEl.load();
         await videoEl.play();
         setIsVideoLoaded(true);
       } catch (err) {
-        console.warn("Autoplay notice or play error:", err);
+        console.warn("Autoplay error:", err);
       }
     };
 
-    // اجرا برای دسکتاپ و موبایل
     playVideo(desktopVideoRef.current);
     playVideo(mobileVideoRef.current);
   }, [hasVideo, hasVideoError, mediaUrls.desktopVideo, mediaUrls.mobileVideo]);
@@ -81,7 +81,6 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ slides = [] }) => {
   }, []);
 
   const handleVideoError = useCallback(() => {
-    console.error("Failed to load hero background video.");
     setHasVideoError(true);
   }, []);
 
@@ -95,39 +94,58 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ slides = [] }) => {
   const tagline = currentSlide?.tagline || t("tagline");
   const title = currentSlide?.title || t("title");
   const subtitle = currentSlide?.subtitle || t("subtitle");
-  const overlayOpacity = (currentSlide?.overlayOpacity ?? 40) / 100;
 
   return (
-    <section className="relative h-[100dvh] w-full overflow-hidden bg-neutral-950 text-white flex flex-col justify-end">
-      {/* 1. Desktop Poster (نمایش آنی روی دسکتاپ) */}
-      <Image
-        src={mediaUrls.desktopPoster}
-        alt="Persis Quartz Surface"
-        fill
-        priority
-        sizes="100vw"
-        className={`hidden md:block object-cover transition-opacity duration-700 ${
-          isVideoLoaded && !hasVideoError && mediaUrls.desktopVideo
-            ? "opacity-0"
-            : "opacity-100"
-        }`}
-      />
+    <section className="relative h-[100dvh] w-full overflow-hidden bg-neutral-950 text-white flex flex-col justify-end select-none">
+      {/* ۱. پس‌زمینه پیش‌فرض در صورت نبود مدیا */}
+      {!hasCustomMedia && (
+        <div className="absolute inset-0 bg-radial from-neutral-900 via-neutral-950 to-black flex items-center justify-center pointer-events-none">
+          <div className="absolute inset-0 bg-[radial-gradient(#ffffff08_1px,transparent_1px)] [background-size:24px_24px] opacity-40" />
+          <div className="relative w-52 sm:w-64 h-42 opacity-50">
+            <Image
+              src="/PersisQuartz-Red.png"
+              alt="Persis Quartz Logo"
+              fill
+              className="object-contain"
+              priority
+            />
+          </div>
+        </div>
+      )}
 
-      {/* 2. Mobile Poster (نمایش آنی روی موبایل) */}
-      <Image
-        src={mediaUrls.mobilePoster}
-        alt="Persis Quartz Surface Mobile"
-        fill
-        priority
-        sizes="100vw"
-        className={`block md:hidden object-cover transition-opacity duration-700 ${
-          isVideoLoaded && !hasVideoError && mediaUrls.mobileVideo
-            ? "opacity-0"
-            : "opacity-100"
-        }`}
-      />
+      {/* ۲. پوستر دسکتاپ (افقی) */}
+      {mediaUrls.desktopPoster && (
+        <Image
+          src={mediaUrls.desktopPoster}
+          alt="Persis Quartz Surface"
+          fill
+          priority
+          sizes="100vw"
+          className={`hidden md:block object-cover transition-opacity duration-700 ${
+            isVideoLoaded && !hasVideoError && mediaUrls.desktopVideo
+              ? "opacity-0"
+              : "opacity-100"
+          }`}
+        />
+      )}
 
-      {/* 3. Background Videos با سورس صریح و کارهای پیش‌فرض Muted */}
+      {/* ۳. پوستر موبایل (عمودی) */}
+      {mediaUrls.mobilePoster && (
+        <Image
+          src={mediaUrls.mobilePoster}
+          alt="Persis Quartz Surface Mobile"
+          fill
+          priority
+          sizes="100vw"
+          className={`block md:hidden object-cover transition-opacity duration-700 ${
+            isVideoLoaded && !hasVideoError && mediaUrls.mobileVideo
+              ? "opacity-0"
+              : "opacity-100"
+          }`}
+        />
+      )}
+
+      {/* ۴. ویدیوهای پس‌زمینه */}
       {mediaUrls.desktopVideo && !hasVideoError && (
         <video
           ref={desktopVideoRef}
@@ -164,18 +182,15 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ slides = [] }) => {
         </video>
       )}
 
-      {/* Overlays */}
-      <div
-        className="absolute inset-0 bg-black pointer-events-none transition-opacity"
-        style={{ opacity: overlayOpacity }}
-      />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/80 pointer-events-none" />
+      {/* ۵. لایه‌های سایه و گرادیانت خوانایی متون */}
+      <div className="absolute inset-0 bg-black/40 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/85 pointer-events-none" />
 
-      {/* Content Container - متن‌ها آنی و بدون تاخیر از فریم اول وجود دارند */}
+      {/* ۶. محتوای متنی */}
       <div className="container relative z-10 mx-auto px-6 sm:px-12 pb-20 sm:pb-28">
-        <div className="max-w-3xl space-y-5 border-s border-white/20 ps-6 sm:ps-8">
+        <div className="max-w-3xl space-y-4 border-s border-white/20 ps-6 sm:ps-8">
           <div className="flex items-center gap-3">
-            <span className="h-[1px] w-8 bg-primary"></span>
+            <span className="h-[1px] w-8 bg-primary" />
             <span className="text-[11px] sm:text-xs uppercase tracking-[0.25em] text-neutral-300 font-light">
               {tagline}
             </span>
@@ -188,23 +203,12 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ slides = [] }) => {
           <p className="text-xs sm:text-base font-light text-neutral-300/90 leading-relaxed max-w-xl">
             {subtitle}
           </p>
-
-          {currentSlide?.ctaText && currentSlide?.ctaLink && (
-            <div className="pt-2">
-              <a
-                href={currentSlide.ctaLink}
-                className="inline-flex items-center gap-2 text-xs uppercase tracking-wider bg-primary text-primary-foreground px-6 py-3 font-medium transition-all hover:bg-primary/90"
-              >
-                {currentSlide.ctaText}
-              </a>
-            </div>
-          )}
         </div>
       </div>
 
-      {/* Scroll Indicator */}
+      {/* ۷. راهنمای اسکرول به پایین */}
       <div
-        className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 text-white/40 hover:text-white transition-colors cursor-pointer group"
+        className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 text-white/40 hover:text-white transition-colors cursor-pointer"
         onClick={handleScrollDown}
       >
         <motion.div

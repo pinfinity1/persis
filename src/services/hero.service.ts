@@ -1,4 +1,3 @@
-// مسیر جدید: src/services/hero.service.ts
 import { cache } from "react";
 import "server-only";
 import { getPayload } from "payload";
@@ -17,7 +16,8 @@ export const getHeroBannersService = cache(async (locale: string = "fa") => {
           equals: "published",
         },
       },
-      sort: "order",
+      sort: "-updatedAt",
+      limit: 1,
     });
 
     return response.docs;

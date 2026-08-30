@@ -66,15 +66,7 @@ export const Media: CollectionConfig = {
       required: true,
       admin: {
         description:
-          "متن جایگزین عکس برای سئو و Accessibility (برای ویدیو و PDF اختیاری است)",
-      },
-    },
-    {
-      name: "caption",
-      type: "text",
-      localized: true,
-      admin: {
-        description: "کپشن یا توضیح کوتاه",
+          "عنوان/متن جایگزین تصویر برای سئو و موتورهای جستجو (مثال: اسلب پرسیس کوارتز)",
       },
     },
   ],

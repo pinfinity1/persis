@@ -47,16 +47,19 @@
     "subtitle": "Surfaces beyond mere covering; crafting harmony and authenticity in modern architecture"
   },
   "BrandIntro": {
-    "tagline": "A Fusion of Architectural Art & Quartz Durability",
-    "description": "Persis Quartz utilizes cutting-edge technology and premium materials to create surfaces of unmatched quality for modern architectural spaces.",
+    "tagline": "Engineering Precision for Timeless Architectural Beauty",
+    "description": "Fusing advanced engineering and contemporary aesthetics for modern architectural harmony.",
     "ctaProducts": "Explore Products",
     "ctaCatalogs": "Download Catalog",
-    "feature1Title": "Structural Quality & Material",
-    "feature1Desc": "Exceptional resistance to scratches, heat, and everyday stains.",
-    "feature2Title": "Architectural Design",
-    "feature2Desc": "Versatile textures and color palettes matching international design standards.",
-    "feature3Title": "Authenticity & Warranty",
-    "feature3Desc": "Guaranteed brand authenticity with reliable technical support."
+    "feature1Tag": "01 / Engineering",
+    "feature1Title": "Structural Durability",
+    "feature1Desc": "High resistance to scratches and heat.",
+    "feature2Tag": "02 / Aesthetics",
+    "feature2Title": "Contemporary Design",
+    "feature2Desc": "Creating visual depth and timeless harmony.",
+    "feature3Tag": "03 / Trust",
+    "feature3Title": "Global Authenticity",
+    "feature3Desc": "Guaranteed premium quality and sustainability."
   },
   "FeaturedProducts": {
     "tagline": "PERSIS QUARTZ COLLECTION",

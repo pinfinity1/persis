@@ -5,20 +5,20 @@ export const HeroBanner: CollectionConfig = {
   admin: {
     useAsTitle: "title",
     group: "Home Page",
-    defaultColumns: ["title", "order", "status", "updatedAt"],
+    defaultColumns: ["title", "status", "updatedAt"],
   },
   access: {
-    read: () => true, // دسترسی عمومی برای خواندن در فرانت‌‌اند
+    read: () => true,
   },
   fields: [
-    // --- ۱. اطلاعات متنی (چندزبانه) ---
+    // ۱. اطلاعات متنی (۳ زبانه)
     {
       name: "tagline",
       type: "text",
       localized: true,
       defaultValue: "PERSIS QUARTZ",
       admin: {
-        description: "متن کوچک بالای تیتر (مانند PERSIS QUARTZ)",
+        description: "متن کوچک بالای تیتر (مثال: PERSIS QUARTZ)",
       },
     },
     {
@@ -27,7 +27,7 @@ export const HeroBanner: CollectionConfig = {
       required: true,
       localized: true,
       admin: {
-        description: "تیتر اصلی اسلاید",
+        description: "تیتر اصلی بنر",
       },
     },
     {
@@ -39,9 +39,9 @@ export const HeroBanner: CollectionConfig = {
       },
     },
 
-    // --- ۲. رسانه‌های دسکتاپ (Desktop Media) ---
+    // ۲. رسانه دسکتاپ (افقی)
     {
-      type: "row", // قرارگیری فیلدها کنار هم در پنل ادمین
+      type: "row",
       fields: [
         {
           name: "desktopPoster",
@@ -49,8 +49,8 @@ export const HeroBanner: CollectionConfig = {
           relationTo: "media",
           required: true,
           admin: {
-            description:
-              "پوستر دسکتاپ (مهم برای SEO و حالت لودینگ/اینترنت ضعیف)",
+            description: "تصویر دسکتاپ (۱۹۲۰ در ۱۰۸۰) - اجباری",
+            width: "50%",
           },
         },
         {
@@ -58,13 +58,14 @@ export const HeroBanner: CollectionConfig = {
           type: "upload",
           relationTo: "media",
           admin: {
-            description: "ویدیو پس‌زمینه دسکتاپ (اختیاری)",
+            description: "ویدیوی دسکتاپ MP4 (اختیاری)",
+            width: "50%",
           },
         },
       ],
     },
 
-    // --- ۳. رسانه‌های موبایل (Mobile Media) ---
+    // ۳. رسانه موبایل (عمودی)
     {
       type: "row",
       fields: [
@@ -74,7 +75,8 @@ export const HeroBanner: CollectionConfig = {
           relationTo: "media",
           required: true,
           admin: {
-            description: "پوستر موبایل (حالت عمودی)",
+            description: "تصویر موبایل (عمودی ۱۰۸۰ در ۱۹۲۰) - اجباری",
+            width: "50%",
           },
         },
         {
@@ -82,67 +84,26 @@ export const HeroBanner: CollectionConfig = {
           type: "upload",
           relationTo: "media",
           admin: {
-            description: "ویدیو پس‌زمینه موبایل (اختیاری)",
+            description: "ویدیوی موبایل MP4 (اختیاری)",
+            width: "50%",
           },
         },
       ],
     },
 
-    // --- ۴. دکمه/لینک اختیاری (Optional CTA) ---
+    // ۴. وضعیت فعال/غیرفعال بودن
     {
-      type: "row",
-      fields: [
-        {
-          name: "ctaText",
-          type: "text",
-          localized: true,
-          admin: {
-            description: "متن دکمه (اگر خالی باشد، دکمه نمایش داده نمی‌شود)",
-          },
-        },
-        {
-          name: "ctaLink",
-          type: "text",
-          admin: {
-            description: "لینک هدف دکمه (مثلاً products/ یا contact/)",
-          },
-        },
+      name: "status",
+      type: "select",
+      defaultValue: "published",
+      options: [
+        { label: "فعال روی سایت (Published)", value: "published" },
+        { label: "پیش‌نویس / غیرفعال (Draft)", value: "draft" },
       ],
-    },
-
-    // --- ۵. تنظیمات نمایش و دیزاین ---
-    {
-      type: "row",
-      fields: [
-        {
-          name: "overlayOpacity",
-          type: "number",
-          min: 0,
-          max: 100,
-          defaultValue: 40,
-          admin: {
-            description: "میزان تیرگی لایه روی ویدیو/عکس (درصد از ۰ تا ۱۰۰)",
-          },
-        },
-        {
-          name: "order",
-          type: "number",
-          defaultValue: 0,
-          admin: {
-            description:
-              "ترتیب نمایش اسلایدها (اعداد کوچک‌تر اول نمایش داده می‌شوند)",
-          },
-        },
-        {
-          name: "status",
-          type: "select",
-          defaultValue: "published",
-          options: [
-            { label: "منتشر شده (Published)", value: "published" },
-            { label: "پیش‌نویس (Draft)", value: "draft" },
-          ],
-        },
-      ],
+      admin: {
+        description:
+          "جهت نمایش این بنر در سایت، وضعیت را روی «فعال روی سایت» قرار دهید.",
+      },
     },
   ],
 };
