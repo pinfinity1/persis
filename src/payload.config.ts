@@ -18,6 +18,7 @@ import { Finishes } from "./payload/collections/Finishes";
 import { Catalogs } from "./payload/collections/Catalogs";
 import { AboutPage } from "./payload/globals/AboutPage";
 import { Dealers } from "./payload/collections/Dealers";
+import { Inquiries } from "./payload/collections/Inquiries";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -40,6 +41,7 @@ export default buildConfig({
     Products,
     Catalogs,
     Dealers,
+    Inquiries,
   ],
   globals: [AboutPage],
 

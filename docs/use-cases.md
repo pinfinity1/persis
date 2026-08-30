@@ -55,7 +55,6 @@
 ### 6. Info Pages:
 
 - `/about-persis`: About us and FAQ section.
-- `/privacy-policy`: Privacy Policy and Terms of Service.
 
 ### 7. Contact Us Page:
 

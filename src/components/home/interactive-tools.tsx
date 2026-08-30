@@ -1,7 +1,12 @@
-// src/components/home/interactive-tools.tsx
 "use client";
 
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useCallback,
+  useEffect,
+  useRef,
+  useTransition,
+} from "react";
 import Image from "next/image";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,6 +16,7 @@ import {
   quickContactSchema,
   type QuickContactValues,
 } from "@/lib/validations/contact";
+import { submitContactFormAction } from "@/app/actions/contact-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,11 +32,11 @@ export const InteractiveTools: React.FC = () => {
   const t = useTranslations("InteractiveTools");
   const locale = useLocale();
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [isSuccess, setIsSuccess] = useState(false);
   const [cooldown, setCooldown] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // useRef جهت مدیریت امن تایمر و جلوگیری از Memory Leak در هنگام unmount
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -56,42 +62,34 @@ export const InteractiveTools: React.FC = () => {
   });
 
   const onSubmit = useCallback(
-    async (data: QuickContactValues) => {
-      if (cooldown || isSubmitting) return;
+    (data: QuickContactValues) => {
+      if (cooldown || isPending) return;
 
-      setIsSubmitting(true);
+      setErrorMessage(null);
       setCooldown(true);
 
-      const sanitizedData = {
-        fullName: data.fullName.trim().replace(/[<>]/g, ""),
-        country: data.country.trim().replace(/[<>]/g, ""),
-        phone: data.phone.trim().replace(/[^0-9+]/g, ""),
-        message: data.message.trim().replace(/[<>]/g, ""),
-        locale,
-      };
-
-      try {
-        const response = await fetch("/api/v1/leads/quick-contact", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Requested-With": "XMLHttpRequest",
-          },
-          body: JSON.stringify(sanitizedData),
+      startTransition(async () => {
+        // مپ کردن دیتای سریع به نوع general که فقط فیلدهای پایه را نیاز دارد
+        const response = await submitContactFormAction({
+          type: "general",
+          fullName: data.fullName.trim().replace(/[<>]/g, ""),
+          country: data.country.trim().replace(/[<>]/g, ""),
+          phone: data.phone.trim().replace(/[^0-9+]/g, ""),
+          message: data.message.trim().replace(/[<>]/g, ""),
+          email: "",
         });
 
-        if (response.ok) {
+        if (response.success) {
           setIsSuccess(true);
           reset();
+        } else {
+          setErrorMessage(response.message || "serverError");
         }
-      } catch (error) {
-        console.error("Error submitting project inquiry:", error);
-      } finally {
-        setIsSubmitting(false);
+
         timerRef.current = setTimeout(() => setCooldown(false), 5000);
-      }
+      });
     },
-    [cooldown, isSubmitting, reset, locale],
+    [cooldown, isPending, reset],
   );
 
   return (
@@ -109,9 +107,8 @@ export const InteractiveTools: React.FC = () => {
 
         {/* گرید اصلی */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch">
-          {/* کارت ۱: شبکه فروش و نقشه ایران (واضح، محوشدگی لبه پایین و بدون خط جداکننده) */}
+          {/* کارت ۱: شبکه فروش و نقشه ایران */}
           <div className="lg:col-span-5 bg-card border border-border/60 flex flex-col justify-between hover:border-primary/40 transition-colors duration-500 rounded-none overflow-hidden relative group">
-            {/* بخش نقشه ایران - شفافیت عالی، انیمیشن هاور و گرادینت نرم */}
             <div className="relative w-full h-48 sm:h-56 lg:h-52 bg-muted/30 p-4 flex items-center justify-center overflow-hidden">
               <Image
                 src="/iran-map.png"
@@ -123,7 +120,6 @@ export const InteractiveTools: React.FC = () => {
               <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-card to-transparent pointer-events-none" />
             </div>
 
-            {/* محتوای متنی کارت ۱ */}
             <div className="p-5 sm:p-7 pt-2 flex flex-col justify-between flex-1 space-y-6 z-10">
               <div className="space-y-3 sm:space-y-4">
                 <div className="p-2 bg-muted/60 w-fit border border-border/50 text-primary">
@@ -168,6 +164,12 @@ export const InteractiveTools: React.FC = () => {
             </div>
 
             <div className="pt-2">
+              {errorMessage && (
+                <div className="p-3 mb-4 bg-destructive/10 border border-destructive text-destructive text-xs">
+                  {errorMessage}
+                </div>
+              )}
+
               {isSuccess ? (
                 <div className="p-6 bg-muted/30 border border-emerald-600/30 text-center space-y-2 my-auto">
                   <CheckCircle2 className="h-7 w-7 text-emerald-600 mx-auto" />
@@ -194,7 +196,6 @@ export const InteractiveTools: React.FC = () => {
                 >
                   {/* ردیف ۱: نام و کشور */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
-                    {/* نام و نام خانوادگی */}
                     <div className="flex flex-col relative pb-5">
                       <label
                         htmlFor="fullName"
@@ -222,12 +223,11 @@ export const InteractiveTools: React.FC = () => {
                       />
                       {errors.fullName && (
                         <span className="absolute bottom-0 start-0 text-[10px] text-destructive font-light leading-none">
-                          {t("fullNameError")}
+                          {t(errors.fullName.message as any)}
                         </span>
                       )}
                     </div>
 
-                    {/* کشور / شهر */}
                     <div className="flex flex-col relative pb-5">
                       <label
                         htmlFor="country"
@@ -254,7 +254,7 @@ export const InteractiveTools: React.FC = () => {
                       />
                       {errors.country && (
                         <span className="absolute bottom-0 start-0 text-[10px] text-destructive font-light leading-none">
-                          {t("countryError")}
+                          {t(errors.country.message as any)}
                         </span>
                       )}
                     </div>
@@ -295,7 +295,7 @@ export const InteractiveTools: React.FC = () => {
                     />
                     {errors.phone && (
                       <span className="absolute bottom-0 start-0 text-[10px] text-destructive font-light leading-none">
-                        {t("phoneError")}
+                        {t(errors.phone.message as any)}
                       </span>
                     )}
                   </div>
@@ -326,7 +326,7 @@ export const InteractiveTools: React.FC = () => {
                     />
                     {errors.message && (
                       <span className="absolute bottom-0 start-0 text-[10px] text-destructive font-light leading-none">
-                        {t("messageError")}
+                        {t(errors.message.message as any)}
                       </span>
                     )}
                   </div>
@@ -335,10 +335,10 @@ export const InteractiveTools: React.FC = () => {
                   <div>
                     <Button
                       type="submit"
-                      disabled={isSubmitting || cooldown}
+                      disabled={isPending || cooldown}
                       className="w-full sm:w-auto px-8 rounded-none bg-primary text-primary-foreground hover:bg-primary/90 h-11 text-xs uppercase tracking-wider transition-all disabled:opacity-70"
                     >
-                      {isSubmitting ? (
+                      {isPending ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
                         <span className="flex items-center gap-2">
