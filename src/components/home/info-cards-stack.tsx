@@ -110,7 +110,7 @@ export const InfoCardsStack: React.FC = () => {
     { label: t("featScratch"), icon: "/icons/scratch.png" },
     { label: t("featStain"), icon: "/icons/stain.png" },
     { label: t("featImpact"), icon: "/icons/impact.png" },
-    { label: t("featImpermeable"), icon: "/icons/layerbarrier.png" },
+    { label: t("featImpermeable"), icon: "/icons/dense.png" },
     { label: t("featAntibacterial"), icon: "/icons/antibacterial.png" },
     { label: t("featEasyClean"), icon: "/icons/easyclean.png" },
   ];

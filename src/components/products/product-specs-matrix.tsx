@@ -56,7 +56,7 @@ export async function ProductSpecsMatrix({
     { label: tInfo("featScratch"), icon: "/icons/scratch.png" },
     { label: tInfo("featStain"), icon: "/icons/stain.png" },
     { label: tInfo("featImpact"), icon: "/icons/impact.png" },
-    { label: tInfo("featImpermeable"), icon: "/icons/layerbarrier.png" },
+    { label: tInfo("featImpermeable"), icon: "/icons/dense.png" },
     { label: tInfo("featAntibacterial"), icon: "/icons/antibacterial.png" },
     { label: tInfo("featEasyClean"), icon: "/icons/easyclean.png" },
   ];
