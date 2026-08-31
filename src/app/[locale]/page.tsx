@@ -4,7 +4,7 @@ import { ProductShowcase } from "@/components/home/product-showcase";
 import { InteractiveTools } from "@/components/home/interactive-tools";
 import { InfoCardsStack } from "@/components/home/info-cards-stack";
 import { getHeroBannersService } from "@/services/hero.service";
-import { getProductsService } from "@/services/product.service";
+import { getFeaturedProductsService } from "@/services/product.service";
 
 export default async function HomePage({
   params,
@@ -14,20 +14,18 @@ export default async function HomePage({
   const { locale } = await params;
   const currentLocale = locale as "fa" | "en" | "ar";
 
-  const [heroSlides, { data: products }] = await Promise.all([
+  const [heroSlides, featuredProducts] = await Promise.all([
     getHeroBannersService(currentLocale),
-    getProductsService({
-      locale: currentLocale,
-      page: 1,
-      limit: 8,
-    }),
+    getFeaturedProductsService(currentLocale),
   ]);
 
   return (
     <main className="min-h-screen bg-background font-sans">
       <HeroBanner slides={heroSlides as any} />
       <BrandIntro />
-      <ProductShowcase products={products} />
+      {featuredProducts.length > 0 && (
+        <ProductShowcase products={featuredProducts} />
+      )}
       <InfoCardsStack />
       <InteractiveTools />
     </main>

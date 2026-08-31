@@ -79,6 +79,15 @@ export const Products: CollectionConfig = {
       ],
     },
     {
+      name: "is_featured",
+      type: "checkbox",
+      defaultValue: false,
+      admin: {
+        description: "نمایش این محصول در بخش محصولات منتخب (صفحه اصلی)",
+        position: "sidebar", // این گزینه چک‌باکس را در ستون کناری ادمین قرار می‌دهد تا در دسترس‌تر باشد
+      },
+    },
+    {
       name: "thumbnail",
       type: "upload",
       relationTo: "media",

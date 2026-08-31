@@ -54,6 +54,7 @@ export interface ProductItem {
   color_family: ColorItem | string;
   vein_pattern?: VeinPatternItem | string;
   is_in_stock: "in_stock" | "on_demand" | "discontinued";
+  is_featured?: boolean;
   thumbnail: { url: string; alt?: string } | string;
   gallery?: GalleryItem[];
   available_thicknesses?: string[];
@@ -288,6 +289,33 @@ export const getAllFinishesService = cache(
       }));
     } catch (error) {
       console.error("Error fetching finishes:", error);
+      return [];
+    }
+  },
+);
+
+export const getFeaturedProductsService = cache(
+  async (locale: "fa" | "en" | "ar"): Promise<ProductItem[]> => {
+    try {
+      const payload = await getPayload({ config: configPromise });
+
+      const response = await payload.find({
+        collection: "products",
+        locale,
+        limit: 6, // دقیقاً ۶ محصول را می‌گیرد
+        where: {
+          is_featured: { equals: true },
+        },
+        sort: "-updatedAt", // جدیدترین مواردی که تیک زده‌اید را اول می‌آورد
+        depth: 2,
+      });
+
+      return (response.docs as unknown as ProductItem[]) || [];
+    } catch (error) {
+      console.error(
+        "Error fetching featured products from Payload CMS:",
+        error,
+      );
       return [];
     }
   },
