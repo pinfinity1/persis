@@ -64,7 +64,7 @@ export default async function RootLayout({
         <NextIntlClientProvider messages={messages}>
           <Header categories={categories} />
           <div className="flex-1">{children}</div>
-          <Footer />
+          <Footer categories={categories} />
         </NextIntlClientProvider>
       </body>
     </html>

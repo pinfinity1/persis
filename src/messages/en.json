@@ -23,23 +23,20 @@
     "contactUs": "Contact Us"
   },
   "Footer": {
-    "description": "Manufacturer of premium engineered quartz surfaces; blending unmatched durability with architectural aesthetics.",
+    "description": "Engineered quartz surfaces designed with global standards, combining unmatched durability with architectural beauty.",
     "address": "No. 369, Andisheh 6, Phase 3, Industrial Zone, Shahrekord, Iran",
     "phone": "+98 38 3228 1752",
     "email": "info@persisquartz.com",
-    "productsTitle": "Collections",
-    "monocolorSeries": "Monocolor Series",
-    "veinedEffectSeries": "Veined Effect Series",
-    "calacattaSeries": "Calacatta Series",
-    "quickLinksTitle": "Quick Links",
-    "findDealers": "Find Dealers",
-    "downloadCatalog": "Catalog",
-    "aboutUs": "About Us",
+    "productsTitle": "COLLECTIONS",
+    "resourcesTitle": "RESOURCES",
+    "companyTitle": "COMPANY",
+    "allProducts": "All Products",
+    "downloadCatalog": "Download Catalogs",
+    "careAndMaintenance": "Care & Maintenance",
+    "findDealers": "Find a Dealer",
+    "aboutUs": "About Persis",
     "contactUs": "Contact Us",
-    "infoAndLegalTitle": "Info & Legal",
-    "termsAndConditions": "Terms & Conditions",
-    "faq": "FAQ",
-    "copyright": "All rights reserved."
+    "requestSample": "Request a Sample"
   },
   "Hero": {
     "tagline": "PERSIS QUARTZ",
