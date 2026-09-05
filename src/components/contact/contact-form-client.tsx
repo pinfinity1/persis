@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useTransition, useEffect, useRef } from "react";
+import React, { useState, useTransition, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import {
   contactFormSchema,
   type ContactFormValues,
@@ -26,6 +26,8 @@ import {
 
 export function ContactFormClient() {
   const t = useTranslations("ContactPage");
+  const locale = useLocale();
+  const isRtl = locale === "fa" || locale === "ar";
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [isSuccess, setIsSuccess] = useState(false);
@@ -35,7 +37,7 @@ export function ContactFormClient() {
     (searchParams.get("type") as ContactFormValues["type"]) || "general";
 
   const {
-    control,
+    register,
     handleSubmit,
     watch,
     setValue,
@@ -43,7 +45,7 @@ export function ContactFormClient() {
     formState: { errors },
   } = useForm<ContactFormValues>({
     resolver: zodResolver(contactFormSchema),
-    mode: "onTouched",
+    mode: "onBlur",
     defaultValues: {
       type: ["sample", "project", "dealer", "general"].includes(initialType)
         ? initialType
@@ -125,55 +127,78 @@ export function ContactFormClient() {
   const FieldWrapper = ({
     name,
     label,
+    hint,
     required = false,
     type = "text",
-    placeholder = "",
     span = 1,
     isTextarea = false,
-  }: any) => (
-    <div
-      className={`space-y-1.5 ${span === 2 ? "sm:col-span-2" : "sm:col-span-1"}`}
-    >
-      <label
-        htmlFor={name}
-        className="text-xs font-medium text-foreground block"
+  }: any) => {
+    const errorMsg = (errors as any)[name]?.message;
+    // فقط ایمیل و تلفن قطعاً ltr هستند، بقیه فیلدها قطعاً بر اساس زبان صفحه rtl یا ltr هستند
+    const fieldDir =
+      type === "tel" || type === "email" ? "ltr" : isRtl ? "rtl" : "ltr";
+
+    return (
+      <div
+        className={`space-y-1.5 ${span === 2 ? "sm:col-span-2" : "sm:col-span-1"}`}
       >
-        {label} {required && <span className="text-primary">*</span>}
-      </label>
-      <Controller
-        name={name}
-        control={control}
-        render={({ field }) =>
-          isTextarea ? (
-            <Textarea
-              {...field}
-              id={name}
-              placeholder={placeholder}
-              className={`rounded-none bg-background text-xs resize-none min-h-[110px] transition-colors ${(errors as any)[name] ? "border-destructive focus-visible:ring-destructive" : "border-border/60 focus-visible:border-primary"}`}
-            />
-          ) : (
-            <Input
-              {...field}
-              id={name}
-              type={type}
-              dir={type === "email" || type === "tel" ? "ltr" : "auto"}
-              placeholder={placeholder}
-              className={`rounded-none h-11 bg-background text-xs transition-colors ${(errors as any)[name] ? "border-destructive focus-visible:ring-destructive" : "border-border/60 focus-visible:border-primary"}`}
-            />
-          )
-        }
-      />
-      {(errors as any)[name] && (
-        <span className="text-[10px] text-destructive block mt-1">
-          {t((errors as any)[name].message)}
-        </span>
-      )}
-    </div>
-  );
+        <div className="flex items-center justify-between">
+          <label
+            htmlFor={name}
+            className="text-xs font-medium text-foreground block"
+          >
+            {label} {required && <span className="text-primary">*</span>}
+          </label>
+          {hint && (
+            <span className="text-[10px] text-muted-foreground/70 font-light">
+              {hint}
+            </span>
+          )}
+        </div>
+
+        {isTextarea ? (
+          <Textarea
+            id={name}
+            dir={fieldDir}
+            placeholder={t(`${name}Placeholder` as any)}
+            {...register(name)}
+            disabled={isPending}
+            className={`rounded-none bg-background text-xs resize-none min-h-[110px] placeholder:text-muted-foreground/40 transition-colors ${
+              errorMsg
+                ? "border-destructive focus-visible:ring-destructive"
+                : "border-border/60 focus-visible:border-primary"
+            }`}
+          />
+        ) : (
+          <Input
+            id={name}
+            type={type}
+            dir={fieldDir}
+            placeholder={t(`${name}Placeholder` as any)}
+            {...register(name)}
+            disabled={isPending}
+            className={`rounded-none h-11 bg-background text-xs placeholder:text-muted-foreground/40 transition-colors ${
+              type === "tel"
+                ? "font-mono text-start tracking-wider placeholder:tracking-normal placeholder:font-mono"
+                : ""
+            } ${
+              errorMsg
+                ? "border-destructive focus-visible:ring-destructive"
+                : "border-border/60 focus-visible:border-primary"
+            }`}
+          />
+        )}
+        {errorMsg && (
+          <span className="text-[10px] text-destructive block mt-1">
+            {t(errorMsg)}
+          </span>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6">
-      {/* تب‌ها: اسکرول افقی نرم در موبایل + گرید چهار ستونه در دسکتاپ */}
       <div className="overflow-x-auto pb-1.5 scrollbar-none -mx-2 px-2 sm:mx-0 sm:px-0">
         <div className="flex sm:grid sm:grid-cols-4 gap-1.5 border border-border/40 p-1 bg-muted/20 min-w-[500px] sm:min-w-0">
           {typeTabs.map((tab) => {
@@ -183,7 +208,7 @@ export function ContactFormClient() {
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => {
+                onClick={() =>
                   reset({
                     type: tab.id,
                     fullName: "",
@@ -191,9 +216,13 @@ export function ContactFormClient() {
                     phone: "",
                     country: "",
                     message: "",
-                  } as any);
-                }}
-                className={`relative flex-1 py-3 px-3 flex items-center justify-center gap-2 transition-all cursor-pointer select-none ${isSelected ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                  } as any)
+                }
+                className={`relative flex-1 py-3 px-3 flex items-center justify-center gap-2 transition-all cursor-pointer select-none ${
+                  isSelected
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
               >
                 {isSelected && (
                   <motion.div
@@ -206,7 +235,9 @@ export function ContactFormClient() {
                 <div className="relative z-10 flex items-center gap-2">
                   <Icon className="h-3.5 w-3.5 shrink-0" />
                   <span
-                    className={`text-[11px] uppercase tracking-wider whitespace-nowrap ${isSelected ? "font-bold" : "font-normal"}`}
+                    className={`text-[11px] uppercase tracking-wider whitespace-nowrap ${
+                      isSelected ? "font-bold" : "font-normal"
+                    }`}
                   >
                     {tab.label}
                   </span>
@@ -223,7 +254,6 @@ export function ContactFormClient() {
         </div>
       )}
 
-      {/* فیلدها */}
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FieldWrapper name="fullName" label={t("fullNameLabel")} required />
@@ -231,8 +261,8 @@ export function ContactFormClient() {
           <FieldWrapper
             name="phone"
             label={t("phoneLabel")}
+            hint={t("phoneHint")}
             type="tel"
-            placeholder="+98..."
             required
           />
           <FieldWrapper name="country" label={t("countryLabel")} required />
@@ -246,22 +276,17 @@ export function ContactFormClient() {
                 exit={{ opacity: 0, y: -8 }}
                 className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-border/30 mt-1"
               >
-                <FieldWrapper name="city" label="شهر / استان" required />
+                <FieldWrapper name="city" label={t("cityLabel")} required />
                 <FieldWrapper
                   name="postalCode"
-                  label="کد پستی (۱۰ رقمی)"
+                  label={t("postalCodeLabel")}
                   required
                 />
                 <FieldWrapper
                   name="productCodes"
                   label={t("productCodesLabel")}
-                  placeholder="e.g. 1101, 3106"
                 />
-                <FieldWrapper
-                  name="company"
-                  label={t("companyLabel")}
-                  placeholder="دفتر معماری / شرکت"
-                />
+                <FieldWrapper name="company" label={t("companyLabel")} />
                 <FieldWrapper
                   name="address"
                   label={t("addressLabel")}
@@ -286,12 +311,11 @@ export function ContactFormClient() {
                 />
                 <FieldWrapper
                   name="projectSize"
-                  label="متراژ حدودی (متر مربع)"
+                  label={t("projectSizeLabel")}
                 />
                 <FieldWrapper
                   name="productCodes"
                   label={t("productCodesLabel")}
-                  placeholder="e.g. 1101, 3106"
                   span={2}
                 />
               </motion.div>
@@ -310,11 +334,7 @@ export function ContactFormClient() {
                   label={t("companyLabel")}
                   required
                 />
-                <FieldWrapper
-                  name="city"
-                  label="شهر و استان مورد تقاضا"
-                  required
-                />
+                <FieldWrapper name="city" label={t("cityLabel")} required />
               </motion.div>
             )}
           </AnimatePresence>
