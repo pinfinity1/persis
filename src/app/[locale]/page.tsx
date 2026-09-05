@@ -1,32 +1,31 @@
+import { getHomePageDataService } from "@/services/home.service";
+import { getFeaturedProductsService } from "@/services/product.service";
 import { HeroBanner } from "@/components/home/hero-banner";
+import { InfoCardsStack } from "@/components/home/info-cards-stack";
 import { BrandIntro } from "@/components/home/brand-intro";
 import { ProductShowcase } from "@/components/home/product-showcase";
 import { InteractiveTools } from "@/components/home/interactive-tools";
-import { InfoCardsStack } from "@/components/home/info-cards-stack";
-import { getHeroBannersService } from "@/services/hero.service";
-import { getFeaturedProductsService } from "@/services/product.service";
 
-export default async function HomePage({
-  params,
-}: {
+interface PageProps {
   params: Promise<{ locale: string }>;
-}) {
-  const { locale } = await params;
-  const currentLocale = locale as "fa" | "en" | "ar";
+}
 
-  const [heroSlides, featuredProducts] = await Promise.all([
-    getHeroBannersService(currentLocale),
+export default async function HomePage({ params }: PageProps) {
+  const { locale } = await params;
+  const currentLocale = (locale as "fa" | "en" | "ar") || "fa";
+
+  // دو واکشی موازی و پرسرعت سروری
+  const [homeData, featuredProducts] = await Promise.all([
+    getHomePageDataService(currentLocale),
     getFeaturedProductsService(currentLocale),
   ]);
 
   return (
-    <main className="min-h-screen bg-background font-sans">
-      <HeroBanner slides={heroSlides as any} />
+    <main className="min-h-screen bg-background">
+      <HeroBanner heroData={homeData.hero} />
       <BrandIntro />
-      {featuredProducts.length > 0 && (
-        <ProductShowcase products={featuredProducts} />
-      )}
-      <InfoCardsStack />
+      <ProductShowcase products={featuredProducts} />
+      <InfoCardsStack images={homeData.infoCardsImages} />
       <InteractiveTools />
     </main>
   );

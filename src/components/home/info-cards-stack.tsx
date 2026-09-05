@@ -1,7 +1,7 @@
 // src/components/home/info-cards-stack.tsx
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo, useCallback } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { useTranslations, useLocale } from "next-intl";
@@ -11,25 +11,26 @@ import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
 
 type CardType = "features" | "maintenance" | "catalog" | "sample";
 
-interface CardItem {
+interface CardDefinition {
   id: number;
   type: CardType;
-  categoryKey: string;
-  titleKey: string;
-  descKey: string;
-  ctaKey?: string;
+  categoryKey:
+    "card1Category" | "card2Category" | "card3Category" | "card4Category";
+  titleKey: "card1Title" | "card2Title" | "card3Title" | "card4Title";
+  descKey?: "card2Desc" | "card3Desc" | "card4Desc";
+  ctaKey?: "card2Cta" | "card3Cta" | "card4Cta";
   link?: string;
-  imageUrl: string;
+  imageKey:
+    "featuresImage" | "maintenanceImage" | "catalogsImage" | "sampleImage";
 }
 
-const CARDS_DATA: CardItem[] = [
+const STATIC_CARDS: readonly CardDefinition[] = [
   {
     id: 1,
     type: "features",
     categoryKey: "card1Category",
     titleKey: "card1Title",
-    descKey: "",
-    imageUrl: "/PersisQuartz-Red.png",
+    imageKey: "featuresImage",
   },
   {
     id: 2,
@@ -39,7 +40,7 @@ const CARDS_DATA: CardItem[] = [
     descKey: "card2Desc",
     ctaKey: "card2Cta",
     link: "/care-and-maintenance",
-    imageUrl: "/PersisQuartz-Red.png",
+    imageKey: "maintenanceImage",
   },
   {
     id: 3,
@@ -49,7 +50,7 @@ const CARDS_DATA: CardItem[] = [
     descKey: "card3Desc",
     ctaKey: "card3Cta",
     link: "/catalogs",
-    imageUrl: "/PersisQuartz-Red.png",
+    imageKey: "catalogsImage",
   },
   {
     id: 4,
@@ -59,42 +60,46 @@ const CARDS_DATA: CardItem[] = [
     descKey: "card4Desc",
     ctaKey: "card4Cta",
     link: "/contact?type=sample",
-    imageUrl: "/PersisQuartz-Red.png",
+    imageKey: "sampleImage",
   },
-];
+] as const;
 
-export const InfoCardsStack: React.FC = () => {
+export interface InfoCardsStackProps {
+  images?: {
+    featuresImage?: string;
+    maintenanceImage?: string;
+    catalogsImage?: string;
+    sampleImage?: string;
+  };
+}
+
+const FALLBACK_IMG = "/PersisQuartz-Red.png";
+
+export const InfoCardsStack: React.FC<InfoCardsStackProps> = ({ images }) => {
   const t = useTranslations("InfoCards");
   const locale = useLocale();
   const isRtl = locale === "fa" || locale === "ar";
 
-  const [cards, setCards] = useState<CardItem[]>(CARDS_DATA);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const touchStartX = useRef<number | null>(null);
 
-  const handleNext = () => {
-    setCards((prev) => {
-      const [first, ...rest] = prev;
-      return [...rest, first];
-    });
-  };
+  const totalCards = STATIC_CARDS.length;
 
-  const handlePrev = () => {
-    setCards((prev) => {
-      const last = prev[prev.length - 1];
-      const rest = prev.slice(0, prev.length - 1);
-      return [last, ...rest];
-    });
-  };
+  const handleNext = useCallback(() => {
+    setCurrentIndex((prev) => (prev + 1) % totalCards);
+  }, [totalCards]);
 
-  // مدیریت Swipe روان بدون تداخل با Dragهای سنگین Framer Motion
+  const handlePrev = useCallback(() => {
+    setCurrentIndex((prev) => (prev - 1 + totalCards) % totalCards);
+  }, [totalCards]);
+
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (touchStartX.current === null) return;
-    const touchEndX = e.changedTouches[0].clientX;
-    const diff = touchStartX.current - touchEndX;
+    const diff = touchStartX.current - e.changedTouches[0].clientX;
 
     if (Math.abs(diff) > 40) {
       if (diff > 0) {
@@ -106,29 +111,52 @@ export const InfoCardsStack: React.FC = () => {
     touchStartX.current = null;
   };
 
-  const featuresList = [
-    { label: t("featScratch"), icon: "/icons/scratch.png" },
-    { label: t("featStain"), icon: "/icons/stain.png" },
-    { label: t("featImpact"), icon: "/icons/impact.png" },
-    { label: t("featImpermeable"), icon: "/icons/dense.png" },
-    { label: t("featAntibacterial"), icon: "/icons/antibacterial.png" },
-    { label: t("featEasyClean"), icon: "/icons/easyclean.png" },
-  ];
+  const visibleCards = useMemo(() => {
+    return [0, 1, 2].map((offset) => {
+      const idx = (currentIndex + offset) % totalCards;
+      const def = STATIC_CARDS[idx];
+      const rawUrl = images?.[def.imageKey];
+      const isPlaceholder = !rawUrl || rawUrl === FALLBACK_IMG;
+
+      return {
+        ...def,
+        imageUrl: isPlaceholder ? FALLBACK_IMG : rawUrl,
+        isPlaceholder,
+        stackPosition: offset,
+      };
+    });
+  }, [currentIndex, images, totalCards]);
+
+  const featuresList = useMemo(
+    () => [
+      { label: t("featScratch"), icon: "/icons/scratch.png" },
+      { label: t("featStain"), icon: "/icons/stain.png" },
+      { label: t("featImpact"), icon: "/icons/impact.png" },
+      { label: t("featImpermeable"), icon: "/icons/dense.png" },
+      { label: t("featAntibacterial"), icon: "/icons/antibacterial.png" },
+      { label: t("featEasyClean"), icon: "/icons/easyclean.png" },
+    ],
+    [t],
+  );
 
   return (
-    <section className="py-16 sm:py-24 bg-background border-b border-border/40 select-none overflow-hidden">
-      <div className="container mx-auto px-6 sm:px-12">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-12 gap-4 max-w-4xl mx-auto">
+    <section
+      className="py-12 sm:py-20 lg:py-24 bg-background border-b border-border/40 select-none overflow-hidden"
+      aria-label="Info Cards Stack"
+    >
+      <div className="container mx-auto px-4 sm:px-12">
+        {/* هدر بخش و دکمه‌های ناوبری */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-12 gap-4 max-w-5xl mx-auto">
           <div>
-            <span className="text-[11px] sm:text-xs uppercase tracking-widest text-primary block mb-1">
+            <span className="text-[10px] sm:text-xs uppercase tracking-widest text-primary block mb-1 font-semibold">
               {t("tagline")}
             </span>
-            <h3 className="text-2xl sm:text-3xl font-light text-foreground">
+            <h3 className="text-xl sm:text-3xl font-light text-foreground">
               {t("title")}
             </h3>
           </div>
 
-          <div className="flex items-center gap-2 self-start sm:self-auto">
+          <div className="flex items-center gap-2 self-end sm:self-auto">
             <Button
               variant="outline"
               size="icon"
@@ -150,14 +178,15 @@ export const InfoCardsStack: React.FC = () => {
           </div>
         </div>
 
+        {/* محفظه استک کارت‌ها: ارتفاع تطبیقی برای دسکتاپ و موبایل بدون بیرون‌زدگی */}
         <div
-          className="relative w-full max-w-4xl mx-auto h-[600px] sm:h-[500px] flex items-center justify-center"
+          className="relative w-full max-w-5xl mx-auto h-[540px] sm:h-[480px] md:h-[420px] flex items-center justify-center touch-pan-y"
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
           <AnimatePresence mode="popLayout" initial={false}>
-            {cards.slice(0, 3).map((card, index) => {
-              const isFront = index === 0;
+            {visibleCards.map((card) => {
+              const isFront = card.stackPosition === 0;
 
               return (
                 <motion.div
@@ -165,70 +194,76 @@ export const InfoCardsStack: React.FC = () => {
                   layout
                   initial={{ opacity: 0, scale: 0.9, y: 30 }}
                   animate={{
-                    y: index * 22,
-                    scale: 1 - index * 0.05,
-                    opacity: 1 - index * 0.18,
-                    x: isRtl ? index * -6 : index * 6,
-                    zIndex: cards.length - index,
-                    filter:
-                      index === 0
-                        ? "brightness(100%)"
-                        : `brightness(${95 - index * 10}%)`,
+                    y: card.stackPosition * 10,
+                    scale: 1 - card.stackPosition * 0.035,
+                    opacity: 1 - card.stackPosition * 0.18,
+                    zIndex: totalCards - card.stackPosition,
                   }}
                   exit={{
-                    x: isRtl ? -350 : 350,
+                    x: isRtl ? -300 : 300,
                     opacity: 0,
-                    scale: 0.85,
+                    scale: 0.9,
                   }}
                   transition={{
-                    duration: 0.4,
+                    duration: 0.35,
                     ease: [0.16, 1, 0.3, 1],
                   }}
-                  className={`absolute inset-0 w-full bg-card border border-border/80 shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-12 min-h-[500px] sm:min-h-[440px] rounded-none origin-bottom ${
-                    !isFront && "pointer-events-none"
+                  style={{ willChange: "transform, opacity" }}
+                  className={`absolute inset-0 w-full h-full bg-card border border-border shadow-xl overflow-hidden flex flex-col md:grid md:grid-cols-12 rounded-none origin-bottom ${
+                    !isFront ? "pointer-events-none" : ""
                   }`}
                 >
-                  <div className="relative md:col-span-5 h-44 md:h-auto bg-muted overflow-hidden">
+                  {/* بخش تصویر: ارتفاع فیکس ۴۰٪ در موبایل برای باز گذاشتن فضا برای متن */}
+                  <div className="relative w-full h-[40%] md:h-full md:col-span-5 bg-muted/20 shrink-0 overflow-hidden flex items-center justify-center border-b md:border-b-0 md:border-e border-border/40">
                     <Image
                       src={card.imageUrl}
-                      alt={t(card.titleKey as any)}
+                      alt={t(card.titleKey)}
                       fill
-                      sizes="(max-width: 768px) 100vw, 400px"
-                      className="object-cover"
-                      priority={isFront}
+                      sizes="(max-width: 768px) 100vw, 420px"
+                      className={`transition-all duration-300 ${
+                        card.isPlaceholder
+                          ? "object-contain p-6 sm:p-10 dark:invert"
+                          : "object-cover"
+                      }`}
+                      loading="lazy"
                     />
-                    <div className="absolute top-3 start-3 bg-background/90 backdrop-blur-md px-2.5 py-1 border border-border/50 text-[10px] tracking-widest uppercase text-foreground">
-                      0{card.id} / 0{CARDS_DATA.length}
+
+                    {/* بج شماره کارت */}
+                    <div className="absolute top-2.5 start-2.5 sm:top-3 sm:start-3 bg-background/90 backdrop-blur-md px-2 py-0.5 border border-border/60 text-[9px] sm:text-[10px] tracking-widest uppercase font-mono text-foreground z-10">
+                      0{card.id} / 0{totalCards}
                     </div>
                   </div>
 
-                  <div className="md:col-span-7 p-6 sm:p-8 flex flex-col justify-between bg-card">
+                  {/* بخش محتوا: ۶۰٪ ارتفاع در موبایل همراه با اسکرول احتیاطی بدون بریدگی */}
+                  <div className="h-[60%] md:h-full md:col-span-7 p-4 sm:p-6 lg:p-8 flex flex-col justify-between overflow-y-auto bg-card">
                     {card.type === "features" ? (
-                      <div className="space-y-4 my-auto">
+                      <div className="space-y-3 my-auto w-full">
                         <div>
-                          <span className="text-[11px] uppercase tracking-widest text-primary font-semibold block mb-1">
-                            {t(card.categoryKey as any)}
+                          <span className="text-[10px] sm:text-xs uppercase tracking-widest text-primary font-semibold block mb-0.5">
+                            {t(card.categoryKey)}
                           </span>
-                          <h4 className="text-lg sm:text-xl font-light text-foreground">
-                            {t(card.titleKey as any)}
+                          <h4 className="text-base sm:text-xl lg:text-2xl font-light text-foreground leading-snug">
+                            {t(card.titleKey)}
                           </h4>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-2.5 pt-3 border-t border-border/40">
+                        {/* گرید ویژگی‌ها با فونت و پدینگ متناسب با موبایل */}
+                        <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/40">
                           {featuresList.map((item, idx) => (
                             <div
                               key={idx}
-                              className="p-2.5 bg-muted/20 border border-border/40 flex items-center gap-2.5 group hover:border-primary/50 transition-colors h-14"
+                              className="p-2 sm:p-2.5 bg-muted/20 border border-border/40 flex items-center gap-2 group hover:border-primary/50 transition-colors"
                             >
-                              <div className="relative h-6 w-6 shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
+                              <div className="relative h-4 w-4 sm:h-5 sm:w-5 shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
                                 <Image
                                   src={item.icon}
                                   alt={item.label}
                                   fill
+                                  sizes="20px"
                                   className="object-contain dark:invert"
                                 />
                               </div>
-                              <span className="text-[11px] sm:text-xs font-light text-foreground leading-tight line-clamp-2">
+                              <span className="text-[10px] sm:text-xs font-light text-foreground leading-tight line-clamp-1">
                                 {item.label}
                               </span>
                             </div>
@@ -236,29 +271,33 @@ export const InfoCardsStack: React.FC = () => {
                         </div>
                       </div>
                     ) : (
-                      <div className="space-y-4 my-auto">
-                        <span className="text-[11px] uppercase tracking-widest text-primary font-semibold block">
-                          {t(card.categoryKey as any)}
+                      <div className="space-y-3 my-auto w-full">
+                        <span className="text-[10px] sm:text-xs uppercase tracking-widest text-primary font-semibold block">
+                          {t(card.categoryKey)}
                         </span>
-                        <h4 className="text-lg sm:text-2xl font-light text-foreground leading-snug">
-                          {t(card.titleKey as any)}
+                        <h4 className="text-base sm:text-xl lg:text-2xl font-light text-foreground leading-snug">
+                          {t(card.titleKey)}
                         </h4>
-                        <p className="text-xs sm:text-sm text-muted-foreground font-light leading-relaxed">
-                          {t(card.descKey as any)}
-                        </p>
+                        {card.descKey && (
+                          <p className="text-xs sm:text-sm text-muted-foreground font-light leading-relaxed line-clamp-3 sm:line-clamp-none">
+                            {t(card.descKey)}
+                          </p>
+                        )}
 
-                        <div className="pt-4 border-t border-border/40 flex items-center justify-between">
-                          <Button
-                            asChild
-                            variant="link"
-                            className="p-0 h-auto text-xs tracking-wider uppercase text-foreground hover:text-primary gap-2"
-                          >
-                            <Link href={card.link || "#"}>
-                              <span>{t(card.ctaKey as any)}</span>
-                              <ArrowUpRight className="h-4 w-4" />
-                            </Link>
-                          </Button>
-                        </div>
+                        {card.ctaKey && card.link && (
+                          <div className="pt-3 border-t border-border/40 flex items-center justify-between">
+                            <Button
+                              asChild
+                              variant="link"
+                              className="p-0 h-auto text-xs sm:text-sm tracking-wider uppercase text-foreground hover:text-primary gap-1.5"
+                            >
+                              <Link href={card.link}>
+                                <span>{t(card.ctaKey)}</span>
+                                <ArrowUpRight className="h-3.5 w-3.5" />
+                              </Link>
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

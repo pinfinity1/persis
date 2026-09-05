@@ -6,7 +6,6 @@ import path from "path";
 import { s3Storage } from "@payloadcms/storage-s3";
 import { fileURLToPath } from "url";
 import { Users } from "./payload/collections/Users";
-import { HeroBanner } from "./payload/collections/HeroBanner";
 import { Media } from "./payload/collections/Media";
 import { Products } from "./payload/collections/Products";
 import { Categories } from "./payload/collections/Categories";
@@ -19,6 +18,7 @@ import { Catalogs } from "./payload/collections/Catalogs";
 import { AboutPage } from "./payload/globals/AboutPage";
 import { Dealers } from "./payload/collections/Dealers";
 import { Inquiries } from "./payload/collections/Inquiries";
+import { HomePage } from "./payload/globals/HomePage";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -29,7 +29,6 @@ export default buildConfig({
   },
   sharp,
   collections: [
-    HeroBanner,
     Users,
     Media,
     Categories,
@@ -43,7 +42,7 @@ export default buildConfig({
     Dealers,
     Inquiries,
   ],
-  globals: [AboutPage],
+  globals: [AboutPage, HomePage],
 
   editor: lexicalEditor({}),
 
