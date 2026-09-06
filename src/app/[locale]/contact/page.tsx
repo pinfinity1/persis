@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   ArrowUpRight,
 } from "lucide-react";
+import { PageWatermarkHeader } from "@/components/shared/page-watermark-header";
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -39,21 +40,10 @@ export default async function ContactPage({ params }: PageProps) {
   return (
     <main className="min-h-screen bg-background pt-28 sm:pt-36 pb-20 select-none">
       <div className="container mx-auto px-4 sm:px-12 space-y-10 sm:space-y-14">
-        {/* واترمارک معمارانه هدر */}
-        <div
-          dir="ltr"
-          className="relative pt-4 pb-2 overflow-hidden border-b border-border/30"
-        >
-          <span className="text-4xl sm:text-7xl lg:text-9xl font-black text-foreground/[0.03] uppercase tracking-tighter leading-none block">
-            CONTACT
-          </span>
-          <div className="absolute bottom-4 start-0 z-10 flex items-center gap-3">
-            <span className="h-px w-6 bg-primary" />
-            <h1 className="text-[10px] sm:text-[11px] tracking-[0.25em] text-primary uppercase m-0 leading-none font-medium">
-              Client Services & Global Inquiries
-            </h1>
-          </div>
-        </div>
+        <PageWatermarkHeader
+          watermark="CONTACT"
+          title="Client Services & Global Inquiries"
+        />
 
         {/* گرید تقارن‌دار اسپلیت اسکرین */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">

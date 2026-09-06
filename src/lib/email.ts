@@ -1,11 +1,24 @@
+// src/lib/email.ts
 import nodemailer from "nodemailer";
+import type { Transporter } from "nodemailer";
 import { escape } from "html-escaper";
 import type { ContactFormValues } from "@/lib/validations/contact";
 
-const transporter = nodemailer.createTransport({
+// Sanitizer to eliminate SMTP Header Injection (strips carriage returns & line feeds)
+function sanitizeHeader(val: string): string {
+  return val.replace(/[\r\n\t]/g, " ").trim();
+}
+
+// Singleton transporter configured with robust connection pooling
+const transporter: Transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || "smtp.gmail.com",
   port: Number(process.env.SMTP_PORT) || 587,
   secure: process.env.SMTP_SECURE === "true",
+  pool: true,
+  maxConnections: 5,
+  maxMessages: 100,
+  rateDelta: 1000,
+  rateLimit: 5,
   auth: {
     user: process.env.SMTP_USER || "",
     pass: process.env.SMTP_PASS || "",
@@ -19,7 +32,21 @@ const TYPE_TITLE_MAP: Record<ContactFormValues["type"], string> = {
   general: "تماس عمومی و پشتیبانی",
 };
 
-export async function sendInquiryEmails(data: ContactFormValues) {
+export interface EmailDispatchResult {
+  internalSent: boolean;
+  customerSent: boolean;
+  errors: string[];
+}
+
+export async function sendInquiryEmails(
+  data: ContactFormValues,
+): Promise<EmailDispatchResult> {
+  const result: EmailDispatchResult = {
+    internalSent: false,
+    customerSent: false,
+    errors: [],
+  };
+
   const fromEmail =
     process.env.SMTP_FROM || `"Persis Quartz" <noreply@persisquartz.com>`;
 
@@ -36,9 +63,10 @@ export async function sendInquiryEmails(data: ContactFormValues) {
     process.env.EMAIL_ADMIN || "admin@persisquartz.com",
   ].filter(Boolean);
 
-  // Escaping all dynamic inputs to prevent Stored XSS in email clients
+  // Deep sanitization against XSS in clients and Header Injection
   const safeFullName = escape(data.fullName || "");
-  const safeEmail = escape(data.email || "");
+  const safeHeaderName = sanitizeHeader(data.fullName || "");
+  const safeEmail = data.email ? sanitizeHeader(data.email) : "";
   const safePhone = escape(data.phone || "");
   const safeCountry = escape(data.country || "");
   const safeMessage = escape(data.message || "");
@@ -136,25 +164,35 @@ export async function sendInquiryEmails(data: ContactFormValues) {
     </div>
   `;
 
-  const sendPromises: Promise<any>[] = [
-    transporter.sendMail({
+  // Explicit tracking of internal vs external notifications
+  try {
+    await transporter.sendMail({
       from: fromEmail,
       to: managementRecipients,
-      subject: `[Persis Portal] ${TYPE_TITLE_MAP[data.type]} - ${safeFullName}`,
+      replyTo: safeEmail || undefined,
+      subject: `[Persis Portal] ${TYPE_TITLE_MAP[data.type]} - ${safeHeaderName}`,
       html: internalHtml,
-    }),
-  ];
-
-  if (data.email) {
-    sendPromises.push(
-      transporter.sendMail({
-        from: fromEmail,
-        to: data.email,
-        subject: "We received your inquiry | Persis Quartz",
-        html: customerHtml,
-      }),
-    );
+    });
+    result.internalSent = true;
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    result.errors.push(`Internal notification error: ${errorMsg}`);
   }
 
-  await Promise.allSettled(sendPromises);
+  if (safeEmail) {
+    try {
+      await transporter.sendMail({
+        from: fromEmail,
+        to: safeEmail,
+        subject: "We received your inquiry | Persis Quartz",
+        html: customerHtml,
+      });
+      result.customerSent = true;
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      result.errors.push(`Customer acknowledgment error: ${errorMsg}`);
+    }
+  }
+
+  return result;
 }

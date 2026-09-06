@@ -8,6 +8,7 @@ import {
 import { DealerFilterClient } from "@/components/dealers/dealer-filter-client";
 import { DealerCard } from "@/components/dealers/dealer-card";
 import SkeletonLoader from "@/components/products/skeleton-loader";
+import { PageWatermarkHeader } from "@/components/shared/page-watermark-header";
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -46,22 +47,11 @@ export default async function DealersPage({ params, searchParams }: PageProps) {
   ]);
 
   return (
-    <main className="container mx-auto px-4 sm:px-12 py-24 sm:py-28 min-h-screen space-y-12 select-none">
-      <div
-        dir="ltr"
-        className="relative pt-4 pb-2 overflow-hidden border-b border-border/30"
-      >
-        <h1 className="sr-only">Dealers & Showrooms</h1>
-        <span className="text-4xl sm:text-7xl lg:text-9xl font-black text-foreground/[0.03] uppercase tracking-tighter leading-none block">
-          SHOWROOMS
-        </span>
-        <div className="absolute bottom-4 start-0 z-10 flex items-center gap-3">
-          <span className="h-px w-6 bg-primary" />
-          <span className="text-[10px] sm:text-[11px] tracking-[0.25em] text-primary uppercase">
-            Official Sales Network & Dealers
-          </span>
-        </div>
-      </div>
+    <main className="container mx-auto px-4 sm:px-12 pt-28 sm:pt-36 pb-20 min-h-screen space-y-12 select-none">
+      <PageWatermarkHeader
+        watermark="SHOWROOMS"
+        title="Official Sales Network & Dealers"
+      />
 
       <div className="flex items-center justify-between gap-4 flex-wrap pb-2 border-b border-border/20">
         <span className="text-xs uppercase tracking-widest text-primary block">

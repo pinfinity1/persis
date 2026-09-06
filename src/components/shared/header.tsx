@@ -452,7 +452,7 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
               </Link>
 
               <Link
-                href="/about"
+                href="/about-persis"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="block text-base font-medium text-foreground py-2 border-b border-border/50 hover:text-primary transition-colors"
               >

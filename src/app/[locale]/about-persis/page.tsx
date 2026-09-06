@@ -3,6 +3,7 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { getAboutPageDataService } from "@/services/about.service";
+import { PageWatermarkHeader } from "@/components/shared/page-watermark-header";
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -57,23 +58,12 @@ export default async function AboutPersisPage({ params }: PageProps) {
   return (
     <main className="min-h-screen bg-background select-none flex flex-col overflow-hidden">
       {/* 1. Header */}
-      <section className="container mx-auto px-4 sm:px-12 pt-28 sm:pt-36 pb-6 select-none">
-        <div
-          dir="ltr"
-          className="relative py-4 select-none overflow-hidden border-b border-border/30"
-        >
-          <span className="text-4xl sm:text-7xl lg:text-9xl font-black text-foreground/[0.03] uppercase tracking-tighter leading-none block">
-            PERSIS QUARTZ
-          </span>
-
-          <div className="absolute bottom-4 start-0 z-10 flex items-center gap-3">
-            <span className="h-px w-6 bg-primary" />
-            <h1 className="text-[10px] sm:text-[11px] tracking-[0.25em] text-primary uppercase m-0 leading-none font-medium">
-              {t("brandLabel")}
-            </h1>
-          </div>
-        </div>
-      </section>
+      <div className="container mx-auto px-4 sm:px-12 pt-28 sm:pt-36 pb-2 select-none">
+        <PageWatermarkHeader
+          watermark="PERSIS QUARTZ"
+          title={t("brandLabel")}
+        />
+      </div>
 
       {/* 2. Vision */}
       <section className="py-14 sm:py-20 lg:py-28">

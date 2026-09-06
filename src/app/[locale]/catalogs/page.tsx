@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { getGroupedCatalogsService } from "@/services/catalog.service";
 import { CatalogCard } from "@/components/catalogs/catalog-card";
 import { getTranslations } from "next-intl/server";
+import { PageWatermarkHeader } from "@/components/shared/page-watermark-header";
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -37,23 +38,11 @@ export default async function CatalogsPage({ params }: PageProps) {
   });
 
   return (
-    <main className="container mx-auto px-4 sm:px-12 py-20 sm:py-28 min-h-screen space-y-12 sm:space-y-16">
-      {/* عنوان مینیمال هدر */}
-      <div
-        dir="ltr"
-        className="relative pt-4 pb-2 select-none overflow-hidden border-b border-border/30"
-      >
-        <h1 className="sr-only">کاتالوگ‌های پرسیس کوارتز</h1>
-        <span className="text-4xl sm:text-7xl lg:text-9xl font-black text-foreground/[0.03] uppercase tracking-tighter leading-none block">
-          PUBLICATIONS
-        </span>
-        <div className="absolute bottom-4 start-0 z-10 flex items-center gap-3">
-          <span className="h-px w-6 bg-primary" />
-          <span className="text-[10px] sm:text-[11px] tracking-[0.25em] text-primary uppercase">
-            Official Catalogs & Tech Specs
-          </span>
-        </div>
-      </div>
+    <main className="container mx-auto px-4 sm:px-12 pt-28 sm:pt-36 pb-20 min-h-screen space-y-12 select-none">
+      <PageWatermarkHeader
+        watermark="PUBLICATIONS"
+        title="Official Catalogs & Tech Specs"
+      />
 
       {years.length > 0 ? (
         <div className="space-y-12 sm:space-y-20">

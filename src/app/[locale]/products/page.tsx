@@ -8,6 +8,7 @@ import {
 import ProductGridClient from "@/components/products/product-grid-client";
 import { ProductFiltersClient } from "@/components/products/product-filters-client";
 import SkeletonLoader from "@/components/products/skeleton-loader";
+import { PageWatermarkHeader } from "@/components/shared/page-watermark-header";
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -65,23 +66,12 @@ export default async function ProductsPage({
   ]);
 
   return (
-    <main className="container mx-auto px-4 sm:px-12 py-24 sm:py-28 min-h-screen">
-      <div
-        dir="ltr"
-        className="relative mb-12 pt-4 pb-2 select-none overflow-hidden"
-      >
-        <h1 className="sr-only">اسلب‌های سنگ کوارتز پرسیس کوارتز</h1>
-        <h1 className="text-6xl sm:text-8xl lg:text-9xl font-black text-foreground/[0.04] uppercase tracking-tighter leading-none">
-          COLLECTION
-        </h1>
-
-        <div className="absolute bottom-2 start-0 z-10 flex items-center gap-3">
-          <span className="h-px w-6 bg-primary" />
-          <span className="text-[11px] tracking-[0.3em] text-primary uppercase">
-            Persis Quartz Catalog
-          </span>
-        </div>
-      </div>
+    <main className="container mx-auto px-4 sm:px-12 pt-28 sm:pt-36 pb-20 min-h-screen select-none">
+      <PageWatermarkHeader
+        watermark="COLLECTION"
+        title="Persis Quartz Catalog"
+        className="mb-12"
+      />
 
       <div className="flex flex-col md:flex-row gap-8 items-start">
         <aside className="w-full md:w-64 shrink-0">

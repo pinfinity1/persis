@@ -1,22 +1,32 @@
+// src/app/api/admin/import-categories/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getPayload } from "payload";
 import configPromise from "@/payload.config";
 import * as XLSX from "xlsx";
-import { excelCategoryRowSchema } from "@/lib/validations/excel-category-import";
+import {
+  excelCategoryRowSchema,
+  type ExcelCategoryRow,
+} from "@/lib/validations/excel-category-import";
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB Limit
+const BATCH_SIZE = 50;
 
 export async function POST(req: NextRequest) {
+  const correlationId = crypto.randomUUID();
+
   try {
     const payload = await getPayload({ config: configPromise });
 
-    // احراز هویت ادمین
+    // 1. Authorization
     const { user } = await payload.auth({ headers: req.headers });
     if (!user) {
       return NextResponse.json(
-        { error: "عدم دسترسی! لطفاً ابتدا وارد پنل ادمین شوید." },
+        { error: "Unauthorized. Admin credentials required." },
         { status: 401 },
       );
     }
 
+    // 2. Request Guard
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
 
@@ -24,17 +34,35 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "فایلی دریافت نشد." }, { status: 400 });
     }
 
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { error: "حجم فایل بیش از سقف مجاز (۵ مگابایت) است." },
+        { status: 413 },
+      );
+    }
+
     const arrayBuffer = await file.arrayBuffer();
     const workbook = XLSX.read(arrayBuffer, { type: "array" });
     const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
-    const rawData = XLSX.utils.sheet_to_json<Record<string, any>>(worksheet, {
-      defval: "",
-    });
+    if (!sheetName) {
+      return NextResponse.json(
+        { error: "فایل اکسل خالی است." },
+        { status: 400 },
+      );
+    }
+
+    const rawData = XLSX.utils.sheet_to_json<Record<string, any>>(
+      workbook.Sheets[sheetName],
+      { defval: "" },
+    );
 
     let createdCount = 0;
     let updatedCount = 0;
     const errors: string[] = [];
+
+    // 3. Pre-flight Validation & Slug Extraction
+    const validRows: { rowNum: number; data: ExcelCategoryRow }[] = [];
+    const slugsToLookup = new Set<string>();
 
     for (let index = 0; index < rawData.length; index++) {
       const rowNum = index + 2;
@@ -43,7 +71,6 @@ export async function POST(req: NextRequest) {
       if (!row.slug && !row.title_fa) continue;
 
       const parseResult = excelCategoryRowSchema.safeParse(row);
-
       if (!parseResult.success) {
         const errorMsgs = parseResult.error.errors
           .map((e) => e.message)
@@ -52,102 +79,93 @@ export async function POST(req: NextRequest) {
         continue;
       }
 
-      const item = parseResult.data;
+      validRows.push({ rowNum, data: parseResult.data });
+      slugsToLookup.add(parseResult.data.slug);
+    }
 
-      const existing = await payload.find({
-        collection: "categories",
-        where: { slug: { equals: item.slug } },
-        limit: 1,
+    // Single Batch Query to eliminate N+1 DB roundtrips
+    const existingCatsRes = await payload.find({
+      collection: "categories",
+      where: {
+        slug: { in: Array.from(slugsToLookup) },
+      },
+      limit: slugsToLookup.size,
+      depth: 0,
+      pagination: false,
+    });
+
+    const existingCatMap = new Map<string, string | number>(
+      existingCatsRes.docs.map((doc: any) => [doc.slug, doc.id]),
+    );
+
+    // 4. Batch Atomic Execution
+    for (let i = 0; i < validRows.length; i += BATCH_SIZE) {
+      const chunk = validRows.slice(i, i + BATCH_SIZE);
+
+      const chunkPromises = chunk.map(async ({ rowNum, data: item }) => {
+        // Atomic payload with locale: 'all'
+        const atomicPayload = {
+          slug: item.slug,
+          order: item.order,
+          title: {
+            fa: item.title_fa,
+            en: item.title_en,
+            ar: item.title_ar,
+          },
+          description: {
+            fa: item.description_fa,
+            en: item.description_en,
+            ar: item.description_ar,
+          },
+          meta_title: {
+            fa: item.meta_title_fa,
+            en: item.meta_title_en,
+            ar: item.meta_title_ar,
+          },
+          meta_description: {
+            fa: item.meta_description_fa,
+            en: item.meta_description_en,
+            ar: item.meta_description_ar,
+          },
+        };
+
+        const existingId = existingCatMap.get(item.slug);
+
+        if (existingId) {
+          await payload.update({
+            collection: "categories",
+            id: existingId,
+            locale: "all",
+            req,
+            data: atomicPayload as any,
+          });
+          return "updated";
+        } else {
+          await payload.create({
+            collection: "categories",
+            locale: "all",
+            req,
+            data: atomicPayload as any,
+          });
+          return "created";
+        }
       });
 
-      if (existing.docs.length > 0) {
-        const catId = existing.docs[0].id;
+      const settledChunk = await Promise.allSettled(chunkPromises);
 
-        // بروزرسانی فارسی
-        await payload.update({
-          collection: "categories",
-          id: catId,
-          locale: "fa",
-          data: {
-            title: item.title_fa,
-            slug: item.slug,
-            order: item.order,
-            description: item.description_fa,
-            meta_title: item.meta_title_fa,
-            meta_description: item.meta_description_fa,
-          },
-        });
+      settledChunk.forEach((res, index) => {
+        if (res.status === "fulfilled") {
+          if (res.value === "created") createdCount++;
+          if (res.value === "updated") updatedCount++;
+        } else {
+          const rowNum = chunk[index].rowNum;
+          errors.push(
+            `ردیف ${rowNum}: ${res.reason?.message || "خطای ثبت در پایگاه‌داده"}`,
+          );
+        }
+      });
 
-        // بروزرسانی انگلیسی
-        await payload.update({
-          collection: "categories",
-          id: catId,
-          locale: "en",
-          data: {
-            title: item.title_en,
-            description: item.description_en,
-            meta_title: item.meta_title_en,
-            meta_description: item.meta_description_en,
-          },
-        });
-
-        // بروزرسانی عربی
-        await payload.update({
-          collection: "categories",
-          id: catId,
-          locale: "ar",
-          data: {
-            title: item.title_ar,
-            description: item.description_ar,
-            meta_title: item.meta_title_ar,
-            meta_description: item.meta_description_ar,
-          },
-        });
-
-        updatedCount++;
-      } else {
-        // ایجاد جدید پایه فارسی
-        const createdDoc = await payload.create({
-          collection: "categories",
-          locale: "fa",
-          data: {
-            title: item.title_fa,
-            slug: item.slug,
-            order: item.order,
-            description: item.description_fa,
-            meta_title: item.meta_title_fa,
-            meta_description: item.meta_description_fa,
-          },
-        });
-
-        // افزودن انگلیسی
-        await payload.update({
-          collection: "categories",
-          id: createdDoc.id,
-          locale: "en",
-          data: {
-            title: item.title_en,
-            description: item.description_en,
-            meta_title: item.meta_title_en,
-            meta_description: item.meta_description_en,
-          },
-        });
-
-        // افزودن عربی
-        await payload.update({
-          collection: "categories",
-          id: createdDoc.id,
-          locale: "ar",
-          data: {
-            title: item.title_ar,
-            description: item.description_ar,
-            meta_title: item.meta_title_ar,
-            meta_description: item.meta_description_ar,
-          },
-        });
-
-        createdCount++;
-      }
+      await new Promise((resolve) => setImmediate(resolve));
     }
 
     return NextResponse.json({
@@ -160,7 +178,17 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error: any) {
-    console.error("Categories Excel Import Error:", error);
+    console.error(
+      JSON.stringify({
+        level: "CRITICAL",
+        module: "api.admin.import-categories",
+        correlationId,
+        error: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString(),
+      }),
+    );
+
     return NextResponse.json(
       { error: "خطا در پردازش فایل دسته‌بندی‌ها", details: error.message },
       { status: 500 },

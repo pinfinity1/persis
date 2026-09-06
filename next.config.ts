@@ -9,23 +9,10 @@ const nextConfig: NextConfig = {
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [
-      {
-        protocol: "http",
-        hostname: "localhost",
-      },
-      {
-        protocol: "http",
-        hostname: "127.0.0.1",
-      },
-      // دامنه اصلی سایت (برای پروداکشن)
-      {
-        protocol: "https",
-        hostname: "persisquartz.com",
-      },
-      {
-        protocol: "https",
-        hostname: "www.persisquartz.com",
-      },
+      { protocol: "http", hostname: "localhost" },
+      { protocol: "http", hostname: "127.0.0.1" },
+      { protocol: "https", hostname: "persisquartz.com" },
+      { protocol: "https", hostname: "www.persisquartz.com" },
     ],
   },
 };
