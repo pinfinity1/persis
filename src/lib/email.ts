@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { escape } from "html-escaper";
 import type { ContactFormValues } from "@/lib/validations/contact";
 
 const transporter = nodemailer.createTransport({
@@ -35,29 +36,50 @@ export async function sendInquiryEmails(data: ContactFormValues) {
     process.env.EMAIL_ADMIN || "admin@persisquartz.com",
   ].filter(Boolean);
 
-  // استخراج امن فیلدهای اختصاصی بر اساس نوع درخواست (Type Guarding)
+  // Escaping all dynamic inputs to prevent Stored XSS in email clients
+  const safeFullName = escape(data.fullName || "");
+  const safeEmail = escape(data.email || "");
+  const safePhone = escape(data.phone || "");
+  const safeCountry = escape(data.country || "");
+  const safeMessage = escape(data.message || "");
+
   let extraDetailsHtml = "";
 
   if (data.type === "sample") {
+    const safeCompany = data.company ? escape(data.company) : "";
+    const safeCity = escape(data.city || "");
+    const safePostal = escape(data.postalCode || "");
+    const safeAddress = escape(data.address || "");
+    const safeProductCodes = data.productCodes ? escape(data.productCodes) : "";
+
     extraDetailsHtml = `
-      ${data.company ? `<tr style="border-bottom: 1px solid #eeeeee;"><td style="padding: 8px 0; color: #666;">شرکت / دفتر:</td><td style="padding: 8px 0; font-weight: bold;">${data.company}</td></tr>` : ""}
-      <tr style="border-bottom: 1px solid #eeeeee;"><td style="padding: 8px 0; color: #666;">شهر:</td><td style="padding: 8px 0; font-weight: bold;">${data.city}</td></tr>
-      <tr style="border-bottom: 1px solid #eeeeee;"><td style="padding: 8px 0; color: #666;">کد پستی:</td><td style="padding: 8px 0; font-weight: bold; direction: ltr; text-align: left;">${data.postalCode}</td></tr>
-      <tr style="border-bottom: 1px solid #eeeeee;"><td style="padding: 8px 0; color: #666;">آدرس پستی:</td><td style="padding: 8px 0; font-weight: bold;">${data.address}</td></tr>
-      ${data.productCodes ? `<tr style="border-bottom: 1px solid #eeeeee;"><td style="padding: 8px 0; color: #666;">کدهای درخواستی:</td><td style="padding: 8px 0; font-weight: bold;">${data.productCodes}</td></tr>` : ""}
+      ${safeCompany ? `<tr style="border-bottom: 1px solid #eeeeee;"><td style="padding: 8px 0; color: #666;">شرکت / دفتر:</td><td style="padding: 8px 0; font-weight: bold;">${safeCompany}</td></tr>` : ""}
+      <tr style="border-bottom: 1px solid #eeeeee;"><td style="padding: 8px 0; color: #666;">شهر:</td><td style="padding: 8px 0; font-weight: bold;">${safeCity}</td></tr>
+      <tr style="border-bottom: 1px solid #eeeeee;"><td style="padding: 8px 0; color: #666;">کد پستی:</td><td style="padding: 8px 0; font-weight: bold; direction: ltr; text-align: left;">${safePostal}</td></tr>
+      <tr style="border-bottom: 1px solid #eeeeee;"><td style="padding: 8px 0; color: #666;">آدرس پستی:</td><td style="padding: 8px 0; font-weight: bold;">${safeAddress}</td></tr>
+      ${safeProductCodes ? `<tr style="border-bottom: 1px solid #eeeeee;"><td style="padding: 8px 0; color: #666;">کدهای درخواستی:</td><td style="padding: 8px 0; font-weight: bold;">${safeProductCodes}</td></tr>` : ""}
     `;
   } else if (data.type === "project") {
+    const safeCompany = escape(data.company || "");
+    const safeSize = data.projectSize ? escape(data.projectSize) : "";
+    const safeProductCodes = data.productCodes ? escape(data.productCodes) : "";
+    const safeThickness = data.thickness ? escape(data.thickness) : "";
+    const safeFinish = data.finish ? escape(data.finish) : "";
+
     extraDetailsHtml = `
-      <tr style="border-bottom: 1px solid #eeeeee;"><td style="padding: 8px 0; color: #666;">شرکت معماری / کارفرما:</td><td style="padding: 8px 0; font-weight: bold;">${data.company}</td></tr>
-      ${data.projectSize ? `<tr style="border-bottom: 1px solid #eeeeee;"><td style="padding: 8px 0; color: #666;">متراژ حدودی:</td><td style="padding: 8px 0; font-weight: bold;">${data.projectSize}</td></tr>` : ""}
-      ${data.productCodes ? `<tr style="border-bottom: 1px solid #eeeeee;"><td style="padding: 8px 0; color: #666;">کدهای مدنظر:</td><td style="padding: 8px 0; font-weight: bold;">${data.productCodes}</td></tr>` : ""}
-      ${data.thickness ? `<tr style="border-bottom: 1px solid #eeeeee;"><td style="padding: 8px 0; color: #666;">ضخامت:</td><td style="padding: 8px 0; font-weight: bold;">${data.thickness}</td></tr>` : ""}
-      ${data.finish ? `<tr style="border-bottom: 1px solid #eeeeee;"><td style="padding: 8px 0; color: #666;">فینیش:</td><td style="padding: 8px 0; font-weight: bold;">${data.finish}</td></tr>` : ""}
+      <tr style="border-bottom: 1px solid #eeeeee;"><td style="padding: 8px 0; color: #666;">شرکت معماری / کارفرما:</td><td style="padding: 8px 0; font-weight: bold;">${safeCompany}</td></tr>
+      ${safeSize ? `<tr style="border-bottom: 1px solid #eeeeee;"><td style="padding: 8px 0; color: #666;">متراژ حدودی:</td><td style="padding: 8px 0; font-weight: bold;">${safeSize}</td></tr>` : ""}
+      ${safeProductCodes ? `<tr style="border-bottom: 1px solid #eeeeee;"><td style="padding: 8px 0; color: #666;">کدهای مدنظر:</td><td style="padding: 8px 0; font-weight: bold;">${safeProductCodes}</td></tr>` : ""}
+      ${safeThickness ? `<tr style="border-bottom: 1px solid #eeeeee;"><td style="padding: 8px 0; color: #666;">ضخامت:</td><td style="padding: 8px 0; font-weight: bold;">${safeThickness}</td></tr>` : ""}
+      ${safeFinish ? `<tr style="border-bottom: 1px solid #eeeeee;"><td style="padding: 8px 0; color: #666;">فینیش:</td><td style="padding: 8px 0; font-weight: bold;">${safeFinish}</td></tr>` : ""}
     `;
   } else if (data.type === "dealer") {
+    const safeCompany = escape(data.company || "");
+    const safeCity = escape(data.city || "");
+
     extraDetailsHtml = `
-      <tr style="border-bottom: 1px solid #eeeeee;"><td style="padding: 8px 0; color: #666;">نام مجموعه / فروشگاه:</td><td style="padding: 8px 0; font-weight: bold;">${data.company}</td></tr>
-      <tr style="border-bottom: 1px solid #eeeeee;"><td style="padding: 8px 0; color: #666;">شهر و استان مورد تقاضا:</td><td style="padding: 8px 0; font-weight: bold;">${data.city}</td></tr>
+      <tr style="border-bottom: 1px solid #eeeeee;"><td style="padding: 8px 0; color: #666;">نام مجموعه / فروشگاه:</td><td style="padding: 8px 0; font-weight: bold;">${safeCompany}</td></tr>
+      <tr style="border-bottom: 1px solid #eeeeee;"><td style="padding: 8px 0; color: #666;">شهر و استان مورد تقاضا:</td><td style="padding: 8px 0; font-weight: bold;">${safeCity}</td></tr>
     `;
   }
 
@@ -68,30 +90,30 @@ export async function sendInquiryEmails(data: ContactFormValues) {
         <table style="width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 14px;">
           <tr style="border-bottom: 1px solid #eeeeee;">
             <td style="padding: 8px 0; color: #666;">نام و نام خانوادگی:</td>
-            <td style="padding: 8px 0; font-weight: bold;">${data.fullName}</td>
+            <td style="padding: 8px 0; font-weight: bold;">${safeFullName}</td>
           </tr>
           ${
-            data.email
+            safeEmail
               ? `
           <tr style="border-bottom: 1px solid #eeeeee;">
             <td style="padding: 8px 0; color: #666;">پست الکترونیک:</td>
-            <td style="padding: 8px 0; font-weight: bold; direction: ltr; text-align: left;">${data.email}</td>
+            <td style="padding: 8px 0; font-weight: bold; direction: ltr; text-align: left;">${safeEmail}</td>
           </tr>`
               : ""
           }
           <tr style="border-bottom: 1px solid #eeeeee;">
             <td style="padding: 8px 0; color: #666;">شماره تماس:</td>
-            <td style="padding: 8px 0; font-weight: bold; direction: ltr; text-align: left;">${data.phone}</td>
+            <td style="padding: 8px 0; font-weight: bold; direction: ltr; text-align: left;">${safePhone}</td>
           </tr>
           <tr style="border-bottom: 1px solid #eeeeee;">
             <td style="padding: 8px 0; color: #666;">کشور:</td>
-            <td style="padding: 8px 0; font-weight: bold;">${data.country}</td>
+            <td style="padding: 8px 0; font-weight: bold;">${safeCountry}</td>
           </tr>
           ${extraDetailsHtml}
         </table>
         <div style="margin-top: 20px; padding: 16px; background-color: #fcfcfc; border: 1px solid #eeeeee;">
           <strong style="display: block; margin-bottom: 8px; color: #444;">متن پیام / شرح نیاز:</strong>
-          <p style="margin: 0; line-height: 1.6; white-space: pre-wrap;">${data.message}</p>
+          <p style="margin: 0; line-height: 1.6; white-space: pre-wrap;">${safeMessage}</p>
         </div>
       </div>
     </div>
@@ -101,7 +123,7 @@ export async function sendInquiryEmails(data: ContactFormValues) {
     <div style="font-family: Arial, Tahoma, sans-serif; background-color: #f7f7f7; padding: 24px; color: #1e1e1e;">
       <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-top: 4px solid #9b0737; padding: 24px;">
         <h2 style="color: #9b0737; margin-top: 0;">Persis Quartz</h2>
-        <p>Dear ${data.fullName},</p>
+        <p>Dear ${safeFullName},</p>
         <p>Thank you for reaching out to us regarding <strong>${TYPE_TITLE_MAP[data.type]}</strong>.</p>
         <p>We have successfully received your message. Our technical and sales representatives are reviewing your requirements and will contact you shortly.</p>
         <hr style="border: none; border-top: 1px solid #eeeeee; margin: 24px 0;" />
@@ -118,7 +140,7 @@ export async function sendInquiryEmails(data: ContactFormValues) {
     transporter.sendMail({
       from: fromEmail,
       to: managementRecipients,
-      subject: `[Persis Portal] ${TYPE_TITLE_MAP[data.type]} - ${data.fullName}`,
+      subject: `[Persis Portal] ${TYPE_TITLE_MAP[data.type]} - ${safeFullName}`,
       html: internalHtml,
     }),
   ];

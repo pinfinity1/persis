@@ -7,7 +7,7 @@ import {
   type ContactFormValues,
 } from "@/lib/validations/contact";
 import { sendInquiryEmails } from "@/lib/email";
-import DOMPurify from "isomorphic-dompurify"; // برای امنیت و پاکسازی تگ‌های مخرب
+import xss from "xss";
 
 export type ContactActionResult = {
   success: boolean;
@@ -15,10 +15,19 @@ export type ContactActionResult = {
   message?: string;
 };
 
+// Strips all HTML tags safely without spinning up a heavy JSDOM instance
+function sanitizeInput(val: string | undefined): string {
+  if (!val) return "";
+  return xss(val, {
+    whiteList: {},
+    stripIgnoreTag: true,
+    stripIgnoreTagBody: ["script", "style"],
+  }).trim();
+}
+
 export async function submitContactFormAction(
-  rawData: ContactFormValues,
+  rawData: unknown,
 ): Promise<ContactActionResult> {
-  // ۱. اعتبارسنجی تایتپ‌اسکریپت و Zod
   const result = contactFormSchema.safeParse(rawData);
 
   if (!result.success) {
@@ -31,53 +40,71 @@ export async function submitContactFormAction(
 
   const validData = result.data;
 
-  // ۲. مپ کردن امن دیتا بر اساس نوع درخواست
-  const safePayload: any = {
+  const basePayload = {
     type: validData.type,
-    status: "new",
-    fullName: DOMPurify.sanitize(validData.fullName),
-    email: DOMPurify.sanitize(validData.email || ""),
-    phone: DOMPurify.sanitize(validData.phone),
-    country: DOMPurify.sanitize(validData.country),
-    message: DOMPurify.sanitize(validData.message),
+    status: "new" as const,
+    fullName: sanitizeInput(validData.fullName),
+    email: validData.email ? sanitizeInput(validData.email) : "",
+    phone: sanitizeInput(validData.phone),
+    country: sanitizeInput(validData.country),
+    message: sanitizeInput(validData.message),
   };
 
-  // فقط فیلدهای مجاز هر تایپ ثبت می‌شوند
-  if (validData.type === "sample") {
-    safePayload.city = DOMPurify.sanitize(validData.city);
-    safePayload.postalCode = DOMPurify.sanitize(validData.postalCode);
-    safePayload.address = DOMPurify.sanitize(validData.address);
-    safePayload.company = DOMPurify.sanitize(validData.company || "");
-    safePayload.productCodes = DOMPurify.sanitize(validData.productCodes || "");
-  } else if (validData.type === "project") {
-    safePayload.company = DOMPurify.sanitize(validData.company);
-    safePayload.projectSize = DOMPurify.sanitize(validData.projectSize || "");
-    safePayload.productCodes = DOMPurify.sanitize(validData.productCodes || "");
-    safePayload.thickness = DOMPurify.sanitize(validData.thickness || "");
-    safePayload.finish = DOMPurify.sanitize(validData.finish || "");
-  } else if (validData.type === "dealer") {
-    safePayload.company = DOMPurify.sanitize(validData.company);
-    safePayload.city = DOMPurify.sanitize(validData.city);
+  let specificPayload = {};
+
+  switch (validData.type) {
+    case "sample":
+      specificPayload = {
+        city: sanitizeInput(validData.city),
+        postalCode: sanitizeInput(validData.postalCode),
+        address: sanitizeInput(validData.address),
+        company: validData.company ? sanitizeInput(validData.company) : "",
+        productCodes: validData.productCodes
+          ? sanitizeInput(validData.productCodes)
+          : "",
+      };
+      break;
+    case "project":
+      specificPayload = {
+        company: sanitizeInput(validData.company),
+        projectSize: validData.projectSize
+          ? sanitizeInput(validData.projectSize)
+          : "",
+        productCodes: validData.productCodes
+          ? sanitizeInput(validData.productCodes)
+          : "",
+        thickness: validData.thickness
+          ? sanitizeInput(validData.thickness)
+          : "",
+        finish: validData.finish ? sanitizeInput(validData.finish) : "",
+      };
+      break;
+    case "dealer":
+      specificPayload = {
+        company: sanitizeInput(validData.company),
+        city: sanitizeInput(validData.city),
+      };
+      break;
   }
+
+  const finalPayload = { ...basePayload, ...specificPayload };
 
   try {
     const payload = await getPayload({ config: configPromise });
     await payload.create({
-      collection: "inquiries" as any,
-      data: safePayload,
+      collection: "inquiries",
+      data: finalPayload as any,
     });
 
     if (validData.email) {
-      try {
-        await sendInquiryEmails(validData);
-      } catch (mailError) {
-        console.error("Email delivery failed, but DB saved:", mailError);
-      }
+      sendInquiryEmails(validData).catch((mailError) => {
+        console.error("[EMAIL_ERROR] Failed to send email:", mailError);
+      });
     }
 
     return { success: true };
-  } catch (dbError: any) {
-    console.error("Database persistence error:", dbError);
+  } catch (dbError: unknown) {
+    console.error("[DB_ERROR] Failed to persist inquiry:", dbError);
     return { success: false, message: "serverError" };
   }
 }

@@ -1,16 +1,21 @@
-import { cache } from "react";
+// src/services/product.service.ts
 import "server-only";
 import { getPayload } from "payload";
 import configPromise from "@/payload.config";
+import { unstable_cache } from "next/cache";
+
+// --- Domain & DTO Contracts ---
+
+export type Locale = "fa" | "en" | "ar";
 
 export interface GetProductsParams {
-  locale: "fa" | "en" | "ar";
+  locale: Locale;
   page?: number;
   limit?: number;
   category?: string;
   color?: string;
   vein_pattern?: string;
-  sort?: string;
+  sort?: "newest" | "oldest" | "title_asc" | "title_desc";
   search?: string;
 }
 
@@ -21,163 +26,315 @@ export interface ProductMeta {
   has_next_page: boolean;
 }
 
-export interface CategoryItem {
-  id: string;
-  title: string;
-  slug: string;
-}
-
-export interface ColorItem {
+export interface LookupItem {
   id: string;
   title: string;
   slug: string;
   hex_code?: string;
 }
 
-export interface VeinPatternItem {
-  id: string;
-  title: string;
-  slug: string;
-}
-
-export interface GalleryItem {
-  image: { url: string; alt?: string } | string;
+export interface GalleryItemDTO {
+  url: string;
+  alt: string;
   caption?: string;
 }
 
-export interface ProductItem {
+export interface ProductItemDTO {
   id: string;
   title: string;
   slug: string;
   code: string;
-  category: CategoryItem | string;
-  color_family: ColorItem | string;
-  vein_pattern?: VeinPatternItem | string;
+  category: LookupItem;
+  color_family: LookupItem;
+  vein_pattern?: LookupItem;
   is_in_stock: "in_stock" | "on_demand" | "discontinued";
-  is_featured?: boolean;
-  thumbnail: { url: string; alt?: string } | string;
-  gallery?: GalleryItem[];
-  available_thicknesses?: string[];
-  finishes?: string[];
-  dimensions?: string;
+  is_featured: boolean;
+  thumbnail: string;
+  gallery: GalleryItemDTO[];
+  available_thicknesses: string[];
+  finishes: string[];
+  dimensions: string[];
   description?: string;
   meta_title?: string;
   meta_description?: string;
-  specsSheetUrl?: string;
 }
 
-export function extractCategorySlug(
-  category: CategoryItem | string | undefined,
+export interface ProductsResponseDTO {
+  data: ProductItemDTO[];
+  meta: ProductMeta;
+}
+
+// --- Constants & Security Boundaries ---
+
+const TTL = {
+  STATIC_SEC: 86400, // 24 Hours
+  DYNAMIC_SEC: 1800, // 30 Minutes
+} as const;
+
+const MAX_SEARCH_LENGTH = 50;
+const DEFAULT_PAGE_LIMIT = 9;
+const MAX_PAGE_LIMIT = 48;
+
+// --- Sanitization & Utility Helpers ---
+
+function sanitizeSearchTerm(input?: string): string | undefined {
+  if (!input) return undefined;
+
+  // Moving the hyphen to the very end or escaping it avoids character-range collision
+  const sanitized = input
+    .trim()
+    .replace(/[^\p{L}\p{N}\s_\-]/gu, "")
+    .slice(0, MAX_SEARCH_LENGTH);
+
+  return sanitized.length > 0 ? sanitized : undefined;
+}
+
+function resolveMediaUrl(
+  media: unknown,
+  fallback = "/PersisQuartz-Red.png",
 ): string {
-  if (!category) return "";
-  if (typeof category === "object") return category.slug || "";
-  return category;
+  if (!media) return fallback;
+  if (typeof media === "string") return media;
+  if (typeof media === "object" && media !== null && "url" in media) {
+    const url = (media as { url?: unknown }).url;
+    if (typeof url === "string" && url.trim().length > 0) return url;
+  }
+  return fallback;
 }
 
-export function extractCategoryTitle(
-  category: CategoryItem | string | undefined,
-): string {
-  if (!category) return "";
-  if (typeof category === "object") return category.title || "";
-  return category;
+function mapProductDocToDTO(doc: any): ProductItemDTO {
+  return {
+    id: String(doc.id),
+    title: String(doc.title || ""),
+    slug: String(doc.slug || ""),
+    code: String(doc.code || ""),
+    category: {
+      id: String(doc.category?.id || ""),
+      title: String(doc.category?.title || ""),
+      slug: String(doc.category?.slug || ""),
+    },
+    color_family: {
+      id: String(doc.color_family?.id || ""),
+      title: String(doc.color_family?.title || ""),
+      slug: String(doc.color_family?.slug || ""),
+      hex_code: doc.color_family?.hex_code
+        ? String(doc.color_family.hex_code)
+        : undefined,
+    },
+    vein_pattern: doc.vein_pattern
+      ? {
+          id: String(doc.vein_pattern.id || ""),
+          title: String(doc.vein_pattern.title || ""),
+          slug: String(doc.vein_pattern.slug || ""),
+        }
+      : undefined,
+    is_in_stock: doc.is_in_stock || "in_stock",
+    is_featured: Boolean(doc.is_featured),
+    thumbnail: resolveMediaUrl(doc.thumbnail),
+    gallery: Array.isArray(doc.gallery)
+      ? doc.gallery.map((g: any) => ({
+          url: resolveMediaUrl(g.image),
+          alt:
+            typeof g.image === "object" && g.image?.alt
+              ? String(g.image.alt)
+              : "",
+          caption: g.caption ? String(g.caption) : undefined,
+        }))
+      : [],
+    available_thicknesses: Array.isArray(doc.available_thicknesses)
+      ? doc.available_thicknesses.map(String)
+      : [],
+    finishes: Array.isArray(doc.finishes) ? doc.finishes.map(String) : [],
+    dimensions: Array.isArray(doc.dimensions)
+      ? doc.dimensions.map((d: any) =>
+          typeof d === "object" ? String(d.title || d.slug) : String(d),
+        )
+      : [],
+    description: doc.description ? String(doc.description) : undefined,
+    meta_title: doc.meta_title ? String(doc.meta_title) : undefined,
+    meta_description: doc.meta_description
+      ? String(doc.meta_description)
+      : undefined,
+  };
 }
 
-export const getProductsService = cache(
-  async ({
-    locale,
-    page = 1,
-    limit = 9,
-    category,
-    color,
-    vein_pattern,
-    sort = "-createdAt",
-    search,
-  }: GetProductsParams): Promise<{
-    data: ProductItem[];
-    meta: ProductMeta;
-  }> => {
-    try {
-      const payload = await getPayload({ config: configPromise });
-      const where: Record<string, any> = {};
+// --- Data Access Layer ---
 
-      if (category) {
-        where["category.slug"] = { equals: category };
-      }
+async function executeProductsQuery(
+  params: GetProductsParams,
+): Promise<ProductsResponseDTO> {
+  const payload = await getPayload({ config: configPromise });
+  const sanitizedSearch = sanitizeSearchTerm(params.search);
 
-      if (color) {
-        where["color_family.slug"] = { equals: color };
-      }
+  const where: Record<string, any> = {};
 
-      if (vein_pattern) {
-        where["vein_pattern.slug"] = { equals: vein_pattern };
-      }
+  if (params.category && params.category !== "all") {
+    where["category.slug"] = { equals: params.category.trim().toLowerCase() };
+  }
 
-      if (search) {
-        where.or = [{ title: { like: search } }, { code: { like: search } }];
-      }
+  if (params.color && params.color !== "all") {
+    where["color_family.slug"] = { equals: params.color.trim().toLowerCase() };
+  }
 
-      const response = await payload.find({
-        collection: "products",
-        locale,
-        page,
-        limit,
-        where,
-        sort,
-        depth: 2,
-      });
+  if (params.vein_pattern && params.vein_pattern !== "all") {
+    where["vein_pattern.slug"] = {
+      equals: params.vein_pattern.trim().toLowerCase(),
+    };
+  }
 
-      return {
-        data: (response.docs as unknown as ProductItem[]) || [],
-        meta: {
-          current_page: response.page ?? 1,
-          total_pages: response.totalPages ?? 1,
-          total_items: response.totalDocs ?? 0,
-          has_next_page: (response.page ?? 1) < (response.totalPages ?? 1),
-        },
-      };
-    } catch (error) {
-      console.error("Error fetching products from Payload CMS:", error);
-      return {
-        data: [],
-        meta: {
-          current_page: 1,
-          total_pages: 1,
-          total_items: 0,
-          has_next_page: false,
-        },
-      };
-    }
-  },
-);
+  if (sanitizedSearch) {
+    where.or = [
+      { code: { like: sanitizedSearch } },
+      { title: { like: sanitizedSearch } },
+    ];
+  }
 
-export const getProductBySlugService = cache(
+  // Deterministic sorting map to prevent SQL injection or arbitrary fields
+  let sortField = "-createdAt";
+  if (params.sort === "oldest") sortField = "createdAt";
+  if (params.sort === "title_asc") sortField = "title";
+  if (params.sort === "title_desc") sortField = "-title";
+
+  const limit = Math.min(
+    Math.max(params.limit ?? DEFAULT_PAGE_LIMIT, 1),
+    MAX_PAGE_LIMIT,
+  );
+  const page = Math.max(params.page ?? 1, 1);
+
+  try {
+    const result = await payload.find({
+      collection: "products",
+      locale: params.locale,
+      page,
+      limit,
+      where,
+      sort: sortField,
+      depth: 1, // Depth 1 resolves immediate Lookup relationships cleanly
+      pagination: true,
+    });
+
+    return {
+      data: result.docs.map(mapProductDocToDTO),
+      meta: {
+        current_page: result.page ?? 1,
+        total_pages: result.totalPages ?? 1,
+        total_items: result.totalDocs ?? 0,
+        has_next_page: (result.page ?? 1) < (result.totalPages ?? 1),
+      },
+    };
+  } catch (err: unknown) {
+    console.error(
+      JSON.stringify({
+        level: "ERROR",
+        module: "product.service",
+        action: "executeProductsQuery",
+        error: err instanceof Error ? err.message : String(err),
+        params,
+        timestamp: new Date().toISOString(),
+      }),
+    );
+    return {
+      data: [],
+      meta: {
+        current_page: 1,
+        total_pages: 1,
+        total_items: 0,
+        has_next_page: false,
+      },
+    };
+  }
+}
+
+// --- Cached Service Layer (Singleton Closures) ---
+
+const cachedPaginatedProducts = unstable_cache(
   async (
-    slug: string,
-    locale: "fa" | "en" | "ar",
-  ): Promise<ProductItem | null> => {
-    try {
-      const payload = await getPayload({ config: configPromise });
-      const response = await payload.find({
-        collection: "products",
-        locale,
-        where: { slug: { equals: slug } },
-        limit: 1,
-        depth: 2,
-      });
-
-      if (response.docs && response.docs.length > 0) {
-        return response.docs[0] as unknown as ProductItem;
-      }
-      return null;
-    } catch (error) {
-      console.error("Error fetching product by slug from Payload CMS:", error);
-      return null;
-    }
+    locale: Locale,
+    page: number,
+    limit: number,
+    category: string,
+    color: string,
+    vein_pattern: string,
+    sort: string,
+  ) => {
+    return executeProductsQuery({
+      locale,
+      page,
+      limit,
+      category: category === "all" ? undefined : category,
+      color: color === "all" ? undefined : color,
+      vein_pattern: vein_pattern === "all" ? undefined : vein_pattern,
+      sort: sort as GetProductsParams["sort"],
+    });
+  },
+  ["products-catalog-cache"],
+  {
+    revalidate: TTL.DYNAMIC_SEC,
+    tags: ["products"],
   },
 );
 
-export const getCategoriesService = cache(
-  async (locale: "fa" | "en" | "ar"): Promise<CategoryItem[]> => {
+export async function getProductsService(
+  params: GetProductsParams,
+): Promise<ProductsResponseDTO> {
+  const sanitizedSearch = sanitizeSearchTerm(params.search);
+
+  // Searches must intentionally bypass read caches to avoid unbounded key growth
+  if (sanitizedSearch) {
+    return executeProductsQuery({ ...params, search: sanitizedSearch });
+  }
+
+  return cachedPaginatedProducts(
+    params.locale,
+    Math.max(params.page ?? 1, 1),
+    Math.min(Math.max(params.limit ?? DEFAULT_PAGE_LIMIT, 1), MAX_PAGE_LIMIT),
+    params.category ?? "all",
+    params.color ?? "all",
+    params.vein_pattern ?? "all",
+    params.sort ?? "newest",
+  );
+}
+
+export const getProductBySlugService = unstable_cache(
+  async (slug: string, locale: Locale): Promise<ProductItemDTO | null> => {
+    try {
+      const payload = await getPayload({ config: configPromise });
+      const result = await payload.find({
+        collection: "products",
+        locale,
+        where: { slug: { equals: slug.trim().toLowerCase() } },
+        limit: 1,
+        depth: 2, // Depth 2 is strictly reserved for the single product detail page
+      });
+
+      if (!result.docs || result.docs.length === 0) return null;
+      return mapProductDocToDTO(result.docs[0]);
+    } catch (err: unknown) {
+      console.error(
+        JSON.stringify({
+          level: "ERROR",
+          module: "product.service",
+          action: "getProductBySlugService",
+          slug,
+          locale,
+          error: err instanceof Error ? err.message : String(err),
+          timestamp: new Date().toISOString(),
+        }),
+      );
+      return null;
+    }
+  },
+  ["product-detail-by-slug"],
+  {
+    revalidate: TTL.STATIC_SEC,
+    tags: ["products"],
+  },
+);
+
+// --- Fast Attribute Services ---
+
+export const getCategoriesService = unstable_cache(
+  async (locale: Locale): Promise<LookupItem[]> => {
     try {
       const payload = await getPayload({ config: configPromise });
       const response = await payload.find({
@@ -185,138 +342,147 @@ export const getCategoriesService = cache(
         locale,
         limit: 100,
         sort: "order",
+        depth: 0,
       });
 
       return response.docs.map((doc: any) => ({
-        id: doc.id,
-        title: doc.title,
-        slug: doc.slug,
+        id: String(doc.id),
+        title: String(doc.title),
+        slug: String(doc.slug),
       }));
-    } catch (error) {
-      console.error("Error fetching categories from Payload CMS:", error);
+    } catch {
       return [];
     }
   },
+  ["attributes-categories-cache"],
+  { revalidate: TTL.STATIC_SEC, tags: ["categories"] },
 );
 
-export const getColorsService = cache(
-  async (locale: "fa" | "en" | "ar"): Promise<ColorItem[]> => {
+export const getColorsService = unstable_cache(
+  async (locale: Locale): Promise<LookupItem[]> => {
     try {
       const payload = await getPayload({ config: configPromise });
       const response = await payload.find({
         collection: "colors",
         locale,
         limit: 100,
+        depth: 0,
       });
 
       return response.docs.map((doc: any) => ({
-        id: doc.id,
-        title: doc.title,
-        slug: doc.slug,
-        hex_code: doc.hex_code,
+        id: String(doc.id),
+        title: String(doc.title),
+        slug: String(doc.slug),
+        hex_code: doc.hex_code ? String(doc.hex_code) : undefined,
       }));
-    } catch (error) {
-      console.error("Error fetching colors from Payload CMS:", error);
+    } catch {
       return [];
     }
   },
+  ["attributes-colors-cache"],
+  { revalidate: TTL.STATIC_SEC, tags: ["colors"] },
 );
 
-export const getVeinPatternsService = cache(
-  async (locale: "fa" | "en" | "ar"): Promise<VeinPatternItem[]> => {
+export const getVeinPatternsService = unstable_cache(
+  async (locale: Locale): Promise<LookupItem[]> => {
     try {
       const payload = await getPayload({ config: configPromise });
       const response = await payload.find({
         collection: "vein-patterns",
         locale,
         limit: 100,
+        depth: 0,
       });
 
       return response.docs.map((doc: any) => ({
-        id: doc.id,
-        title: doc.title,
-        slug: doc.slug,
+        id: String(doc.id),
+        title: String(doc.title),
+        slug: String(doc.slug),
       }));
-    } catch (error) {
-      console.error("Error fetching vein patterns from Payload CMS:", error);
+    } catch {
       return [];
     }
   },
+  ["attributes-vein-patterns-cache"],
+  { revalidate: TTL.STATIC_SEC, tags: ["vein-patterns"] },
 );
 
-export const getAllDimensionsService = cache(async (): Promise<string[]> => {
-  try {
-    const payload = await getPayload({ config: configPromise });
-    const response = await payload.find({
-      collection: "dimensions",
-      limit: 50,
-    });
-    return response.docs.map((d: any) => d.title);
-  } catch (error) {
-    console.error("Error fetching dimensions:", error);
-    return [];
-  }
-});
+export const getAllDimensionsService = unstable_cache(
+  async (): Promise<string[]> => {
+    try {
+      const payload = await getPayload({ config: configPromise });
+      const response = await payload.find({
+        collection: "dimensions",
+        limit: 50,
+        depth: 0,
+      });
+      return response.docs.map((d: any) => String(d.title || ""));
+    } catch {
+      return [];
+    }
+  },
+  ["attributes-dimensions-cache"],
+  { revalidate: TTL.STATIC_SEC, tags: ["dimensions"] },
+);
 
-export const getAllThicknessesService = cache(async (): Promise<string[]> => {
-  try {
-    const payload = await getPayload({ config: configPromise });
-    const response = await payload.find({
-      collection: "thicknesses" as any,
-      limit: 50,
-    });
-    return response.docs.map((d: any) => d.slug || d.title);
-  } catch (error) {
-    console.error("Error fetching thicknesses:", error);
-    return [];
-  }
-});
+export const getAllThicknessesService = unstable_cache(
+  async (): Promise<string[]> => {
+    try {
+      const payload = await getPayload({ config: configPromise });
+      const response = await payload.find({
+        collection: "thicknesses" as any,
+        limit: 50,
+        depth: 0,
+      });
+      return response.docs.map((d: any) => String(d.slug || d.title || ""));
+    } catch {
+      return [];
+    }
+  },
+  ["attributes-thicknesses-cache"],
+  { revalidate: TTL.STATIC_SEC, tags: ["thicknesses"] },
+);
 
-export const getAllFinishesService = cache(
-  async (
-    locale: "fa" | "en" | "ar",
-  ): Promise<{ title: string; slug: string }[]> => {
+export const getAllFinishesService = unstable_cache(
+  async (locale: Locale): Promise<{ title: string; slug: string }[]> => {
     try {
       const payload = await getPayload({ config: configPromise });
       const response = await payload.find({
         collection: "finishes" as any,
         locale,
         limit: 50,
+        depth: 0,
       });
       return response.docs.map((d: any) => ({
-        title: d.title,
-        slug: d.slug,
+        title: String(d.title || ""),
+        slug: String(d.slug || ""),
       }));
-    } catch (error) {
-      console.error("Error fetching finishes:", error);
+    } catch {
       return [];
     }
   },
+  ["attributes-finishes-cache"],
+  { revalidate: TTL.STATIC_SEC, tags: ["finishes"] },
 );
 
-export const getFeaturedProductsService = cache(
-  async (locale: "fa" | "en" | "ar"): Promise<ProductItem[]> => {
+export const getFeaturedProductsService = unstable_cache(
+  async (locale: Locale): Promise<ProductItemDTO[]> => {
     try {
       const payload = await getPayload({ config: configPromise });
-
       const response = await payload.find({
         collection: "products",
         locale,
-        limit: 6, // دقیقاً ۶ محصول را می‌گیرد
-        where: {
-          is_featured: { equals: true },
-        },
-        sort: "-updatedAt", // جدیدترین مواردی که تیک زده‌اید را اول می‌آورد
-        depth: 2,
+        limit: 6,
+        where: { is_featured: { equals: true } },
+        sort: "-updatedAt",
+        depth: 1,
       });
 
-      return (response.docs as unknown as ProductItem[]) || [];
-    } catch (error) {
-      console.error(
-        "Error fetching featured products from Payload CMS:",
-        error,
-      );
+      return response.docs.map(mapProductDocToDTO);
+    } catch {
       return [];
     }
   },
+  ["featured-products-cache"],
+  { revalidate: TTL.DYNAMIC_SEC, tags: ["products", "featured-products"] },
 );
