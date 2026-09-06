@@ -1,3 +1,4 @@
+// src/app/[locale]/about-persis/page.tsx
 import React from "react";
 import Image from "next/image";
 import type { Metadata } from "next";
@@ -26,38 +27,75 @@ export async function generateMetadata({
   };
 }
 
-const getMediaDetails = (media?: any, fallback = "/PersisQuartz-Red.png") => {
-  let url = fallback;
-  if (typeof media === "object" && media?.url) url = media.url;
-  else if (typeof media === "string" && media) url = media;
+const FALLBACK_IMG = "/PersisQuartz-Red.png";
 
-  const isPlaceholder = url === fallback;
-  return { url, isPlaceholder };
+/**
+ * کامپوننت پایدار جهت سنترسازی هندسی Placeholder لوگو در برابر عکس‌های واقعی
+ */
+const SmartMediaBox = ({
+  src,
+  alt,
+  priority = false,
+  aspectRatio = "aspect-[4/3]",
+  className = "",
+}: {
+  src: string;
+  alt: string;
+  priority?: boolean;
+  aspectRatio?: string;
+  className?: string;
+}) => {
+  const isPlaceholder = !src || src === FALLBACK_IMG;
+
+  return (
+    <div
+      className={`relative w-full ${aspectRatio} overflow-hidden border border-border/50 flex items-center justify-center ${
+        isPlaceholder ? "bg-muted/15" : "bg-muted/30"
+      } ${className}`}
+    >
+      {isPlaceholder ? (
+        <div className="relative w-2/3 h-2/5 flex items-center justify-center select-none pointer-events-none">
+          <Image
+            src={FALLBACK_IMG}
+            alt="Persis Quartz Default"
+            fill
+            sizes="300px"
+            className="object-contain opacity-25 grayscale contrast-50"
+          />
+        </div>
+      ) : (
+        <Image
+          src={src}
+          alt={alt}
+          fill
+          priority={priority}
+          sizes="(max-width: 1024px) 100vw, 50vw"
+          className="object-cover transition-all duration-700"
+        />
+      )}
+    </div>
+  );
 };
 
 export default async function AboutPersisPage({ params }: PageProps) {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "About" });
+  const currentLocale = (locale as "fa" | "en" | "ar") || "fa";
 
-  const pageData = await getAboutPageDataService();
+  const [data, t] = await Promise.all([
+    getAboutPageDataService(currentLocale),
+    getTranslations({ locale: currentLocale, namespace: "About" }),
+  ]);
 
-  const visionMedia = getMediaDetails(pageData?.visionImage);
-  const craftsmanshipMedia = getMediaDetails(pageData?.craftsmanshipImage);
-
-  // استخراج تصاویر گالری از دیتابیس یا استفاده از فال‌بک پیش‌فرض
-  const dynamicGallery = pageData?.gallery?.length
-    ? pageData.gallery.map((item: any) => getMediaDetails(item.image).url)
-    : Array(8).fill("/PersisQuartz-Red.png");
-
-  const mid = Math.ceil(dynamicGallery.length / 2);
-  const galleryRow1 = dynamicGallery.slice(0, mid);
-  const galleryRow2 = dynamicGallery.slice(mid).length
-    ? dynamicGallery.slice(mid)
+  const gallery = data.gallery.images;
+  const mid = Math.ceil(gallery.length / 2);
+  const galleryRow1 = gallery.slice(0, mid);
+  const galleryRow2 = gallery.slice(mid).length
+    ? gallery.slice(mid)
     : galleryRow1;
 
   return (
     <main className="min-h-screen bg-background select-none flex flex-col overflow-hidden">
-      {/* 1. Header */}
+      {/* 1. Page Header */}
       <div className="container mx-auto px-4 sm:px-12 pt-28 sm:pt-36 pb-2 select-none">
         <PageWatermarkHeader
           watermark="PERSIS QUARTZ"
@@ -65,130 +103,157 @@ export default async function AboutPersisPage({ params }: PageProps) {
         />
       </div>
 
-      {/* 2. Vision */}
+      {/* 2. Vision Section */}
       <section className="py-14 sm:py-20 lg:py-28">
         <div className="container mx-auto px-6 sm:px-12 flex flex-col lg:flex-row gap-10 lg:gap-20 items-center">
           <div className="w-full lg:w-1/2 space-y-6 lg:space-y-8 order-2 lg:order-1">
             <div className="space-y-1.5 lg:space-y-2">
               <span className="text-[10px] sm:text-xs uppercase tracking-widest text-primary block">
-                {t("visionTag")}
+                {data.vision.tag || t("visionTag")}
               </span>
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-light text-foreground leading-snug">
-                {t("visionTitle")}
+                {data.vision.title || t("visionTitle")}
               </h2>
             </div>
             <div className="space-y-4 lg:space-y-6">
               <p className="text-xs sm:text-sm lg:text-base font-light text-muted-foreground leading-relaxed text-justify">
-                {t("visionDesc1")}
+                {data.vision.desc1 || t("visionDesc1")}
               </p>
               <p className="text-xs sm:text-sm lg:text-base font-light text-muted-foreground leading-relaxed text-justify">
-                {t("visionDesc2")}
+                {data.vision.desc2 || t("visionDesc2")}
               </p>
             </div>
           </div>
 
           <div className="w-full lg:w-1/2 order-1 lg:order-2">
-            <div className="relative aspect-[4/3] sm:aspect-square lg:aspect-[4/5] bg-muted/30 w-full overflow-hidden border border-border/50 flex items-center justify-center">
-              <Image
-                src={visionMedia.url}
-                alt="Persis Factory and Innovation"
-                fill
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                className={`transition-all duration-700 ${
-                  visionMedia.isPlaceholder
-                    ? "object-contain p-16 opacity-20 grayscale"
-                    : "object-cover grayscale hover:grayscale-0"
-                }`}
-              />
+            <SmartMediaBox
+              src={data.vision.imageUrl}
+              alt={data.vision.title || "Persis Factory Vision"}
+              priority={true}
+              aspectRatio="aspect-[4/3] sm:aspect-square lg:aspect-[4/5]"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* 3. Infinite Seamless Marquee Showcase */}
+      <section className="py-14 sm:py-20 lg:py-24 bg-muted/20 border-y border-border/40 overflow-hidden select-none">
+        <div className="container mx-auto px-6 sm:px-12 mb-10 text-center sm:text-start">
+          <span className="text-[10px] sm:text-xs uppercase tracking-widest text-primary block mb-2">
+            {data.gallery.tag || t("galleryTag")}
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-light text-foreground">
+            {data.gallery.title || t("galleryTitle")}
+          </h2>
+        </div>
+
+        <div dir="ltr" className="flex flex-col gap-5 sm:gap-7 overflow-hidden">
+          {/* ردیف اول: حرکت پیوسته به سمت چپ */}
+          <div className="flex overflow-hidden w-full group">
+            <div className="animate-marquee-left group-hover:[animation-play-state:paused] flex shrink-0">
+              {galleryRow1.map((imgUrl, idx) => (
+                <div
+                  key={`r1-track1-${idx}`}
+                  className="relative h-44 sm:h-60 lg:h-72 w-64 sm:w-80 lg:w-96 shrink-0 mx-2 sm:mx-3 bg-card border border-border/50 overflow-hidden"
+                >
+                  <Image
+                    src={imgUrl}
+                    alt="Material Gallery"
+                    fill
+                    sizes="400px"
+                    className="object-cover hover:scale-105 transition-transform duration-700 ease-out"
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* کپی دوم جهت تکمیل بی‌نقص چرخه بدون فلش */}
+            <div
+              aria-hidden="true"
+              className="animate-marquee-left group-hover:[animation-play-state:paused] flex shrink-0"
+            >
+              {galleryRow1.map((imgUrl, idx) => (
+                <div
+                  key={`r1-track2-${idx}`}
+                  className="relative h-44 sm:h-60 lg:h-72 w-64 sm:w-80 lg:w-96 shrink-0 mx-2 sm:mx-3 bg-card border border-border/50 overflow-hidden"
+                >
+                  <Image
+                    src={imgUrl}
+                    alt="Material Gallery"
+                    fill
+                    sizes="400px"
+                    className="object-cover hover:scale-105 transition-transform duration-700 ease-out"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ردیف دوم: حرکت پیوسته به سمت راست */}
+          <div className="flex overflow-hidden w-full group">
+            <div className="animate-marquee-right group-hover:[animation-play-state:paused] flex shrink-0">
+              {galleryRow2.map((imgUrl, idx) => (
+                <div
+                  key={`r2-track1-${idx}`}
+                  className="relative h-44 sm:h-60 lg:h-72 w-64 sm:w-80 lg:w-96 shrink-0 mx-2 sm:mx-3 bg-card border border-border/50 overflow-hidden"
+                >
+                  <Image
+                    src={imgUrl}
+                    alt="Material Gallery"
+                    fill
+                    sizes="400px"
+                    className="object-cover hover:scale-105 transition-transform duration-700 ease-out"
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* کپی دوم جهت تکمیل بی‌نقص چرخه بدون فلش */}
+            <div
+              aria-hidden="true"
+              className="animate-marquee-right group-hover:[animation-play-state:paused] flex shrink-0"
+            >
+              {galleryRow2.map((imgUrl, idx) => (
+                <div
+                  key={`r2-track2-${idx}`}
+                  className="relative h-44 sm:h-60 lg:h-72 w-64 sm:w-80 lg:w-96 shrink-0 mx-2 sm:mx-3 bg-card border border-border/50 overflow-hidden"
+                >
+                  <Image
+                    src={imgUrl}
+                    alt="Material Gallery"
+                    fill
+                    sizes="400px"
+                    className="object-cover hover:scale-105 transition-transform duration-700 ease-out"
+                  />
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
-      {/* 3. Marquee Gallery */}
-      <section className="py-14 sm:py-20 lg:py-24 bg-muted/20 border-y border-border/40 overflow-hidden">
-        <div className="container mx-auto px-6 sm:px-12 mb-10 text-center sm:text-start">
-          <span className="text-[10px] sm:text-xs uppercase tracking-widest text-primary block mb-2">
-            {t("galleryTag")}
-          </span>
-          <h2 className="text-2xl sm:text-3xl font-light text-foreground">
-            {t("galleryTitle")}
-          </h2>
-        </div>
-
-        <div dir="ltr" className="flex flex-col gap-4 sm:gap-6">
-          <div className="flex w-[200%] sm:w-[150%] lg:w-[120%] animate-marquee-left hover:[animation-play-state:paused]">
-            {[...galleryRow1, ...galleryRow1].map((imgUrl, idx) => (
-              <div
-                key={`row1-${idx}`}
-                className="relative h-40 sm:h-56 lg:h-72 w-64 sm:w-80 lg:w-96 shrink-0 mx-2 sm:mx-3 bg-card border border-border/50 flex items-center justify-center overflow-hidden"
-              >
-                <Image
-                  src={imgUrl}
-                  alt="Persis Quartz Gallery Image"
-                  fill
-                  sizes="400px"
-                  className={
-                    imgUrl === "/PersisQuartz-Red.png"
-                      ? "object-contain p-8 opacity-20 grayscale"
-                      : "object-cover"
-                  }
-                />
-              </div>
-            ))}
-          </div>
-
-          <div className="flex w-[200%] sm:w-[150%] lg:w-[120%] animate-marquee-right hover:[animation-play-state:paused] -ml-[100%] sm:-ml-[50%] lg:-ml-[20%]">
-            {[...galleryRow2, ...galleryRow2].map((imgUrl, idx) => (
-              <div
-                key={`row2-${idx}`}
-                className="relative h-40 sm:h-56 lg:h-72 w-64 sm:w-80 lg:w-96 shrink-0 mx-2 sm:mx-3 bg-card border border-border/50 flex items-center justify-center overflow-hidden"
-              >
-                <Image
-                  src={imgUrl}
-                  alt="Persis Quartz Gallery Image"
-                  fill
-                  sizes="400px"
-                  className={
-                    imgUrl === "/PersisQuartz-Red.png"
-                      ? "object-contain p-8 opacity-20 grayscale"
-                      : "object-cover"
-                  }
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 4. Craftsmanship */}
+      {/* 4. Craftsmanship Section */}
       <section className="py-14 sm:py-20 lg:py-28">
         <div className="container mx-auto px-6 sm:px-12 flex flex-col lg:flex-row items-center gap-10 lg:gap-20">
-          <div className="w-full lg:w-1/2 relative aspect-[4/3] sm:aspect-[16/9] lg:aspect-square bg-muted/40 border border-border/50 p-6 lg:p-8 flex items-center justify-center overflow-hidden">
-            <Image
-              src={craftsmanshipMedia.url}
-              alt="Craftsmanship and Inspiration"
-              fill
-              sizes="(max-width: 1024px) 100vw, 50vw"
-              className={`transition-all duration-700 ${
-                craftsmanshipMedia.isPlaceholder
-                  ? "object-contain p-16 opacity-20 grayscale"
-                  : "object-cover"
-              }`}
+          <div className="w-full lg:w-1/2">
+            <SmartMediaBox
+              src={data.craftsmanship.imageUrl}
+              alt={data.craftsmanship.title || "Craftsmanship and Inspiration"}
+              aspectRatio="aspect-[4/3] sm:aspect-[16/9] lg:aspect-square"
             />
           </div>
 
           <div className="w-full lg:w-1/2 space-y-4 lg:space-y-6">
             <div className="space-y-1.5 lg:space-y-2">
               <span className="text-[10px] sm:text-xs uppercase tracking-widest text-primary block">
-                {t("craftsmanshipTag")}
+                {data.craftsmanship.tag || t("craftsmanshipTag")}
               </span>
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-light text-foreground leading-snug">
-                {t("craftsmanshipTitle")}
+                {data.craftsmanship.title || t("craftsmanshipTitle")}
               </h2>
             </div>
             <p className="text-xs sm:text-sm lg:text-base font-light text-muted-foreground leading-relaxed text-justify">
-              {t("craftsmanshipDesc")}
+              {data.craftsmanship.desc || t("craftsmanshipDesc")}
             </p>
           </div>
         </div>
