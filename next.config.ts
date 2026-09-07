@@ -13,6 +13,7 @@ const nextConfig: NextConfig = {
       { protocol: "http", hostname: "127.0.0.1" },
       { protocol: "https", hostname: "persisquartz.com" },
       { protocol: "https", hostname: "www.persisquartz.com" },
+      { protocol: "https", hostname: "images.unsplash.com" },
     ],
   },
 };

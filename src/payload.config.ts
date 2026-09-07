@@ -20,6 +20,7 @@ import { Dealers } from "./payload/collections/Dealers";
 import { Inquiries } from "./payload/collections/Inquiries";
 import { HomePage } from "./payload/globals/HomePage";
 import { CarePage } from "./payload/globals/CarePage";
+import { ApplicationsPage } from "./payload/globals/ApplicationsPage";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -43,7 +44,7 @@ export default buildConfig({
     Dealers,
     Inquiries,
   ],
-  globals: [AboutPage, HomePage, CarePage],
+  globals: [AboutPage, HomePage, CarePage, ApplicationsPage],
 
   editor: lexicalEditor({}),
 
