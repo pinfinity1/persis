@@ -1,38 +1,28 @@
+// src/components/care/routine-accordion.tsx
 "use client";
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { CheckCheck, Droplets, ShieldCheck, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const ICON_MAP: Record<string, React.ElementType> = {
-  CheckCheck: CheckCheck,
-  droplets: Droplets,
-  shieldCheck: ShieldCheck,
-};
-
-export interface StepItem {
-  id: string;
-  stepNumber: string;
-  title: string;
-  desc: string;
-  iconName: "CheckCheck" | "droplets" | "shieldCheck";
-}
+import { renderCareIcon } from "@/components/care/care-icons";
+import type { CareStepDTO } from "@/services/care.service";
 
 interface RoutineAccordionProps {
   sectionTag: string;
   sectionTitle: string;
-  items: StepItem[];
-  mediaSrc?: string;
+  items: CareStepDTO[];
+  mediaSrc?: string | null;
 }
 
 export const RoutineAccordion: React.FC<RoutineAccordionProps> = ({
   sectionTag,
   sectionTitle,
   items,
-  mediaSrc = "/PersisQuartz-Red.png",
+  mediaSrc,
 }) => {
   const [openId, setOpenId] = useState<string>(items[0]?.id || "");
+  const isPlaceholder = !mediaSrc || mediaSrc === "/PersisQuartz-Red.png";
 
   const toggleItem = (id: string) => {
     setOpenId((prev) => (prev === id ? "" : id));
@@ -49,24 +39,44 @@ export const RoutineAccordion: React.FC<RoutineAccordionProps> = ({
         </h2>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-        <div className="lg:col-span-5 w-full">
-          <div className="relative aspect-[4/3] sm:aspect-square w-full bg-muted/40 border border-border/60 overflow-hidden">
-            <Image
-              src={mediaSrc}
-              alt="Persis Quartz Routine Care"
-              fill
-              sizes="(max-width: 1024px) 100vw, 40vw"
-              className="object-cover"
-            />
-            <div className="absolute inset-0 bg-black/10 pointer-events-none" />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+        {/* ۱. کادر مدیا همراه با سنترسازی هندسی شیک در حالت Placeholder */}
+        <div className="lg:col-span-5 w-full lg:sticky lg:top-28">
+          <div
+            className={cn(
+              "relative aspect-[4/3] sm:aspect-square w-full border border-border/60 overflow-hidden flex items-center justify-center transition-all duration-300",
+              isPlaceholder ? "bg-muted/15" : "bg-muted/40",
+            )}
+          >
+            {isPlaceholder ? (
+              <div className="relative w-3/5 h-2/5 flex items-center justify-center pointer-events-none select-none">
+                <Image
+                  src="/PersisQuartz-Red.png"
+                  alt="Persis Quartz Brand Logo"
+                  fill
+                  sizes="320px"
+                  className="object-contain opacity-25 grayscale contrast-75"
+                />
+              </div>
+            ) : (
+              <Image
+                src={mediaSrc}
+                alt="Care and Maintenance"
+                fill
+                sizes="(max-width: 1024px) 100vw, 40vw"
+                className="object-cover"
+              />
+            )}
+            <div className="absolute inset-0 bg-black/5 pointer-events-none" />
           </div>
         </div>
 
+        {/* ۲. لیست آکاردئون‌ها با قابلیت رندر تمامی آیکون‌ها و نقطه لوکس */}
         <div className="lg:col-span-7 space-y-3">
-          {items.map((item) => {
+          {items.map((item, index) => {
             const isOpen = openId === item.id;
-            const Icon = ICON_MAP[item.iconName] || Droplets;
+            const stepDisplayNumber =
+              item.stepNumber || `STEP ${String(index + 1).padStart(2, "0")}`;
 
             return (
               <div
@@ -86,17 +96,24 @@ export const RoutineAccordion: React.FC<RoutineAccordionProps> = ({
                   <div className="flex items-center gap-4 min-w-0">
                     <div
                       className={cn(
-                        "p-2.5 shrink-0 border transition-colors",
+                        "size-10 shrink-0 border flex items-center justify-center transition-colors",
                         isOpen
                           ? "bg-primary text-primary-foreground border-primary"
                           : "bg-muted/50 text-primary border-border/50",
                       )}
                     >
-                      <Icon className="h-5 w-5" />
+                      {renderCareIcon(
+                        item.iconName,
+                        cn(
+                          "h-4 w-4",
+                          isOpen ? "text-primary-foreground" : "text-primary",
+                        ),
+                      )}
                     </div>
-                    <div>
-                      <span className="text-[10px] text-muted-foreground uppercase tracking-widest block">
-                        {item.stepNumber}
+
+                    <div className="min-w-0">
+                      <span className="text-[10px] text-muted-foreground uppercase tracking-widest block font-mono">
+                        {stepDisplayNumber}
                       </span>
                       <h3 className="text-sm sm:text-base font-medium text-foreground truncate">
                         {item.title}
@@ -121,7 +138,7 @@ export const RoutineAccordion: React.FC<RoutineAccordionProps> = ({
                   )}
                 >
                   <div className="overflow-hidden">
-                    <p className="text-xs sm:text-sm font-light text-muted-foreground leading-relaxed pt-2 border-t border-border/30">
+                    <p className="text-xs sm:text-sm font-light text-muted-foreground leading-relaxed pt-2 border-t border-border/30 text-justify">
                       {item.desc}
                     </p>
                   </div>

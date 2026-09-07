@@ -1,3 +1,4 @@
+// src/app/[locale]/dealers/page.tsx
 import React, { Suspense } from "react";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
@@ -32,10 +33,17 @@ export async function generateMetadata({
   };
 }
 
+function safeJsonLdReplacer(data: Record<string, unknown>): string {
+  return JSON.stringify(data)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026");
+}
+
 export default async function DealersPage({ params, searchParams }: PageProps) {
   const { locale } = await params;
   const sParams = await searchParams;
-  const currentLocale = locale as "fa" | "en" | "ar";
+  const currentLocale = (locale as "fa" | "en" | "ar") || "fa";
 
   const selectedProvince =
     typeof sParams.province === "string" ? sParams.province : undefined;
@@ -46,8 +54,31 @@ export default async function DealersPage({ params, searchParams }: PageProps) {
     getTranslations({ locale: currentLocale, namespace: "Dealers" }),
   ]);
 
+  const jsonLdPayload = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "Persis Quartz",
+    department: dealers.map((d) => ({
+      "@type": "LocalBusiness",
+      name: d.title,
+      telephone: d.phone,
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: d.address,
+        addressLocality: d.city,
+        addressRegion: d.province,
+        addressCountry: "IR",
+      },
+    })),
+  };
+
   return (
     <main className="container mx-auto px-4 sm:px-12 pt-28 sm:pt-36 pb-20 min-h-screen space-y-12 select-none">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLdReplacer(jsonLdPayload) }}
+      />
+
       <PageWatermarkHeader
         watermark="SHOWROOMS"
         title="Official Sales Network & Dealers"

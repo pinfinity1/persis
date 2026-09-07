@@ -1,3 +1,4 @@
+import { revalidateTag } from "next/cache";
 import type { CollectionConfig } from "payload";
 
 export const Catalogs: CollectionConfig = {
@@ -9,6 +10,17 @@ export const Catalogs: CollectionConfig = {
   },
   access: {
     read: () => true,
+  },
+  hooks: {
+    afterChange: [
+      () => {
+        try {
+          revalidateTag("catalogs");
+        } catch (err) {
+          console.warn("Revalidate error on Catalogs:", err);
+        }
+      },
+    ],
   },
   fields: [
     {

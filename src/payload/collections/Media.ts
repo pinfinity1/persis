@@ -1,5 +1,6 @@
 // src/payload/collections/Media.ts
 import type { CollectionConfig } from "payload";
+import { revalidateTag } from "next/cache";
 
 export const Media: CollectionConfig = {
   slug: "media",
@@ -9,6 +10,33 @@ export const Media: CollectionConfig = {
   admin: {
     useAsTitle: "alt",
     defaultColumns: ["filename", "mimeType", "filesize", "updatedAt"],
+  },
+  hooks: {
+    beforeOperation: [
+      ({ args, operation }) => {
+        if (operation === "create" && args.req?.file) {
+          const file = args.req.file;
+          const safeFileName = file.name
+            .toLowerCase()
+            .replace(/\s+/g, "-")
+            .replace(/[^a-z0-9.-]/g, "");
+          file.name = safeFileName;
+        }
+        return args;
+      },
+    ],
+    afterChange: [
+      () => {
+        try {
+          revalidateTag("care-page");
+          revalidateTag("about-page");
+          revalidateTag("catalogs");
+          revalidateTag("products");
+        } catch (err) {
+          console.warn("Media revalidation hook error:", err);
+        }
+      },
+    ],
   },
   upload: {
     adminThumbnail: "thumbnail",
@@ -41,21 +69,6 @@ export const Media: CollectionConfig = {
       "video/mp4",
       "video/webm",
       "application/pdf",
-    ],
-  },
-  hooks: {
-    beforeOperation: [
-      ({ args, operation }) => {
-        if (operation === "create" && args.req?.file) {
-          const file = args.req.file;
-          const safeFileName = file.name
-            .toLowerCase()
-            .replace(/\s+/g, "-")
-            .replace(/[^a-z0-9.-]/g, "");
-          file.name = safeFileName;
-        }
-        return args;
-      },
     ],
   },
   fields: [

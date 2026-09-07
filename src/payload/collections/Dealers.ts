@@ -1,4 +1,6 @@
+// src/payload/collections/Dealers.ts
 import type { CollectionConfig } from "payload";
+import { revalidateTag } from "next/cache";
 import { IRAN_PROVINCES } from "@/lib/constants/provinces";
 
 export const Dealers: CollectionConfig = {
@@ -6,7 +8,7 @@ export const Dealers: CollectionConfig = {
   admin: {
     useAsTitle: "title",
     group: "Catalog",
-    defaultColumns: ["title", "province", "city", "phone"],
+    defaultColumns: ["title", "province", "city", "phone", "status"],
     components: {
       beforeListTable: [
         "@/components/admin/ExcelDealerImportControl#ExcelDealerImportControl",
@@ -15,6 +17,26 @@ export const Dealers: CollectionConfig = {
   },
   access: {
     read: () => true,
+  },
+  hooks: {
+    afterChange: [
+      () => {
+        try {
+          revalidateTag("dealers");
+        } catch (err) {
+          console.warn("Revalidate error on Dealers:", err);
+        }
+      },
+    ],
+    afterDelete: [
+      () => {
+        try {
+          revalidateTag("dealers");
+        } catch (err) {
+          console.warn("Revalidate error on Dealers delete:", err);
+        }
+      },
+    ],
   },
   fields: [
     {

@@ -5,18 +5,10 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
 import { PageWatermarkHeader } from "@/components/shared/page-watermark-header";
-import {
-  RoutineAccordion,
-  type StepItem,
-} from "@/components/care/routine-accordion";
-import {
-  ChefHat,
-  ThermometerSun,
-  TestTubeDiagonal,
-  ShieldAlert,
-  ArrowUpRight,
-  FileText,
-} from "lucide-react";
+import { RoutineAccordion } from "@/components/care/routine-accordion";
+import { getCarePageDataService } from "@/services/care.service";
+import { renderCareIcon } from "@/components/care/care-icons";
+import { ArrowUpRight, FileText } from "lucide-react";
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -41,7 +33,12 @@ export async function generateMetadata({
 
 export default async function CareAndMaintenancePage({ params }: PageProps) {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "CareMaintenance" });
+  const currentLocale = (locale as "fa" | "en" | "ar") || "fa";
+
+  const [t, careData] = await Promise.all([
+    getTranslations({ locale: currentLocale, namespace: "CareMaintenance" }),
+    getCarePageDataService(currentLocale),
+  ]);
 
   const engineeredFeatures = [
     { label: t("featScratch"), icon: "/icons/scratch.png" },
@@ -52,13 +49,13 @@ export default async function CareAndMaintenancePage({ params }: PageProps) {
     { label: t("featEasyClean"), icon: "/icons/easyclean.png" },
   ];
 
-  const routineSteps: StepItem[] = [
+  const defaultRoutineSteps = [
     {
       id: "step-1",
       stepNumber: t("step1Tag"),
       title: t("firstCleanTitle"),
       desc: t("firstCleanDesc"),
-      iconName: "CheckCheck",
+      iconName: "checkCheck",
     },
     {
       id: "step-2",
@@ -76,9 +73,41 @@ export default async function CareAndMaintenancePage({ params }: PageProps) {
     },
   ];
 
+  const defaultRules = [
+    {
+      id: "rule-1",
+      title: t("scratchProtTitle"),
+      desc: t("scratchProtDesc"),
+      iconType: "scratch",
+    },
+    {
+      id: "rule-2",
+      title: t("heatProtTitle"),
+      desc: t("heatProtDesc"),
+      iconType: "heat",
+    },
+    {
+      id: "rule-3",
+      title: t("chemicalsProtTitle"),
+      desc: t("chemicalsProtDesc"),
+      iconType: "chemical",
+    },
+    {
+      id: "rule-4",
+      title: t("edgesProtTitle"),
+      desc: t("edgesProtDesc"),
+      iconType: "impact",
+    },
+  ];
+
+  const finalRoutineSteps =
+    careData.steps.length > 0 ? careData.steps : defaultRoutineSteps;
+
+  const finalRules = careData.rules.length > 0 ? careData.rules : defaultRules;
+
   return (
     <main className="min-h-screen bg-background pb-20 sm:pb-32 select-none">
-      {/* 1. Page Header with PageWatermarkHeader */}
+      {/* 1. Page Header */}
       <div className="container mx-auto px-4 sm:px-12 pt-28 sm:pt-36 pb-2 select-none">
         <PageWatermarkHeader watermark="MAINTENANCE" title={t("tagline")} />
       </div>
@@ -121,8 +150,8 @@ export default async function CareAndMaintenancePage({ params }: PageProps) {
       <RoutineAccordion
         sectionTag={t("sectionRoutineTag")}
         sectionTitle={t("routineSectionTitle")}
-        items={routineSteps}
-        mediaSrc="/PersisQuartz-Red.png"
+        items={finalRoutineSteps as any}
+        mediaSrc={careData.mediaSrc}
       />
 
       {/* 4. Dark Preventive Rules Box */}
@@ -137,62 +166,25 @@ export default async function CareAndMaintenancePage({ params }: PageProps) {
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12">
-            <div className="flex gap-5 items-start p-6 bg-neutral-900/50 border border-neutral-800/80">
-              <div className="shrink-0 p-3 bg-neutral-900 border border-neutral-700/60 text-neutral-300">
-                <ChefHat className="h-5 w-5 text-primary" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+            {finalRules.map((rule) => (
+              <div
+                key={rule.id}
+                className="flex gap-5 items-start p-6 bg-neutral-900/50 border border-neutral-800/80 hover:border-neutral-700 transition-colors"
+              >
+                <div className="shrink-0 size-11 bg-neutral-900 border border-neutral-700/60 flex items-center justify-center">
+                  {renderCareIcon(rule.iconType, "h-5 w-5 text-primary")}
+                </div>
+                <div className="space-y-2">
+                  <h4 className="text-sm sm:text-base font-medium text-white tracking-wide">
+                    {rule.title}
+                  </h4>
+                  <p className="text-xs sm:text-sm font-light text-neutral-400 leading-relaxed text-justify">
+                    {rule.desc}
+                  </p>
+                </div>
               </div>
-              <div className="space-y-2">
-                <h4 className="text-sm sm:text-base font-medium text-white tracking-wide">
-                  {t("scratchProtTitle")}
-                </h4>
-                <p className="text-xs sm:text-sm font-light text-neutral-400 leading-relaxed">
-                  {t("scratchProtDesc")}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-5 items-start p-6 bg-neutral-900/50 border border-neutral-800/80">
-              <div className="shrink-0 p-3 bg-neutral-900 border border-neutral-700/60 text-neutral-300">
-                <ThermometerSun className="h-5 w-5 text-primary" />
-              </div>
-              <div className="space-y-2">
-                <h4 className="text-sm sm:text-base font-medium text-white tracking-wide">
-                  {t("heatProtTitle")}
-                </h4>
-                <p className="text-xs sm:text-sm font-light text-neutral-400 leading-relaxed">
-                  {t("heatProtDesc")}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-5 items-start p-6 bg-neutral-900/50 border border-neutral-800/80">
-              <div className="shrink-0 p-3 bg-neutral-900 border border-neutral-700/60 text-neutral-300">
-                <TestTubeDiagonal className="h-5 w-5 text-primary" />
-              </div>
-              <div className="space-y-2">
-                <h4 className="text-sm sm:text-base font-medium text-white tracking-wide">
-                  {t("chemicalsProtTitle")}
-                </h4>
-                <p className="text-xs sm:text-sm font-light text-neutral-400 leading-relaxed">
-                  {t("chemicalsProtDesc")}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-5 items-start p-6 bg-neutral-900/50 border border-neutral-800/80">
-              <div className="shrink-0 p-3 bg-neutral-900 border border-neutral-700/60 text-neutral-300">
-                <ShieldAlert className="h-5 w-5 text-primary" />
-              </div>
-              <div className="space-y-2">
-                <h4 className="text-sm sm:text-base font-medium text-white tracking-wide">
-                  {t("edgesProtTitle")}
-                </h4>
-                <p className="text-xs sm:text-sm font-light text-neutral-400 leading-relaxed">
-                  {t("edgesProtDesc")}
-                </p>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>

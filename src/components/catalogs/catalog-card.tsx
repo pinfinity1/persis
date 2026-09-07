@@ -1,3 +1,4 @@
+// src/components/catalogs/catalog-card.tsx
 "use client";
 
 import React from "react";
@@ -14,36 +15,36 @@ const TYPE_LABELS: Record<string, string> = {
   guide: "Care & Installation Guide",
 };
 
+function getSafeUrl(url?: string | null): string {
+  if (!url) return "";
+  const trimmed = url.trim();
+  if (trimmed.startsWith("/") || /^https?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+  return "";
+}
+
 export const CatalogCard: React.FC<{ catalog: CatalogItem }> = ({
   catalog,
 }) => {
   const t = useTranslations("Catalogs");
 
   const coverUrl =
-    typeof catalog.cover_image === "object" && catalog.cover_image?.url
-      ? catalog.cover_image.url
-      : typeof catalog.cover_image === "string" && catalog.cover_image
-        ? catalog.cover_image
-        : "/PersisQuartz-Red.png";
+    getSafeUrl(
+      typeof catalog.cover_image === "object" && catalog.cover_image?.url
+        ? catalog.cover_image.url
+        : typeof catalog.cover_image === "string"
+          ? catalog.cover_image
+          : null,
+    ) || "/PersisQuartz-Red.png";
 
-  const pdfUrl =
+  const pdfUrl = getSafeUrl(
     typeof catalog.pdf_file === "object" && catalog.pdf_file?.url
       ? catalog.pdf_file.url
       : typeof catalog.pdf_file === "string"
         ? catalog.pdf_file
-        : "";
-
-  const handleDownload = () => {
-    if (!pdfUrl) return;
-    const link = document.createElement("a");
-    link.href = pdfUrl;
-    link.download = `${catalog.slug || "catalog"}.pdf`;
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+        : null,
+  );
 
   return (
     <div className="group flex flex-row sm:flex-col bg-card border border-border/60 hover:border-primary/80 transition-all duration-300 overflow-hidden h-36 sm:h-auto select-none">
@@ -53,6 +54,7 @@ export const CatalogCard: React.FC<{ catalog: CatalogItem }> = ({
           src={coverUrl}
           alt={catalog.title || "Catalog"}
           fill
+          loading="lazy"
           sizes="(max-width: 640px) 112px, (max-width: 1024px) 50vw, 33vw"
           className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
         />
@@ -82,11 +84,12 @@ export const CatalogCard: React.FC<{ catalog: CatalogItem }> = ({
         </div>
 
         <div className="flex items-center gap-1.5 sm:grid sm:grid-cols-2 sm:gap-2 pt-2 sm:pt-3 border-t border-border/40">
-          {/* دکمه باز کردن در تب جدید */}
+          {/* دکمه مشاهده در مرورگر */}
           <Button
             asChild
             variant="outline"
             size="sm"
+            disabled={!pdfUrl}
             className="rounded-none text-[11px] sm:text-xs h-7 sm:h-9 flex-1 px-2 tracking-wider uppercase border-border/70 hover:bg-muted"
           >
             <a
@@ -100,15 +103,23 @@ export const CatalogCard: React.FC<{ catalog: CatalogItem }> = ({
             </a>
           </Button>
 
-          {/* دکمه دانلود مستقیم */}
+          {/* دکمه دانلود امن */}
           <Button
+            asChild
             size="sm"
-            onClick={handleDownload}
             disabled={!pdfUrl}
             className="rounded-none text-[11px] sm:text-xs h-7 sm:h-9 flex-1 px-2 tracking-wider uppercase bg-primary text-primary-foreground hover:bg-primary/90"
           >
-            <Download className="h-3 w-3 sm:h-3.5 sm:w-3.5 me-1.5" />
-            <span>{t("download")}</span>
+            <a
+              href={pdfUrl || "#"}
+              download={`${catalog.slug || "catalog"}.pdf`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center"
+            >
+              <Download className="h-3 w-3 sm:h-3.5 sm:w-3.5 me-1.5" />
+              <span>{t("download")}</span>
+            </a>
           </Button>
         </div>
       </div>
