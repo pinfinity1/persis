@@ -95,13 +95,29 @@ export default async function AboutPersisPage({ params }: PageProps) {
 
   return (
     <main className="min-h-screen bg-background select-none flex flex-col overflow-hidden">
-      {/* 1. Page Header */}
-      <div className="container mx-auto px-4 sm:px-12 pt-28 sm:pt-36 pb-2 select-none">
-        <PageWatermarkHeader
-          watermark="PERSIS QUARTZ"
-          title={t("brandLabel")}
-        />
-      </div>
+      {/* 1. Header Hero with Watermark */}
+      <section className="relative w-full pt-28 pb-14 sm:pt-36 sm:pb-20 bg-muted/20 border-b border-border/40 overflow-hidden select-none">
+        <div
+          aria-hidden="true"
+          dir="ltr"
+          className="absolute top-20 sm:top-24 bottom-0 inset-x-0 pointer-events-none flex items-center justify-center overflow-hidden opacity-[0.035] px-6 select-none"
+        >
+          <span className="text-[10vw] sm:text-[9vw] lg:text-[8vw] font-black uppercase tracking-tighter text-foreground leading-none whitespace-nowrap block text-center">
+            PERSIS QUARTZ
+          </span>
+        </div>
+
+        {/* نشانگر مرکزی با خطوط تراز */}
+        <div className="container mx-auto px-6 relative z-10 text-center max-w-4xl pt-4 sm:pt-6">
+          <div className="flex items-center justify-center gap-3">
+            <span className="h-px w-6 sm:w-8 bg-primary shrink-0" />
+            <span className="text-[11px] sm:text-xs uppercase tracking-[0.25em] text-primary font-medium">
+              {t("brandLabel")}
+            </span>
+            <span className="h-px w-6 sm:w-8 bg-primary shrink-0" />
+          </div>
+        </div>
+      </section>
 
       {/* 2. Vision Section */}
       <section className="py-14 sm:py-20 lg:py-28">

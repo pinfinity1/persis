@@ -4,6 +4,7 @@ import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
+import { PageWatermarkHeader } from "@/components/shared/page-watermark-header";
 import {
   RoutineAccordion,
   type StepItem,
@@ -77,36 +78,10 @@ export default async function CareAndMaintenancePage({ params }: PageProps) {
 
   return (
     <main className="min-h-screen bg-background pb-20 sm:pb-32 select-none">
-      {/* 1. Header Hero */}
-      <section className="relative pt-32 pb-16 sm:pt-40 sm:pb-20 bg-muted/20 border-b border-border/40 overflow-hidden">
-        <div
-          aria-hidden="true"
-          dir="ltr"
-          className="absolute inset-0 pointer-events-none flex items-center justify-center overflow-hidden opacity-[0.03] select-none"
-        >
-          <span className="text-[13.5vw] font-black uppercase tracking-tighter text-foreground leading-none whitespace-nowrap block">
-            MAINTENANCE
-          </span>
-        </div>
-
-        <div className="container mx-auto px-6 sm:px-12 relative z-10 text-center max-w-4xl space-y-5">
-          <div className="flex items-center justify-center gap-3">
-            <span className="h-px w-6 bg-primary" />
-            <span className="text-[11px] sm:text-xs uppercase tracking-[0.25em] text-primary font-medium">
-              {t("tagline")}
-            </span>
-            <span className="h-px w-6 bg-primary" />
-          </div>
-
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-light text-foreground tracking-tight">
-            {t("title")}
-          </h1>
-
-          <p className="text-xs sm:text-base font-light text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-            {t("intro")}
-          </p>
-        </div>
-      </section>
+      {/* 1. Page Header with PageWatermarkHeader */}
+      <div className="container mx-auto px-4 sm:px-12 pt-28 sm:pt-36 pb-2 select-none">
+        <PageWatermarkHeader watermark="MAINTENANCE" title={t("tagline")} />
+      </div>
 
       {/* 2. Material DNA Grid */}
       <section className="container mx-auto px-6 sm:px-12 pt-16 sm:pt-20">
