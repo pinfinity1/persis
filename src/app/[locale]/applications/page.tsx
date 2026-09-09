@@ -23,7 +23,6 @@ const APPLICATION_SECTIONS = [
     id: "kitchen",
     tag: "فضاهای مسکونی",
     title: "صفحات رویه کابینت، کانتر و جزیره آشپزخانه",
-    desc: "سطوحی یکپارچه با ساختار متراکم و کاملاً مهندسی‌شده که بالاترین سطح مقاومت را در برابر خط و خش ابزارهای تیز آشپزی، لکه‌های سرسخت روغن و قهوه، و شوک‌های حرارتی روزمره تضمین می‌کنند.",
     gallery: [
       "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200&auto=format&fit=crop",
       "https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?q=80&w=1200&auto=format&fit=crop",
@@ -34,7 +33,6 @@ const APPLICATION_SECTIONS = [
     id: "vanity",
     tag: "محیط‌های بهداشتی",
     title: "روشویی، دیوارپوش حمام و سرویس‌های مستر",
-    desc: "فرآیند تولید پیشرفته در خلأ مانع از ایجاد کمترین تخلخل در بافت سنگ شده است. خاصیت ضدباکتریایی ذاتی و عدم نفوذ رطوبت، پرسیس را به انتخابی مطمئن و بدون قارچ در محیط‌های مرطوب تبدیل می‌کند.",
     gallery: [
       "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=1200&auto=format&fit=crop",
       "https://images.unsplash.com/photo-1620626011761-996317b8d101?q=80&w=1200&auto=format&fit=crop",
@@ -44,7 +42,6 @@ const APPLICATION_SECTIONS = [
     id: "commercial",
     tag: "پروژه‌های عمومی و درمانی",
     title: "کانترهای تجاری، میزهای آزمایشگاهی و لابی",
-    desc: "دوام ترافیکی استثنایی در برابر سایش و ضربه اجسام سنگین، همراه با پاکسازی سریع با شوینده‌های ملایم، پاسخی بی‌نقص به استانداردهای بهداشتی و ترافیکی فضاهای تجاری مدرن است.",
     gallery: [
       "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1200&auto=format&fit=crop",
       "https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=1200&auto=format&fit=crop",
@@ -163,9 +160,6 @@ export default function ApplicationsPage() {
                 <h2 className="text-2xl sm:text-3xl lg:text-4xl font-light text-foreground tracking-tight">
                   {section.title}
                 </h2>
-                <p className="text-xs sm:text-sm text-muted-foreground font-light leading-relaxed text-justify">
-                  {section.desc}
-                </p>
               </div>
 
               {/* گرید گالری متقارن و چشم‌نواز تصاویر */}
