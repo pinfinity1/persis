@@ -78,11 +78,18 @@ export const ApplicationsPage: GlobalConfig = {
                   required: true,
                 },
                 {
-                  name: "image",
+                  name: "desktopImage",
                   type: "upload",
                   relationTo: "media",
-                  label: "تصویر تمام‌صفحه",
-                  required: false, // رفع ارور اعتبارسنجی دیتابیس
+                  label: "تصویر دسکتاپ (افقی 16:9)",
+                  required: false,
+                },
+                {
+                  name: "mobileImage",
+                  type: "upload",
+                  relationTo: "media",
+                  label: "تصویر موبایل (عمودی 9:16)",
+                  required: false,
                 },
               ],
             },

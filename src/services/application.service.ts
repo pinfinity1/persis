@@ -7,7 +7,8 @@ import { unstable_cache } from "next/cache";
 export interface ShowcaseSlideDTO {
   id: string;
   tag: string;
-  imageUrl: string;
+  desktopImageUrl: string;
+  mobileImageUrl: string;
 }
 
 export interface SectionSpecDTO {
@@ -65,11 +66,18 @@ export async function getApplicationsPageDataService(
         const showcase: ShowcaseSlideDTO[] = Array.isArray(
           rawData?.showcaseItems,
         )
-          ? rawData.showcaseItems.map((item: any, idx: number) => ({
-              id: item.id || `slide-${idx + 1}`,
-              tag: item.tag || "",
-              imageUrl: extractUrl(item.image),
-            }))
+          ? rawData.showcaseItems.map((item: any, idx: number) => {
+              const desktopUrl = extractUrl(item.desktopImage);
+              const mobileUrl = extractUrl(item.mobileImage);
+              return {
+                id: item.id || `slide-${idx + 1}`,
+                tag: item.tag || "",
+                desktopImageUrl: desktopUrl,
+                // فال‌بک هوشمند: اگر عکس موبایل آپلود نشد، از عکس دسکتاپ استفاده کن
+                mobileImageUrl:
+                  mobileUrl !== FALLBACK_IMG ? mobileUrl : desktopUrl,
+              };
+            })
           : [];
 
         const sections: ApplicationSectionDTO[] = Array.isArray(

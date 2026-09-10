@@ -10,15 +10,10 @@ import {
   useSpring,
   AnimatePresence,
 } from "motion/react";
-
-export interface ShowcaseItem {
-  id: string;
-  tag: string;
-  imageUrl: string;
-}
+import type { ShowcaseSlideDTO } from "@/services/application.service";
 
 interface PinnedApplicationsShowcaseProps {
-  items: ShowcaseItem[];
+  items: ShowcaseSlideDTO[];
 }
 
 export const PinnedApplicationsShowcase: React.FC<
@@ -28,13 +23,11 @@ export const PinnedApplicationsShowcase: React.FC<
   const totalItems = items.length;
   const [activeIndex, setActiveIndex] = useState(0);
 
-  // ردیابی اسکرول محلی کل ارتفاع بخش چسبنده
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"],
   });
 
-  // نگاشت اسکرول خطی به مراحل گسسته (Discrete Snaps)
   const discreteProgress = useTransform(scrollYProgress, (progress) => {
     if (totalItems <= 1) return 0;
     const step = 1 / (totalItems - 1);
@@ -42,17 +35,14 @@ export const PinnedApplicationsShowcase: React.FC<
     return Math.min(Math.max(targetIndex, 0), totalItems - 1);
   });
 
-  // اعمال Easing فیزیکی شبیه Embla
   const smoothIndex = useSpring(discreteProgress, {
     stiffness: 140,
     damping: 24,
     mass: 0.6,
   });
 
-  // محاسبه ترنزفرم Y بر مبنای ایندکس فنری شده
   const yOffset = useTransform(smoothIndex, (val) => `-${val * 100}%`);
 
-  // به‌روزرسانی ایندکس فعال برای دات‌ها و بج تگ
   useEffect(() => {
     const unsubscribe = discreteProgress.on("change", (latest) => {
       setActiveIndex(Math.round(latest));
@@ -78,24 +68,21 @@ export const PinnedApplicationsShowcase: React.FC<
   };
 
   return (
-    // محاسبه دقیق بر مبنای 90dvh برای هندل صحیح آدرس‌بار مرورگرهای موبایل
     <div
       ref={containerRef}
-      style={{ height: `calc(${totalItems * 100}dvh)` }}
+      style={{ height: `calc(${totalItems * 90}dvh)` }}
       className="relative w-full select-none bg-black"
     >
-      {/* پین شدن به سقف ویوپورت با ارتفاع داینامیک */}
       <div className="sticky top-0 h-[100dvh] w-full overflow-hidden z-[70] bg-black">
-        {/* کانتینر اسلایدها با ترنزفرم بهینه‌شده روی GPU */}
         <motion.div
           style={{ y: yOffset }}
           className="relative w-full h-full flex flex-col will-change-transform"
         >
           {items.map((item, index) => {
             const isPlaceholder =
-              !item.imageUrl ||
-              item.imageUrl === "/PersisQuartz-Red.png" ||
-              item.imageUrl.trim().length === 0;
+              !item.desktopImageUrl ||
+              item.desktopImageUrl === "/PersisQuartz-Red.png" ||
+              item.desktopImageUrl.trim().length === 0;
 
             return (
               <div
@@ -103,7 +90,6 @@ export const PinnedApplicationsShowcase: React.FC<
                 className="relative flex-[0_0_100%] w-full h-full overflow-hidden flex items-center justify-center bg-neutral-950"
               >
                 {isPlaceholder ? (
-                  /* سنترسازی هندسی و متقارن لوگو در زمان نبود تصویر */
                   <div className="relative w-48 sm:w-64 md:w-80 h-24 sm:h-32 flex items-center justify-center pointer-events-none select-none">
                     <Image
                       src="/PersisQuartz-Red.png"
@@ -115,25 +101,35 @@ export const PinnedApplicationsShowcase: React.FC<
                     />
                   </div>
                 ) : (
-                  /* تصویر واقعی با کادربندی فول‌کاور */
-                  <Image
-                    src={item.imageUrl}
-                    alt={item.tag}
-                    fill
-                    priority={index === 0}
-                    sizes="100vw"
-                    className="object-cover pointer-events-none"
-                  />
+                  <>
+                    {/* تصویر اختصاصی دسکتاپ (فقط در صفحات بزرگ رندر و نمایش داده می‌شود) */}
+                    <Image
+                      src={item.desktopImageUrl}
+                      alt={item.tag}
+                      fill
+                      priority={index === 0}
+                      sizes="100vw"
+                      className="object-cover pointer-events-none hidden sm:block"
+                    />
+                    {/* تصویر اختصاصی موبایل (فقط در صفحات کوچک رندر و نمایش داده می‌شود) */}
+                    <Image
+                      src={item.mobileImageUrl}
+                      alt={item.tag}
+                      fill
+                      priority={index === 0}
+                      sizes="100vw"
+                      className="object-cover pointer-events-none block sm:hidden"
+                    />
+                  </>
                 )}
 
-                {/* گرادینت تاریک تراز با کادر */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/40 pointer-events-none" />
+                {/* گرادینت اصلاح‌شده: فقط پایین تصویر تیره می‌شود */}
+                <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-black/80 via-black/10 to-transparent pointer-events-none" />
               </div>
             );
           })}
         </motion.div>
 
-        {/* تگ تک‌خطی مینیمال، درشت و خوانا با لایه مات بلوری */}
         <div className="absolute bottom-14 sm:bottom-20 start-6 sm:start-16 lg:start-24 z-20 pointer-events-none">
           <AnimatePresence mode="wait">
             <motion.div
@@ -148,7 +144,7 @@ export const PinnedApplicationsShowcase: React.FC<
                 className="inline-flex items-center gap-3.5 px-5 py-3 sm:px-6 sm:py-3.5 bg-black/65 backdrop-blur-md border border-white/20 shadow-2xl"
               >
                 <span className="size-2 rounded-full bg-primary shrink-0" />
-                <span className="text-sm sm:text-lg md:text-xl tracking-[0.2em] text-white font-semibold uppercase">
+                <span className="text-sm sm:text-lg md:text-xl font-mono tracking-[0.2em] text-white font-semibold uppercase">
                   {items[activeIndex]?.tag}
                 </span>
               </div>
@@ -156,7 +152,6 @@ export const PinnedApplicationsShowcase: React.FC<
           </AnimatePresence>
         </div>
 
-        {/* دات‌های ناوبری کناری */}
         <div className="absolute end-6 sm:end-12 top-1/2 -translate-y-1/2 z-30 flex flex-col gap-3 pointer-events-auto">
           {items.map((_, idx) => (
             <button
@@ -174,10 +169,9 @@ export const PinnedApplicationsShowcase: React.FC<
           ))}
         </div>
 
-        {/* برچسب راهنمای پایین */}
         <div
           dir="ltr"
-          className="absolute bottom-6 end-6 sm:end-12 z-20 text-[10px] uppercase tracking-[0.25em] text-white/40 hidden sm:block pointer-events-none"
+          className="absolute bottom-6 end-6 sm:end-12 z-20 text-[10px] uppercase tracking-[0.25em] text-white/80 font-mono hidden sm:block pointer-events-none"
         >
           SCROLL TO EXPLORE
         </div>
