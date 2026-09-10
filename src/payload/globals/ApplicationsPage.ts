@@ -7,7 +7,7 @@ export const ApplicationsPage: GlobalConfig = {
   label: "صفحه کاربردها (Applications)",
   admin: {
     group: "Pages",
-    description: "مدیریت اسلایدها و بخش‌های تعاملی صفحه کاربردها",
+    description: "مدیریت شوکیس، مانیفست و بخش‌های کاربردی معماری",
   },
   access: {
     read: () => true,
@@ -25,71 +25,172 @@ export const ApplicationsPage: GlobalConfig = {
   },
   fields: [
     {
-      name: "tagline",
-      type: "text",
-      label: "برچسب بالا (Tagline)",
-      localized: true,
-      defaultValue: "کاربردهای معمارانه",
-    },
-    {
-      name: "title",
-      type: "text",
-      label: "تیتر اصلی صفحه",
-      localized: true,
-      defaultValue: "گستره بی‌پایان کاربری در معماری مدرن",
-    },
-    {
-      name: "subtitle",
-      type: "textarea",
-      label: "توضیح کوتاه زیر تیتر",
-      localized: true,
-      defaultValue:
-        "از سطوح یکپارچه آشپزخانه تا پروژه‌های عظیم تجاری؛ دوام، ایمنی و زیبایی را با پرسیس کوارتز تجربه کنید.",
-    },
-    {
-      name: "items",
-      type: "array",
-      label: "آیتم‌های کاربرد (هم برای Intro تمام‌صفحه و هم برای گرید نهایی)",
-      minRows: 1,
-      defaultValue: [
+      type: "tabs",
+      tabs: [
         {
-          title: "صفحات رویه کابینت و جزیره آشپزخانه",
-          desc: "مقاومت استثنایی در برابر حرارت، لکه‌های سخت و خط و خش ناشی از کاربری روزمره.",
+          label: "مانیفست هدر (Header Narrative)",
+          fields: [
+            {
+              name: "headerTag",
+              type: "text",
+              label: "برچسب کوچک انگلیسی",
+              defaultValue: "SPATIAL INTEGRATION",
+            },
+            {
+              name: "headerTitle",
+              type: "text",
+              label: "تیتر اصلی مانیفست",
+              localized: true,
+              required: true,
+              defaultValue:
+                "سطوحی فراتر از یک پوشش؛ خلق هارمونی در معماری معاصر",
+            },
+            {
+              name: "headerDesc",
+              type: "textarea",
+              label: "متن توضیح مانیفست",
+              localized: true,
+              required: true,
+              defaultValue:
+                "تلفیق زیبایی بصری با مقاومت ساختاری؛ امکان خلق فضاهایی منحصربه‌فرد و هماهنگ با سبک‌های متنوع، از محیط‌های خانگی تا فضاهای عمومی و بهداشتی.",
+            },
+          ],
         },
         {
-          title: "روشویی و محیط‌های مرطوب و بهداشتی",
-          desc: "ساختار نفوذناپذیر و آنتی‌باکتریال ایده‌آل برای محیط‌های مرطوب، بدون ایجاد قارچ و رسوب.",
+          label: "شوکیس چسبنده (Pinned Showcase)",
+          fields: [
+            {
+              name: "showcaseItems",
+              type: "array",
+              label: "اسلایدهای شوکیس عمودی",
+              minRows: 1,
+              defaultValue: [
+                { tag: "KITCHEN & COUNTERTOPS" },
+                { tag: "BATH & WELLNESS" },
+                { tag: "COMMERCIAL & TRAFFIC" },
+                { tag: "ARCHITECTURAL FACADES" },
+              ],
+              fields: [
+                {
+                  name: "tag",
+                  type: "text",
+                  label: "تگ تکی و خوانا (انگلیسی)",
+                  required: true,
+                },
+                {
+                  name: "image",
+                  type: "upload",
+                  relationTo: "media",
+                  label: "تصویر تمام‌صفحه",
+                  required: true,
+                },
+              ],
+            },
+          ],
         },
         {
-          title: "کانترهای تجاری و فضاهای درمانی",
-          desc: "بالاترین سطح بهداشت و دوام ترافیکی برای پروژه‌های اداری، بیمارستانی و کلینیک‌ها.",
-        },
-        {
-          title: "دیوارپوش و المان‌های دکوراتیو",
-          desc: "هارمونی لوکس و یکپارچه در سطوح عمودی با بازتاب چشم‌نواز نور طبیعی و مصنوعی.",
-        },
-      ],
-      fields: [
-        {
-          name: "title",
-          type: "text",
-          label: "عنوان کاربرد",
-          localized: true,
-          required: true,
-        },
-        {
-          name: "desc",
-          type: "textarea",
-          label: "شرح کاربرد",
-          localized: true,
-          required: true,
-        },
-        {
-          name: "image",
-          type: "upload",
-          relationTo: "media",
-          label: "تصویر اصلی (کیفیت بالا برای تمام‌صفحه و گرید)",
-          required: true,
+          label: "بخش‌های کاربری (Application Sections)",
+          fields: [
+            {
+              name: "sections",
+              type: "array",
+              label: "کاربردهای معماری با گالری و مشخصات",
+              minRows: 1,
+              defaultValue: [
+                {
+                  num: "01",
+                  enTag: "RESIDENTIAL & CULINARY",
+                  title: "صفحات رویه کابینت، کانتر و جزیره آشپزخانه",
+                  desc: "سطوح پرسیس کوارتز مقاومت بالایی در برابر خط و خش ابزارهای تیز، شوک حرارتی غیرمستقیم و نفوذ لکه‌های قهوه و چربی دارند. ساختار متراکم و بدون درز این سنگ‌ها، استانداردی بی‌نقص برای تماس با مواد غذایی ایجاد می‌کند.",
+                  specs: [
+                    { label: "سختی سطحی", val: "7 Mohs" },
+                    { label: "جذب آب", val: "۰.۰۳٪ (نفوذناپذیر)" },
+                    { label: "ضخامت استاندارد" },
+                  ],
+                },
+                {
+                  num: "02",
+                  enTag: "BATH & HYGIENIC WELLNESS",
+                  title: "روشویی، سرویس‌های مستر و محیط‌های مرطوب",
+                  desc: "فرآیند تولید در شرایط خلأ مانع از ایجاد تخلخل میکروسکوپی در بافت سنگ می‌شود. عدم جذب رطوبت امکان تشکیل باکتری، رسوبات آهکی آب و کپک را از بین برده و پاکسازی آن تنها با آب و شوینده‌های ملایم میسر است.",
+                  specs: [
+                    { label: "مقاومت بیولوژیک", val: "آنتی‌باکتریال ۱۰۰٪" },
+                    {
+                      label: "پایداری شیمیایی",
+                      val: "خنثی در برابر شوینده‌ها",
+                    },
+                    { label: "قابلیت ساختاری", val: "روشویی یکپارچه و CNC" },
+                  ],
+                },
+                {
+                  num: "03",
+                  enTag: "HIGH-TRAFFIC & CLINICAL",
+                  title: "کانترهای تجاری، کفپوش‌های پرتردد و فضاهای درمانی",
+                  desc: "طراحی‌شده برای مراکز خرید، ایستگاه‌های مترو، بیمارستان‌ها و فرودگاه‌ها. این محصول با مقاومت فشاری و سایشی بالا، ثبات براقیت در درازمدت و فقدان ترکیبات فرار آلی سمی، گزینه‌ای پایدار برای مقیاس‌های سنگین است.",
+                  specs: [
+                    { label: "مقاومت فشاری", val: "150 - 240 MPa" },
+                    { label: "مقاومت سایشی" },
+                    { label: "ترکیبات فرار", val: "VOC Free" },
+                  ],
+                },
+              ],
+              fields: [
+                {
+                  name: "num",
+                  type: "text",
+                  label: "شماره ردیف",
+                  required: true,
+                },
+                {
+                  name: "enTag",
+                  type: "text",
+                  label: "برچسب انگلیسی",
+                  required: true,
+                },
+                {
+                  name: "title",
+                  type: "text",
+                  label: "عنوان کاربرد",
+                  localized: true,
+                  required: true,
+                },
+                {
+                  name: "desc",
+                  type: "textarea",
+                  label: "توضیح کاربری",
+                  localized: true,
+                  required: true,
+                },
+                {
+                  name: "specs",
+                  type: "array",
+                  label: "مشخصات و متادیتا",
+                  fields: [
+                    {
+                      name: "label",
+                      type: "text",
+                      label: "عنوان ویژگی",
+                      localized: true,
+                      required: true,
+                    },
+                    {
+                      name: "val",
+                      type: "text",
+                      label: "مقدار شاخص (اختیاری)",
+                    },
+                  ],
+                },
+                {
+                  name: "gallery",
+                  type: "upload",
+                  relationTo: "media",
+                  hasMany: true,
+                  label: "تصاویر گالری بخش",
+                  required: true,
+                },
+              ],
+            },
+          ],
         },
       ],
     },

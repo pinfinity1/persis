@@ -4,18 +4,35 @@ import { getPayload } from "payload";
 import configPromise from "@/payload.config";
 import { unstable_cache } from "next/cache";
 
-export interface ApplicationItemDTO {
+export interface ShowcaseSlideDTO {
   id: string;
-  title: string;
-  desc: string;
+  tag: string;
   imageUrl: string;
 }
 
-export interface ApplicationsPageDataDTO {
-  tagline: string;
+export interface SectionSpecDTO {
+  label: string;
+  val?: string;
+}
+
+export interface ApplicationSectionDTO {
+  id: string;
+  num: string;
+  enTag: string;
   title: string;
-  subtitle: string;
-  items: ApplicationItemDTO[];
+  desc: string;
+  specs: SectionSpecDTO[];
+  gallery: string[];
+}
+
+export interface ApplicationsPageFullDTO {
+  header: {
+    tag: string;
+    title: string;
+    desc: string;
+  };
+  showcase: ShowcaseSlideDTO[];
+  sections: ApplicationSectionDTO[];
 }
 
 const FALLBACK_IMG = "/PersisQuartz-Red.png";
@@ -34,43 +51,75 @@ function extractUrl(media: unknown): string {
 
 export async function getApplicationsPageDataService(
   locale: "fa" | "en" | "ar" = "fa",
-): Promise<ApplicationsPageDataDTO> {
+): Promise<ApplicationsPageFullDTO> {
   return unstable_cache(
-    async (): Promise<ApplicationsPageDataDTO> => {
+    async (): Promise<ApplicationsPageFullDTO> => {
       try {
         const payload = await getPayload({ config: configPromise });
         const rawData: any = await payload.findGlobal({
           slug: "applications-page",
           locale,
-          depth: 1, // واکشی خودکار اطلاعات مربوط به تصویر
+          depth: 1,
         });
 
-        const items: ApplicationItemDTO[] = Array.isArray(rawData?.items)
-          ? rawData.items.map((item: any, idx: number) => ({
-              id: item.id || `app-${idx + 1}`,
-              title: item.title || "",
-              desc: item.desc || "",
+        const showcase: ShowcaseSlideDTO[] = Array.isArray(
+          rawData?.showcaseItems,
+        )
+          ? rawData.showcaseItems.map((item: any, idx: number) => ({
+              id: item.id || `slide-${idx + 1}`,
+              tag: item.tag || "",
               imageUrl: extractUrl(item.image),
             }))
           : [];
 
+        const sections: ApplicationSectionDTO[] = Array.isArray(
+          rawData?.sections,
+        )
+          ? rawData.sections.map((sec: any, idx: number) => ({
+              id: sec.id || `sec-${idx + 1}`,
+              num: sec.num || `0${idx + 1}`,
+              enTag: sec.enTag || "",
+              title: sec.title || "",
+              desc: sec.desc || "",
+              specs: Array.isArray(sec.specs)
+                ? sec.specs.map((sp: any) => ({
+                    label: sp.label || "",
+                    val: sp.val || undefined,
+                  }))
+                : [],
+              gallery: Array.isArray(sec.gallery)
+                ? sec.gallery.map((g: any) => extractUrl(g))
+                : [],
+            }))
+          : [];
+
         return {
-          tagline: rawData?.tagline || "",
-          title: rawData?.title || "",
-          subtitle: rawData?.subtitle || "",
-          items,
+          header: {
+            tag: rawData?.headerTag || "SPATIAL INTEGRATION",
+            title:
+              rawData?.headerTitle ||
+              "سطوحی فراتر از یک پوشش؛ خلق هارمونی در معماری معاصر",
+            desc:
+              rawData?.headerDesc ||
+              "تلفیق زیبایی بصری با مقاومت ساختاری؛ امکان خلق فضاهایی منحصربه‌فرد و هماهنگ با سبک‌های متنوع، از محیط‌های خانگی تا فضاهای عمومی و بهداشتی.",
+          },
+          showcase,
+          sections,
         };
       } catch (error) {
-        console.error("Error fetching ApplicationsPage data:", error);
+        console.error("Error in getApplicationsPageDataService:", error);
         return {
-          tagline: "",
-          title: "",
-          subtitle: "",
-          items: [],
+          header: {
+            tag: "SPATIAL INTEGRATION",
+            title: "سطوحی فراتر از یک پوشش؛ خلق هارمونی در معماری معاصر",
+            desc: "تلفیق زیبایی بصری با مقاومت ساختاری؛ امکان خلق فضاهایی منحصربه‌فرد و هماهنگ با سبک‌های متنوع.",
+          },
+          showcase: [],
+          sections: [],
         };
       }
     },
-    ["applications-page-global-cache", locale],
+    ["applications-page-full-cache", locale],
     {
       revalidate: 86400,
       tags: ["applications-page"],
