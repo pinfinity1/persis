@@ -15,11 +15,11 @@ export const ApplicationSectionsList: React.FC<Props> = ({ sections }) => {
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-6 border-b border-border/40">
             <div className="space-y-2 max-w-3xl">
               <div className="flex items-center gap-3">
-                <span className="text-sm font-mono text-primary font-bold">
+                <span className="text-sm text-primary font-bold">
                   {section.num}
                 </span>
                 <span className="h-px w-4 bg-primary" />
-                <span className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground font-mono">
+                <span className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                   {section.enTag}
                 </span>
               </div>
@@ -45,7 +45,7 @@ export const ApplicationSectionsList: React.FC<Props> = ({ sections }) => {
                   {sp.val && (
                     <span
                       dir="ltr"
-                      className="text-xs font-mono font-medium text-foreground block text-start"
+                      className="text-xs font-medium text-foreground block text-start"
                     >
                       {sp.val}
                     </span>

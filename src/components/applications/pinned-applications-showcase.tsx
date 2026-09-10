@@ -148,7 +148,7 @@ export const PinnedApplicationsShowcase: React.FC<
                 className="inline-flex items-center gap-3.5 px-5 py-3 sm:px-6 sm:py-3.5 bg-black/65 backdrop-blur-md border border-white/20 shadow-2xl"
               >
                 <span className="size-2 rounded-full bg-primary shrink-0" />
-                <span className="text-sm sm:text-lg md:text-xl font-mono tracking-[0.2em] text-white font-semibold uppercase">
+                <span className="text-sm sm:text-lg md:text-xl tracking-[0.2em] text-white font-semibold uppercase">
                   {items[activeIndex]?.tag}
                 </span>
               </div>
@@ -177,7 +177,7 @@ export const PinnedApplicationsShowcase: React.FC<
         {/* برچسب راهنمای پایین */}
         <div
           dir="ltr"
-          className="absolute bottom-6 end-6 sm:end-12 z-20 text-[10px] uppercase tracking-[0.25em] text-white/40 font-mono hidden sm:block pointer-events-none"
+          className="absolute bottom-6 end-6 sm:end-12 z-20 text-[10px] uppercase tracking-[0.25em] text-white/40 hidden sm:block pointer-events-none"
         >
           SCROLL TO EXPLORE
         </div>

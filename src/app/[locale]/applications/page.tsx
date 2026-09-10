@@ -43,7 +43,7 @@ export default async function ApplicationsPage({ params }: PageProps) {
           <div className="lg:col-span-8 space-y-4 text-start">
             <div dir="ltr" className="flex items-center justify-start gap-3">
               <span className="h-px w-6 bg-primary shrink-0" />
-              <span className="text-[11px] uppercase tracking-[0.25em] text-primary font-mono font-medium">
+              <span className="text-[11px] uppercase tracking-[0.25em] text-primary font-medium">
                 {data.header.tag}
               </span>
             </div>

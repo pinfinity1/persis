@@ -83,7 +83,7 @@ export const MediaLightboxDialog: React.FC<MediaLightboxDialogProps> = ({
                 </span>
               )}
               {isGallery && (
-                <span className="text-[11px] font-mono tracking-widest text-primary border border-primary/30 px-2 py-0.5">
+                <span className="text-[11px] tracking-widest text-primary border border-primary/30 px-2 py-0.5">
                   0{currentIndex + 1} / 0{total}
                 </span>
               )}

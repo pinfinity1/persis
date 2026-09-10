@@ -112,7 +112,7 @@ export const RoutineAccordion: React.FC<RoutineAccordionProps> = ({
                     </div>
 
                     <div className="min-w-0">
-                      <span className="text-[10px] text-muted-foreground uppercase tracking-widest block font-mono">
+                      <span className="text-[10px] text-muted-foreground uppercase tracking-widest block">
                         {stepDisplayNumber}
                       </span>
                       <h3 className="text-sm sm:text-base font-medium text-foreground truncate">

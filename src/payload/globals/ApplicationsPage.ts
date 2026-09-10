@@ -82,7 +82,7 @@ export const ApplicationsPage: GlobalConfig = {
                   type: "upload",
                   relationTo: "media",
                   label: "تصویر تمام‌صفحه",
-                  required: true,
+                  required: false, // رفع ارور اعتبارسنجی دیتابیس
                 },
               ],
             },
@@ -186,7 +186,7 @@ export const ApplicationsPage: GlobalConfig = {
                   relationTo: "media",
                   hasMany: true,
                   label: "تصاویر گالری بخش",
-                  required: true,
+                  required: false, // رفع ارور اعتبارسنجی دیتابیس
                 },
               ],
             },

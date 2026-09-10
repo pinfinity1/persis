@@ -162,7 +162,7 @@ export const QuickInquiryForm: React.FC = () => {
           placeholder={t("phonePlaceholder")}
           disabled={isPending}
           {...register("phone")}
-          className={`rounded-none h-10 bg-background text-xs font-mono text-start tracking-wider placeholder:tracking-normal placeholder:font-mono placeholder:text-muted-foreground/40 ${
+          className={`rounded-none h-10 bg-background text-xs  text-start tracking-wider placeholder:tracking-normal placeholder:text-muted-foreground/40 ${
             errors.phone
               ? "border-destructive focus-visible:ring-destructive"
               : "border-border/60"

@@ -179,7 +179,7 @@ export function ContactFormClient() {
             disabled={isPending}
             className={`rounded-none h-11 bg-background text-xs placeholder:text-muted-foreground/40 transition-colors ${
               type === "tel"
-                ? "font-mono text-start tracking-wider placeholder:tracking-normal placeholder:font-mono"
+                ? " text-start tracking-wider placeholder:tracking-normal"
                 : ""
             } ${
               errorMsg

@@ -229,7 +229,7 @@ export const InfoCardsStack: React.FC<InfoCardsStackProps> = ({ images }) => {
                     />
 
                     {/* بج شماره کارت */}
-                    <div className="absolute top-2.5 start-2.5 sm:top-3 sm:start-3 bg-background/90 backdrop-blur-md px-2 py-0.5 border border-border/60 text-[9px] sm:text-[10px] tracking-widest uppercase font-mono text-foreground z-10">
+                    <div className="absolute top-2.5 start-2.5 sm:top-3 sm:start-3 bg-background/90 backdrop-blur-md px-2 py-0.5 border border-border/60 text-[9px] sm:text-[10px] tracking-widest uppercase text-foreground z-10">
                       0{card.id} / 0{totalCards}
                     </div>
                   </div>
