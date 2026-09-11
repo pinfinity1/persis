@@ -39,6 +39,14 @@ export interface GalleryItemDTO {
   caption?: string;
 }
 
+export interface CategoryItem {
+  id: string | number;
+  title: string;
+  slug: string;
+  order?: number;
+  description?: string;
+}
+
 export interface ProductItemDTO {
   id: string;
   title: string;
