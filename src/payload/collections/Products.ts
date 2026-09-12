@@ -1,4 +1,5 @@
 // src/payload/collections/Products.ts
+import { revalidateTag } from "next/cache";
 import { CollectionConfig } from "payload";
 
 export const Products: CollectionConfig = {
@@ -14,6 +15,26 @@ export const Products: CollectionConfig = {
     },
   },
   access: { read: () => true },
+  hooks: {
+    afterChange: [
+      () => {
+        try {
+          revalidateTag("products");
+        } catch (err) {
+          console.warn("Revalidate error on Products:", err);
+        }
+      },
+    ],
+    afterDelete: [
+      () => {
+        try {
+          revalidateTag("products");
+        } catch (err) {
+          console.warn("Revalidate error on Products delete:", err);
+        }
+      },
+    ],
+  },
   fields: [
     {
       name: "title",

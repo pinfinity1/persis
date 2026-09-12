@@ -1,10 +1,11 @@
 // src/components/shared/media-lightbox-dialog.tsx
 "use client";
 
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
+import { Dialog as DialogPrimitive } from "radix-ui";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { useLocale } from "next-intl";
 
 export interface LightboxImage {
   url: string;
@@ -16,7 +17,7 @@ interface MediaLightboxDialogProps {
   isOpen: boolean;
   onClose: () => void;
   images: LightboxImage[] | string[];
-  currentIndex: number;
+  currentIndex?: number;
   onIndexChange?: (index: number) => void;
   title?: string;
 }
@@ -29,7 +30,9 @@ export const MediaLightboxDialog: React.FC<MediaLightboxDialogProps> = ({
   onIndexChange,
   title,
 }) => {
-  // استانداردسازی ورودی به آرایه‌ای از شیء LightboxImage
+  const locale = useLocale();
+  const isRtl = locale === "fa" || locale === "ar";
+
   const formattedImages: LightboxImage[] = images.map((img) =>
     typeof img === "string" ? { url: img, alt: title } : img,
   );
@@ -48,43 +51,84 @@ export const MediaLightboxDialog: React.FC<MediaLightboxDialogProps> = ({
     onIndexChange((currentIndex - 1 + total) % total);
   }, [currentIndex, total, isGallery, onIndexChange]);
 
-  // کنترل ناوبری با کلیدهای جهت‌نما کیبورد
+  // کنترل سوایپ لمسی دقیق و بدون تداخل با مرورگر
+  const touchStartX = useRef<number>(0);
+  const touchStartY = useRef<number>(0);
+  const minSwipeDistance = 35;
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!touchStartX.current) return;
+
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+
+    const diffX = touchStartX.current - touchEndX;
+    const diffY = touchStartY.current - touchEndY;
+
+    // اطمینان از اینکه حرکت عمدتاً افقی بوده نه اسکرول عمودی
+    if (
+      Math.abs(diffX) > Math.abs(diffY) &&
+      Math.abs(diffX) > minSwipeDistance
+    ) {
+      if (diffX > 0) {
+        // حرکت انگشت به سمت چپ
+        isRtl ? handlePrev() : handleNext();
+      } else {
+        // حرکت انگشت به سمت راست
+        isRtl ? handleNext() : handlePrev();
+      }
+    }
+  };
+
   useEffect(() => {
-    if (!isOpen || !isGallery) return;
-
+    if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight") handleNext();
-      if (e.key === "ArrowLeft") handlePrev();
+      if (e.key === "Escape") onClose();
+      if (!isGallery) return;
+      if (e.key === "ArrowRight") {
+        isRtl ? handlePrev() : handleNext();
+      }
+      if (e.key === "ArrowLeft") {
+        isRtl ? handleNext() : handlePrev();
+      }
     };
-
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, isGallery, handleNext, handlePrev]);
-
-  if (total === 0 || !currentImage) return null;
+  }, [isOpen, isGallery, isRtl, handleNext, handlePrev, onClose]);
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent
-        showCloseButton={false}
-        className="max-w-[96vw] lg:max-w-6xl p-0 bg-black/95 border-neutral-800 rounded-none overflow-hidden outline-none"
-      >
-        <DialogTitle className="sr-only">
-          {title || currentImage.caption || "نمایش تصویر با ابعاد کامل"}
-        </DialogTitle>
+    <DialogPrimitive.Root
+      open={isOpen}
+      onOpenChange={(open) => !open && onClose()}
+    >
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Overlay className="fixed inset-0 z-[9998] bg-black data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0" />
 
-        <div className="relative w-full h-[85vh] sm:h-[88vh] flex flex-col justify-between p-4 sm:p-6 select-none">
-          {/* هدر دیالوگ شامل عنوان و دکمه بستن */}
-          <div className="flex items-center justify-between pb-3 border-b border-white/10 text-white z-20">
-            <div className="flex items-center gap-3">
+        <DialogPrimitive.Content
+          aria-describedby={undefined}
+          className="fixed inset-0 z-[9999] h-screen w-screen bg-black flex flex-col justify-between p-3 sm:p-6 select-none outline-none data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0"
+        >
+          <DialogPrimitive.Title className="sr-only">
+            {title || "نمایش تصویر"}
+          </DialogPrimitive.Title>
+
+          {/* هدر لایت‌باکس */}
+          <div className="flex items-center justify-between pb-3 border-b border-white/10 shrink-0 z-30">
+            <div className="flex items-center gap-3 text-white">
               {title && (
-                <span className="text-xs sm:text-sm font-light text-neutral-300">
+                <span className="text-xs sm:text-sm font-light tracking-wide text-neutral-300">
                   {title}
                 </span>
               )}
               {isGallery && (
-                <span className="text-[11px] tracking-widest text-primary border border-primary/30 px-2 py-0.5">
-                  0{currentIndex + 1} / 0{total}
+                <span className="text-xs font-mono tracking-widest text-primary border border-primary/40 px-2 py-0.5">
+                  {String(currentIndex + 1).padStart(2, "0")} /{" "}
+                  {String(total).padStart(2, "0")}
                 </span>
               )}
             </div>
@@ -92,81 +136,79 @@ export const MediaLightboxDialog: React.FC<MediaLightboxDialogProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="p-1 text-neutral-400 hover:text-white transition-colors cursor-pointer"
-              aria-label="بستن پنجره"
+              className="p-2 text-neutral-400 hover:text-white transition-colors cursor-pointer touch-manipulation"
+              aria-label="بستن"
             >
-              <X className="size-5" />
+              <X className="size-6" />
             </button>
           </div>
 
-          {/* فریم سنترال تصویر با کادربندی بهینه */}
-          <div className="relative flex-1 w-full my-auto overflow-hidden flex items-center justify-center">
+          {/* استیج اصلی با تاچ مستقیم touch-none برای فعال‌سازی کامل سوایپ لمسی */}
+          <div
+            className="relative flex-1 w-full my-2 flex items-center justify-center overflow-hidden touch-none"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
             <Image
               src={currentImage.url}
-              alt={currentImage.alt || title || "Media View"}
+              alt={currentImage.alt || title || "View"}
               fill
               priority
-              sizes="95vw"
-              className="object-contain"
+              sizes="100vw"
+              className="object-contain pointer-events-none"
             />
 
-            {/* فلش‌های ناوبری فقط در صورت گالری بودن رندر می‌شوند */}
+            {/* فلش‌های ناوبری (قابل استفاده هم در دسکتاپ و هم در موبایل) */}
             {isGallery && (
               <>
                 <button
                   type="button"
                   onClick={handlePrev}
-                  className="absolute start-2 sm:start-4 top-1/2 -translate-y-1/2 size-9 sm:size-11 rounded-none bg-black/60 border border-white/20 text-white flex items-center justify-center hover:bg-primary transition-colors cursor-pointer z-20"
-                  aria-label="تصویر قبلی"
+                  className="absolute start-2 sm:start-6 top-1/2 -translate-y-1/2 size-10 sm:size-12 bg-black/60 active:bg-primary sm:hover:bg-primary border border-white/20 text-white flex items-center justify-center transition-colors cursor-pointer z-30 touch-manipulation"
+                  aria-label="Previous"
                 >
-                  <ChevronRight className="size-5 rtl:rotate-0 ltr:rotate-180" />
+                  <ChevronRight className="size-5 sm:size-6 rtl:rotate-0 ltr:rotate-180" />
                 </button>
 
                 <button
                   type="button"
                   onClick={handleNext}
-                  className="absolute end-2 sm:end-4 top-1/2 -translate-y-1/2 size-9 sm:size-11 rounded-none bg-black/60 border border-white/20 text-white flex items-center justify-center hover:bg-primary transition-colors cursor-pointer z-20"
-                  aria-label="تصویر بعدی"
+                  className="absolute end-2 sm:end-6 top-1/2 -translate-y-1/2 size-10 sm:size-12 bg-black/60 active:bg-primary sm:hover:bg-primary border border-white/20 text-white flex items-center justify-center transition-colors cursor-pointer z-30 touch-manipulation"
+                  aria-label="Next"
                 >
-                  <ChevronLeft className="size-5 rtl:rotate-0 ltr:rotate-180" />
+                  <ChevronLeft className="size-5 sm:size-6 rtl:rotate-0 ltr:rotate-180" />
                 </button>
               </>
             )}
           </div>
 
-          {/* نوار پایین: توضیح زیر تصویر + تامب‌نیل‌های کوچک در صورت گالری بودن */}
-          <div className="pt-3 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 z-20">
-            <p className="text-xs text-neutral-400 font-light truncate max-w-md">
-              {currentImage.caption || currentImage.alt}
-            </p>
-
-            {isGallery && (
-              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-                {formattedImages.map((img, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => onIndexChange && onIndexChange(idx)}
-                    className={`relative size-10 sm:size-12 shrink-0 border overflow-hidden transition-all cursor-pointer ${
-                      currentIndex === idx
-                        ? "border-primary ring-1 ring-primary"
-                        : "border-white/20 opacity-40 hover:opacity-100"
-                    }`}
-                  >
-                    <Image
-                      src={img.url}
-                      alt={img.alt || `Thumb ${idx + 1}`}
-                      fill
-                      sizes="48px"
-                      className="object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+          {/* ریل تامب‌نیل‌های افقی پایین */}
+          {isGallery && (
+            <div className="pt-3 border-t border-white/10 flex items-center justify-center gap-2 overflow-x-auto pb-1 scrollbar-none z-30 shrink-0">
+              {formattedImages.map((img, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => onIndexChange && onIndexChange(idx)}
+                  className={`relative size-12 sm:size-14 shrink-0 overflow-hidden transition-all cursor-pointer touch-manipulation ${
+                    currentIndex === idx
+                      ? "ring-2 ring-primary opacity-100"
+                      : "opacity-35 hover:opacity-90"
+                  }`}
+                >
+                  <Image
+                    src={img.url}
+                    alt={`Thumbnail ${idx + 1}`}
+                    fill
+                    sizes="60px"
+                    className="object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
   );
 };

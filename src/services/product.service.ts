@@ -303,41 +303,32 @@ export async function getProductsService(
   );
 }
 
-export const getProductBySlugService = unstable_cache(
-  async (slug: string, locale: Locale): Promise<ProductItemDTO | null> => {
-    try {
-      const payload = await getPayload({ config: configPromise });
-      const result = await payload.find({
-        collection: "products",
-        locale,
-        where: { slug: { equals: slug.trim().toLowerCase() } },
-        limit: 1,
-        depth: 2, // Depth 2 is strictly reserved for the single product detail page
-      });
-
-      if (!result.docs || result.docs.length === 0) return null;
-      return mapProductDocToDTO(result.docs[0]);
-    } catch (err: unknown) {
-      console.error(
-        JSON.stringify({
-          level: "ERROR",
-          module: "product.service",
-          action: "getProductBySlugService",
-          slug,
+export const getProductBySlugService = (slug: string, locale: Locale) =>
+  unstable_cache(
+    async (): Promise<ProductItemDTO | null> => {
+      try {
+        const payload = await getPayload({ config: configPromise });
+        const result = await payload.find({
+          collection: "products",
           locale,
-          error: err instanceof Error ? err.message : String(err),
-          timestamp: new Date().toISOString(),
-        }),
-      );
-      return null;
-    }
-  },
-  ["product-detail-by-slug"],
-  {
-    revalidate: TTL.STATIC_SEC,
-    tags: ["products"],
-  },
-);
+          where: { slug: { equals: slug.trim().toLowerCase() } },
+          limit: 1,
+          depth: 2,
+        });
+
+        if (!result.docs || result.docs.length === 0) return null;
+        return mapProductDocToDTO(result.docs[0]);
+      } catch (err: unknown) {
+        console.error("getProductBySlugService error:", err);
+        return null;
+      }
+    },
+    ["product-detail-by-slug", slug, locale],
+    {
+      revalidate: TTL.STATIC_SEC,
+      tags: ["products", `product-${slug}`],
+    },
+  )();
 
 // --- Fast Attribute Services ---
 

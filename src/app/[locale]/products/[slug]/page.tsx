@@ -14,18 +14,17 @@ import {
 import { ProductGallery } from "@/components/products/product-gallery";
 import { ProductConfigurator } from "@/components/products/product-configurator";
 import { ProductSpecsMatrix } from "@/components/products/product-specs-matrix";
+import { ProductAppliedGallery } from "@/components/products/product-applied-gallery";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 
 interface ProductPageProps {
   params: Promise<{ locale: string; slug: string }>;
 }
 
-// 1. Request-Deduplication: Prevents double database hits between metadata & page render
 const getCachedProduct = cache(async (slug: string, locale: Locale) => {
   return await getProductBySlugService(slug, locale);
 });
 
-// 2. Defensive JSON-LD sanitization against Stored XSS
 function safeJsonLdReplacer(data: Record<string, unknown>): string {
   return JSON.stringify(data)
     .replace(/</g, "\\u003c")
@@ -60,16 +59,7 @@ export async function generateMetadata(
   try {
     product = await getCachedProduct(slug, currentLocale);
   } catch (error) {
-    console.error(
-      JSON.stringify({
-        level: "ERROR",
-        module: "ProductDetailPage.generateMetadata",
-        slug,
-        locale: currentLocale,
-        error: error instanceof Error ? error.message : String(error),
-        timestamp: new Date().toISOString(),
-      }),
-    );
+    console.error("Metadata error:", error);
   }
 
   if (!product) {
@@ -121,7 +111,6 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   const { locale, slug } = await params;
   const currentLocale = (locale as Locale) || "fa";
 
-  // Concurrent non-blocking resolution
   const [product, allDimensions, allThicknesses, allFinishes, t] =
     await Promise.all([
       getCachedProduct(slug, currentLocale),
@@ -135,7 +124,6 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     notFound();
   }
 
-  // Directly access safely populated LookupItem DTO properties
   const categoryTitle = product.category?.title || "";
   const categorySlug = product.category?.slug || "";
   const thumbnailUrl = resolveMediaUrl(product.thumbnail);
@@ -180,13 +168,13 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
   return (
     <main className="container mx-auto px-4 sm:px-12 py-24 sm:py-28 min-h-screen space-y-14">
-      {/* 1. XSS-Resilient Structured Data */}
+      {/* ۱. سئوی ساختاریافته */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLdReplacer(jsonLdPayload) }}
       />
 
-      {/* 2. Semantic Breadcrumbs */}
+      {/* ۲. مسیر ناوبری (Breadcrumbs) */}
       <nav
         aria-label="Breadcrumb"
         className="flex items-center gap-2 text-xs text-muted-foreground pb-3 border-b border-border/30"
@@ -218,28 +206,28 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         </span>
       </nav>
 
-      {/* 3. Product Presentation & Configurator */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start">
-        <div className="lg:col-span-6">
+      {/* ۳. اسلب اصلی با زوم + بخش تنظیمات B2B محصول */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-stretch">
+        <div className="lg:col-span-6 flex flex-col">
           <ProductGallery
             mainThumbnailUrl={thumbnailUrl}
             title={product.title}
             code={product.code}
-            gallery={product.gallery as any}
           />
         </div>
 
-        <div className="lg:col-span-6">
+        <div className="lg:col-span-6 flex flex-col">
           <ProductConfigurator
-            product={product as any}
+            product={product}
             categoryTitle={categoryTitle}
-            globalThicknesses={allThicknesses}
-            globalFinishes={allFinishes}
           />
         </div>
       </div>
 
-      {/* 4. Architectural Specs Matrix */}
+      {/* ۴. گالری افقی تصاویر اجرا شده در محیط (دقیقاً زیر گرید بالا و بالای مشخصات) */}
+      <ProductAppliedGallery title={product.title} gallery={product.gallery} />
+
+      {/* ۵. ماتریس مشخصات مهندسی سنگ */}
       <ProductSpecsMatrix
         locale={currentLocale}
         dimensions={resolvedDimensions}
