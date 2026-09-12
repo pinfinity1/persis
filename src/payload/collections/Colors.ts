@@ -1,4 +1,5 @@
 import { CollectionConfig } from "payload";
+import { revalidateTag } from "next/cache";
 
 export const Colors: CollectionConfig = {
   slug: "colors",
@@ -7,26 +8,40 @@ export const Colors: CollectionConfig = {
     group: "Attributes",
   },
   access: { read: () => true },
+  hooks: {
+    afterChange: [
+      () => {
+        try {
+          revalidateTag("colors");
+          revalidateTag("products");
+        } catch (err) {
+          console.warn("Revalidate error on Colors change:", err);
+        }
+      },
+    ],
+    afterDelete: [
+      () => {
+        try {
+          revalidateTag("colors");
+          revalidateTag("products");
+        } catch (err) {
+          console.warn("Revalidate error on Colors delete:", err);
+        }
+      },
+    ],
+  },
   fields: [
     {
       name: "title",
       type: "text",
       required: true,
-      localized: true, // نام رنگ (مثلاً: سفید، مشکی، آبی سورمه‌ای)
+      localized: true,
     },
     {
       name: "slug",
       type: "text",
       required: true,
-      unique: true, // برای URL فیلتر (مثلاً: white, black, navy-blue)
-    },
-    {
-      name: "hex_code",
-      type: "text",
-      admin: {
-        description:
-          "کد رنگی جهت نمایش دایره رنگ در فیلتر سایت (مثلاً: #FFFFFF)",
-      },
+      unique: true,
     },
   ],
 };

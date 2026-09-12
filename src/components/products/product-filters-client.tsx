@@ -1,3 +1,4 @@
+// src/components/products/product-filters-client.tsx
 "use client";
 
 import React, { useState, useTransition } from "react";
@@ -5,7 +6,15 @@ import { usePathname, useRouter } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { RotateCcw, SlidersHorizontal, X, Check } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  SheetClose,
+} from "@/components/ui/sheet";
+import { RotateCcw, SlidersHorizontal, Check, X } from "lucide-react";
 import type {
   CategoryItem,
   ColorItem,
@@ -28,7 +37,7 @@ export const ProductFiltersClient: React.FC<ProductFiltersClientProps> = ({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   const currentCategory =
     searchParams.get("category") || searchParams.get("cat") || "";
@@ -53,199 +62,195 @@ export const ProductFiltersClient: React.FC<ProductFiltersClientProps> = ({
     params.delete("page");
 
     startTransition(() => {
-      router.push(`${pathname}?${params.toString()}`);
+      // اضافه شدن scroll: false بسیار حیاتی است
+      router.push(`${pathname}?${params.toString()}`, { scroll: false });
     });
   };
 
   const handleReset = () => {
     startTransition(() => {
-      router.push(pathname);
+      // اضافه شدن scroll: false
+      router.push(pathname, { scroll: false });
     });
   };
-
-  const filterContent = (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between pb-4 border-b border-border/40">
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground">
-          {t("title")}
-        </h3>
-        {activeFiltersCount > 0 && (
-          <Button
-            variant="ghost"
-            size="xs"
-            onClick={handleReset}
-            className="text-xs text-muted-foreground hover:text-primary gap-1"
-          >
-            <RotateCcw className="h-3 w-3" />
-            <span>{t("reset")}</span>
-          </Button>
-        )}
-      </div>
-
-      {/* ۱. فیلتر دسته‌بندی‌ها (سری‌ها) */}
-      <div className="space-y-3">
-        <label className="text-xs uppercase tracking-widest text-primary font-semibold block">
-          {t("collections")}
-        </label>
-        <div className="space-y-1.5">
-          <button
-            onClick={() => updateFilters("category", "")}
-            className={`w-full text-start text-xs py-2.5 px-3 border transition-colors ${
-              currentCategory === ""
-                ? "border-primary bg-primary/10 text-primary font-medium"
-                : "border-border/40 hover:border-border text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {t("all")}
-          </button>
-
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => updateFilters("category", cat.slug)}
-              className={`w-full text-start text-xs py-2.5 px-3 border transition-colors ${
-                currentCategory === cat.slug
-                  ? "border-primary bg-primary/10 text-primary font-medium"
-                  : "border-border/40 hover:border-border text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {cat.title}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ۲. فیلتر طیف رنگی */}
-      {colors.length > 0 && (
-        <div className="space-y-3">
-          <label className="text-xs uppercase tracking-widest text-primary font-semibold block">
-            {t("colorFamily")}
-          </label>
-          <div className="grid grid-cols-2 gap-2">
-            {colors.map((color) => (
-              <button
-                key={color.id}
-                onClick={() =>
-                  updateFilters(
-                    "color",
-                    currentColor === color.slug ? "" : color.slug,
-                  )
-                }
-                className={`text-xs py-2.5 px-2 border flex items-center justify-center gap-2 transition-colors ${
-                  currentColor === color.slug
-                    ? "border-primary bg-primary text-primary-foreground font-medium"
-                    : "border-border/40 hover:border-border text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {color.hex_code && (
-                  <span
-                    className="h-3 w-3 rounded-full border border-black/20 shrink-0"
-                    style={{ backgroundColor: color.hex_code }}
-                  />
-                )}
-                <span>{color.title}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ۳. فیلتر الگوهای رگه (Vein Patterns) */}
-      {veinPatterns.length > 0 && (
-        <div className="space-y-3">
-          <label className="text-xs uppercase tracking-widest text-primary font-semibold block">
-            {t("veinPattern")}
-          </label>
-          <div className="space-y-1.5">
-            {veinPatterns.map((pattern) => {
-              const isSelected = currentVeinPattern === pattern.slug;
-              return (
-                <button
-                  key={pattern.id}
-                  onClick={() =>
-                    updateFilters(
-                      "vein_pattern",
-                      isSelected ? "" : pattern.slug,
-                    )
-                  }
-                  className={`w-full text-start text-xs py-2.5 px-3 border transition-colors flex items-center justify-between ${
-                    isSelected
-                      ? "border-primary bg-primary/10 text-primary font-medium"
-                      : "border-border/40 hover:border-border text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <span>{pattern.title}</span>
-                  {isSelected && <Check className="h-3.5 w-3.5 text-primary" />}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
   return (
-    <>
-      <div className="md:hidden mb-6 flex items-center justify-between">
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <SheetTrigger asChild>
         <Button
+          type="button"
           variant="outline"
-          onClick={() => setIsMobileOpen(true)}
-          className="w-full h-11 justify-between text-xs tracking-wider uppercase rounded-none border-border/80 bg-card"
+          className="h-9 px-3.5 rounded-none border-border/80 hover:border-primary hover:bg-transparent text-xs tracking-wider uppercase flex items-center gap-2 cursor-pointer select-none"
         >
-          <span className="flex items-center gap-2">
-            <SlidersHorizontal className="h-4 w-4 text-primary" />
-            <span>{t("title")}</span>
-          </span>
+          <SlidersHorizontal className="size-3.5 text-primary" />
+          <span>{t("title")}</span>
           {activeFiltersCount > 0 && (
-            <span className="h-5 w-5 bg-primary text-primary-foreground text-[10px] flex items-center justify-center">
+            <span className="size-4 bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold">
               {activeFiltersCount}
             </span>
           )}
         </Button>
-      </div>
+      </SheetTrigger>
 
-      {isMobileOpen && (
-        <div className="fixed inset-0 z-50 md:hidden flex flex-col justify-end bg-black/60 backdrop-blur-sm animate-in fade-in-0 duration-200">
-          <div className="bg-background border-t border-border/60 p-6 max-h-[85vh] flex flex-col justify-between">
-            {/* هدر کشو */}
-            <div className="flex items-center justify-between pb-3 border-b border-border/40 mb-4 shrink-0">
-              <span className="text-xs uppercase tracking-widest text-primary font-semibold">
-                {t("title")}
-              </span>
+      <SheetContent
+        side="bottom"
+        showCloseButton={false}
+        className="h-[80vh] max-h-[580px] rounded-t-none border-t border-border/60 bg-background p-0 flex flex-col justify-between select-none"
+      >
+        {/* هدر یکپارچه و تمیز */}
+        <SheetHeader className="px-6 py-4 border-b border-border/40 flex flex-row items-center justify-between space-y-0 shrink-0">
+          <div className="flex items-center gap-3">
+            <span className="h-px w-4 bg-primary" />
+            <SheetTitle className="text-xs uppercase tracking-[0.2em] text-primary font-bold m-0">
+              {t("title")}
+            </SheetTitle>
+            {activeFiltersCount > 0 && (
               <button
-                onClick={() => setIsMobileOpen(false)}
-                className="p-1 text-muted-foreground hover:text-foreground"
+                type="button"
+                onClick={handleReset}
+                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors cursor-pointer border-s border-border/60 ps-3 ms-1"
               >
-                <X className="h-5 w-5" />
+                <RotateCcw className="size-3" />
+                <span>{t("reset")}</span>
               </button>
-            </div>
+            )}
+          </div>
 
-            {/* محتوای اسکرول‌شونده */}
-            <div className="overflow-y-auto pr-1 flex-1 mb-4 space-y-6">
-              {filterContent}
-            </div>
+          <SheetClose asChild>
+            <button
+              type="button"
+              className="text-muted-foreground hover:text-foreground p-1 transition-colors cursor-pointer"
+              aria-label="Close"
+            >
+              <X className="size-4" />
+            </button>
+          </SheetClose>
+        </SheetHeader>
 
-            {/* دکمه مشاهده نتایج در انتهای موبایل */}
-            <div className="pt-3 border-t border-border/40 shrink-0">
-              <Button
-                onClick={() => setIsMobileOpen(false)}
-                className="w-full h-12 rounded-none bg-primary text-primary-foreground hover:bg-primary/90 text-xs uppercase tracking-wider font-medium"
+        {/* محتوای فیلترها بدون دکمه‌های تکراری و مزاحم */}
+        <div
+          className={`overflow-y-auto px-6 py-6 flex-1 space-y-8 scrollbar-none ${
+            isPending ? "opacity-50 transition-opacity" : ""
+          }`}
+        >
+          {/* ۱. کالکشن‌ها و دسته‌بندی‌ها */}
+          <div className="space-y-3">
+            <span className="text-[11px] uppercase tracking-widest text-foreground/80 font-medium block">
+              {t("collections")}
+            </span>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => updateFilters("category", "")}
+                className={`text-xs py-2 px-3.5 border transition-all duration-200 cursor-pointer ${
+                  currentCategory === ""
+                    ? "border-primary bg-primary text-primary-foreground font-medium shadow-xs"
+                    : "border-border/60 hover:border-border text-muted-foreground hover:text-foreground bg-card"
+                }`}
               >
-                {t("viewResults")}
-              </Button>
+                {t("all")}
+              </button>
+
+              {categories.map((cat) => {
+                const isSelected = currentCategory === cat.slug;
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => updateFilters("category", cat.slug)}
+                    className={`text-xs py-2 px-3.5 border transition-all duration-200 cursor-pointer ${
+                      isSelected
+                        ? "border-primary bg-primary text-primary-foreground font-medium shadow-xs"
+                        : "border-border/60 hover:border-border text-muted-foreground hover:text-foreground bg-card"
+                    }`}
+                  >
+                    {cat.title}
+                  </button>
+                );
+              })}
             </div>
           </div>
-        </div>
-      )}
 
-      <div
-        className={`hidden md:block space-y-8 bg-card border border-border/50 p-6 ${
-          isPending ? "opacity-60 transition-opacity" : ""
-        }`}
-      >
-        {filterContent}
-      </div>
-    </>
+          {/* ۲. طیف رنگی بدون دایره hex_code */}
+          {colors.length > 0 && (
+            <div className="space-y-3">
+              <span className="text-[11px] uppercase tracking-widest text-foreground/80 font-medium block">
+                {t("colorFamily")}
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {colors.map((color) => {
+                  const isSelected = currentColor === color.slug;
+                  return (
+                    <button
+                      key={color.id}
+                      type="button"
+                      onClick={() =>
+                        updateFilters("color", isSelected ? "" : color.slug)
+                      }
+                      className={`text-xs py-2 px-3.5 border flex items-center gap-2 transition-all duration-200 cursor-pointer ${
+                        isSelected
+                          ? "border-primary bg-primary/10 text-primary font-medium"
+                          : "border-border/60 hover:border-border text-muted-foreground hover:text-foreground bg-card"
+                      }`}
+                    >
+                      <span>{color.title}</span>
+                      {isSelected && (
+                        <Check className="size-3 text-primary shrink-0" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* ۳. الگوهای رگه */}
+          {veinPatterns.length > 0 && (
+            <div className="space-y-3">
+              <span className="text-[11px] uppercase tracking-widest text-foreground/80 font-medium block">
+                {t("veinPattern")}
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {veinPatterns.map((pattern) => {
+                  const isSelected = currentVeinPattern === pattern.slug;
+                  return (
+                    <button
+                      key={pattern.id}
+                      type="button"
+                      onClick={() =>
+                        updateFilters(
+                          "vein_pattern",
+                          isSelected ? "" : pattern.slug,
+                        )
+                      }
+                      className={`text-xs py-2 px-3.5 border flex items-center gap-2 transition-all duration-200 cursor-pointer ${
+                        isSelected
+                          ? "border-primary bg-primary/10 text-primary font-medium"
+                          : "border-border/60 hover:border-border text-muted-foreground hover:text-foreground bg-card"
+                      }`}
+                    >
+                      <span>{pattern.title}</span>
+                      {isSelected && (
+                        <Check className="size-3 text-primary shrink-0" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* فوتر چسبان با دکمه تمیز مشاهده نتایج */}
+        <div className="p-4 sm:p-5 border-t border-border/40 bg-card/60 backdrop-blur-sm shrink-0">
+          <Button
+            type="button"
+            onClick={() => setIsOpen(false)}
+            className="w-full h-11 rounded-none bg-primary text-primary-foreground hover:bg-primary/90 text-xs uppercase tracking-wider font-medium cursor-pointer relative overflow-hidden"
+          >
+            {t("viewResults")}
+          </Button>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 };

@@ -1,4 +1,5 @@
 import { CollectionConfig } from "payload";
+import { revalidateTag } from "next/cache";
 
 export const Categories: CollectionConfig = {
   slug: "categories",
@@ -14,6 +15,28 @@ export const Categories: CollectionConfig = {
   },
   access: {
     read: () => true,
+  },
+  hooks: {
+    afterChange: [
+      () => {
+        try {
+          revalidateTag("categories");
+          revalidateTag("products");
+        } catch (err) {
+          console.warn("Revalidate error on Categories change:", err);
+        }
+      },
+    ],
+    afterDelete: [
+      () => {
+        try {
+          revalidateTag("categories");
+          revalidateTag("products");
+        } catch (err) {
+          console.warn("Revalidate error on Categories delete:", err);
+        }
+      },
+    ],
   },
   fields: [
     {

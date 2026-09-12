@@ -1,3 +1,4 @@
+// src/app/[locale]/products/page.tsx
 import React, { Suspense } from "react";
 import {
   getProductsService,
@@ -44,12 +45,12 @@ export default async function ProductsPage({
   const search =
     typeof sParams.search === "string" ? sParams.search : undefined;
 
-  // فراخوانی هم‌زمان دسته‌بندی‌ها، رنگ‌ها و الگوهای رگه از پایگاه‌داده
   const [
     { data: initialProducts, meta: initialMeta },
     categories,
     colors,
     veinPatterns,
+    totalBaseResult, // دریافت تعداد کل محصولات کاتالوگ بدون فیلتر
   ] = await Promise.all([
     getProductsService({
       locale: currentLocale,
@@ -63,6 +64,10 @@ export default async function ProductsPage({
     getCategoriesService(currentLocale),
     getColorsService(currentLocale),
     getVeinPatternsService(currentLocale),
+    getProductsService({
+      locale: currentLocale,
+      limit: 1,
+    }),
   ]);
 
   return (
@@ -70,30 +75,28 @@ export default async function ProductsPage({
       <PageWatermarkHeader
         watermark="COLLECTION"
         title="Persis Quartz Catalog"
-        className="mb-12"
+        className="mb-8"
       />
 
-      <div className="flex flex-col md:flex-row gap-8 items-start">
-        <aside className="w-full md:w-64 shrink-0">
-          <ProductFiltersClient
-            categories={categories}
-            colors={colors}
-            veinPatterns={veinPatterns}
+      <section className="w-full">
+        <Suspense fallback={<SkeletonLoader />}>
+          <ProductGridClient
+            initialProducts={initialProducts}
+            initialMeta={initialMeta}
+            totalCatalogCount={totalBaseResult.meta.total_items}
+            category={category}
+            color={color}
+            search={search}
+            filterControl={
+              <ProductFiltersClient
+                categories={categories}
+                colors={colors}
+                veinPatterns={veinPatterns}
+              />
+            }
           />
-        </aside>
-
-        <section className="flex-1 w-full">
-          <Suspense fallback={<SkeletonLoader />}>
-            <ProductGridClient
-              initialProducts={initialProducts}
-              initialMeta={initialMeta}
-              category={category}
-              color={color}
-              search={search}
-            />
-          </Suspense>
-        </section>
-      </div>
+        </Suspense>
+      </section>
     </main>
   );
 }

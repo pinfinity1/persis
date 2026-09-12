@@ -1,3 +1,4 @@
+// src/components/products/product-configurator.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -33,12 +34,11 @@ export function ProductConfigurator({
 
   return (
     <div className="flex flex-col justify-between h-full max-h-[580px] select-none">
-      {/* بخش بالا با فواصل بیشتر (Spacing بهینه‌شده) */}
       <div className="space-y-7">
         {/* ۱. کد محصول و دکمه اشتراک‌گذاری */}
         <div className="flex items-center justify-between gap-4 pb-4 border-b border-border/30">
-          <span className="font-mono text-sm font-semibold tracking-wider text-primary">
-            کد {product.code}
+          <span className="text-sm font-semibold tracking-wider text-primary">
+            {t("codePrefix")} {product.code}
           </span>
 
           <button
@@ -60,24 +60,20 @@ export function ProductConfigurator({
           </button>
         </div>
 
-        {/* ۲. عنوان بزرگ با حاشیه تنفسی بازتر */}
+        {/* ۲. عنوان اسلب */}
         <div className="space-y-5">
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extralight text-foreground tracking-tight leading-none">
             {product.title}
           </h1>
 
-          {/* ۳. کادر مشخصات هویتی با پدینگ جادارتر */}
+          {/* ۳. کادر مشخصات هویتی ۳ زبانه */}
           <div className="border-s-2 border-primary ps-5 py-3 space-y-2 bg-muted/10">
             {product.color_family?.title && (
               <div className="flex items-center gap-2.5">
-                {product.color_family.hex_code && (
-                  <span
-                    className="size-2.5 rounded-full border border-black/20 shrink-0"
-                    style={{ backgroundColor: product.color_family.hex_code }}
-                  />
-                )}
-                <span className="text-xs text-muted-foreground">رنگ:</span>
-                <span className="text-xs font-medium text-foreground">
+                <span className="text-xs text-muted-foreground">
+                  {t("colorLabel")}:
+                </span>
+                <span className="text-xs font-medium text-foreground capitalize">
                   {product.color_family.title}
                 </span>
               </div>
@@ -86,7 +82,7 @@ export function ProductConfigurator({
             {categoryTitle && (
               <div className="flex items-center gap-2.5">
                 <span className="text-xs text-muted-foreground">
-                  دسته‌بندی:
+                  {t("categoryLabel")}:
                 </span>
                 <span className="text-xs font-medium text-foreground">
                   {categoryTitle}
@@ -95,7 +91,7 @@ export function ProductConfigurator({
             )}
           </div>
 
-          {/* ۴. متن کانسپت با لاین‌های بازتر */}
+          {/* ۴. متن کانسپت و معرفی محصول */}
           {product.description && (
             <p className="text-xs sm:text-sm font-light text-muted-foreground leading-loose text-justify pt-1 max-w-xl">
               {product.description}
@@ -104,7 +100,7 @@ export function ProductConfigurator({
         </div>
       </div>
 
-      {/* ۵. دکمه‌های اقدام B2B */}
+      {/* ۵. دکمه‌های اقدام */}
       <div className="space-y-3 pt-6 border-t border-border/20 mt-auto">
         <Button
           asChild

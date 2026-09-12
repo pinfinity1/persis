@@ -1,4 +1,5 @@
 import { CollectionConfig } from "payload";
+import { revalidateTag } from "next/cache";
 
 export const Dimensions: CollectionConfig = {
   slug: "dimensions",
@@ -7,6 +8,28 @@ export const Dimensions: CollectionConfig = {
     group: "Attributes",
   },
   access: { read: () => true },
+  hooks: {
+    afterChange: [
+      () => {
+        try {
+          revalidateTag("dimensions");
+          revalidateTag("products");
+        } catch (err) {
+          console.warn("Revalidate error on Dimensions change:", err);
+        }
+      },
+    ],
+    afterDelete: [
+      () => {
+        try {
+          revalidateTag("dimensions");
+          revalidateTag("products");
+        } catch (err) {
+          console.warn("Revalidate error on Dimensions delete:", err);
+        }
+      },
+    ],
+  },
   fields: [
     {
       name: "title",
@@ -21,7 +44,7 @@ export const Dimensions: CollectionConfig = {
       name: "slug",
       type: "text",
       required: true,
-      unique: true, // مثلا: 320x75
+      unique: true,
     },
   ],
 };

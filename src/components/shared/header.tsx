@@ -168,7 +168,7 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
                       className="group/card p-4 border border-border/50 hover:border-primary/80 bg-card/40 hover:bg-card transition-all duration-300 flex flex-col justify-between min-h-[115px]"
                     >
                       <div>
-                        <span className="text-[10px] text-primary block mb-2 font-mono font-bold">
+                        <span className="text-[10px] text-primary block mb-2 font-bold">
                           0{idx + 1}
                         </span>
                         <h5 className="text-xs font-medium text-foreground group-hover/card:text-primary transition-colors leading-snug">
@@ -256,7 +256,7 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
                   )}
                 >
                   <Globe className="h-3.5 w-3.5 opacity-80" />
-                  <span className="uppercase font-mono font-bold tracking-wider">
+                  <span className="uppercase font-bold tracking-wider">
                     {locale}
                   </span>
                   <ChevronDown className="h-3 w-3 opacity-60" />
@@ -459,7 +459,7 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
                           setIsMobileMenuOpen(false);
                         }}
                         className={cn(
-                          "py-2 text-xs font-mono transition-all rounded-none border",
+                          "py-2 text-xs transition-all rounded-none border",
                           locale === lang.code
                             ? "border-primary bg-primary text-primary-foreground font-semibold shadow-xs"
                             : "border-border/60 bg-background text-muted-foreground hover:border-border hover:text-foreground",

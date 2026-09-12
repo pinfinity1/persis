@@ -3,29 +3,33 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Loader2 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
-import type { ProductItem, ProductMeta } from "@/services/product.service";
+import type { ProductItemDTO, ProductMeta } from "@/services/product.service";
 import { fetchMoreProductsAction } from "@/app/actions/product-actions";
 import { ProductCard } from "@/components/products/product-card";
 
 interface ProductGridProps {
-  initialProducts: ProductItem[];
+  initialProducts: ProductItemDTO[];
   initialMeta: ProductMeta;
+  totalCatalogCount?: number;
   category?: string;
   color?: string;
   search?: string;
+  filterControl?: React.ReactNode; // <-- اضافه شد
 }
 
 export const ProductGridClient: React.FC<ProductGridProps> = ({
   initialProducts,
   initialMeta,
+  totalCatalogCount,
   category,
   color,
   search,
+  filterControl,
 }) => {
   const t = useTranslations("ProductsGrid");
   const locale = useLocale() as "fa" | "en" | "ar";
 
-  const [products, setProducts] = useState<ProductItem[]>(initialProducts);
+  const [products, setProducts] = useState<ProductItemDTO[]>(initialProducts);
   const [meta, setMeta] = useState<ProductMeta>(initialMeta);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
@@ -34,6 +38,7 @@ export const ProductGridClient: React.FC<ProductGridProps> = ({
   useEffect(() => {
     setProducts(initialProducts);
     setMeta(initialMeta);
+    setIsLoadingMore(false);
   }, [initialProducts, initialMeta]);
 
   const loadMoreProducts = useCallback(async () => {
@@ -93,16 +98,24 @@ export const ProductGridClient: React.FC<ProductGridProps> = ({
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between pb-4 border-b border-border/40">
-        <span className="text-xs text-muted-foreground uppercase">
-          {t("showingCount", {
-            count: products.length,
-            total: meta.total_items,
-          })}
-        </span>
+      <div className="flex items-center justify-between pb-3 mb-6 border-b border-border/40 select-none">
+        <div className="flex items-center gap-2">
+          <span
+            dir="ltr"
+            className="font-bold text-xs sm:text-sm text-foreground bg-muted/40 px-2.5 py-1 border border-border/50"
+          >
+            {meta.total_items} / {totalCatalogCount ?? meta.total_items}
+          </span>
+          <span className="text-muted-foreground uppercase tracking-wider text-[11px] font-light">
+            {t("slabsUnit", { defaultMessage: "اسلب" })}
+          </span>
+        </div>
+
+        {/* دکمه فیلتر در سمت مقابل */}
+        {filterControl && <div>{filterControl}</div>}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
         {products.map((product, idx) => (
           <ProductCard key={`${product.id}-${idx}`} product={product} />
         ))}

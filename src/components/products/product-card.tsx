@@ -1,64 +1,63 @@
+// src/components/products/product-card.tsx
 "use client";
 
 import React from "react";
 import Image from "next/image";
 import { Link } from "@/i18n/routing";
 import { ArrowUpRight } from "lucide-react";
-import type { ProductItem } from "@/services/product.service";
+import type { ProductItemDTO } from "@/services/product.service";
 
 interface ProductCardProps {
-  product: ProductItem;
+  product: ProductItemDTO;
   className?: string;
+  priority?: boolean;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
   product,
   className = "",
+  priority = false,
 }) => {
-  const imageUrl =
-    typeof product.thumbnail === "object" && product.thumbnail?.url
-      ? product.thumbnail.url
-      : typeof product.thumbnail === "string"
-        ? product.thumbnail
-        : "/PersisQuartz-Red.png";
-
+  const imageUrl = product.thumbnail || "/PersisQuartz-Red.png";
   const isDefaultLogo = imageUrl === "/PersisQuartz-Red.png";
 
   return (
     <Link
       href={`/products/${product.slug}`}
-      className={`group relative flex flex-col bg-card border border-border/50 hover:border-primary/60 transition-all duration-500 overflow-hidden select-none h-full ${className}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`group relative flex flex-col bg-card border border-border/50 hover:border-primary/60 transition-colors duration-300 overflow-hidden select-none h-full ${className}`}
     >
-      {/* قاب تصویر عمودی اسلب (نسبت ۳:۴) */}
-      <div className="relative aspect-[3/4] w-full overflow-hidden bg-muted/40 flex items-center justify-center p-6">
+      {/* قاب نمایش اسلب */}
+      <div className="relative aspect-[3/4] w-full overflow-hidden bg-muted/20 flex items-center justify-center p-3 sm:p-5">
         <Image
           src={imageUrl}
           alt={product.title}
           fill
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          loading="lazy"
+          priority={priority}
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           className={`${
             isDefaultLogo
-              ? "object-contain p-8 opacity-70 group-hover:opacity-100 group-hover:scale-105"
-              : "object-cover group-hover:scale-105"
-          } transition-all duration-700 ease-out`}
+              ? "object-contain p-4 opacity-70 group-hover:opacity-100"
+              : "object-cover group-hover:scale-[1.03]"
+          } transition-transform duration-500 ease-out`}
         />
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-500 pointer-events-none" />
       </div>
 
-      {/* اطلاعات متنی سنگ بدون برچسب‌های فروشگاهی */}
-      <div className="p-4 sm:p-5 flex items-center justify-between gap-3 border-t border-border/30 flex-1 bg-card">
-        <div className="space-y-0.5">
-          <span className="text-xs text-muted-foreground tracking-wider block">
-            کد {product.code}
+      {/* اطلاعات محصول */}
+      <div className="p-3 sm:p-4 flex items-center justify-between gap-2 border-t border-border/30 flex-1 bg-card">
+        <div className="space-y-0.5 min-w-0">
+          <span className="text-[10px] sm:text-xs text-muted-foreground tracking-wider block font-mono">
+            {product.code}
           </span>
-          <h4 className="text-sm sm:text-base font-medium text-foreground group-hover:text-primary transition-colors duration-300">
+          <h4 className="text-xs sm:text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors duration-200">
             {product.title}
           </h4>
         </div>
 
-        <div className="hidden sm:flex shrink-0 h-8 w-8 sm:h-9 sm:w-9 border border-primary bg-primary text-primary-foreground items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-          <ArrowUpRight className="h-4 w-4" />
+        {/* دکمه اکشن گوشه: در حالت عادی مخفی و در هاور پدیدار می‌شود */}
+        <div className="hidden sm:flex shrink-0 size-7 lg:size-8 border border-primary bg-primary text-primary-foreground items-center justify-center opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 ease-out">
+          <ArrowUpRight className="size-3.5" />
         </div>
       </div>
     </Link>

@@ -8,7 +8,7 @@ import {
   type ExcelProductRow,
 } from "@/lib/validations/excel-product-import";
 
-export const maxDuration = 120; // Allow sufficient execution window for bulk operations
+export const maxDuration = 120;
 const MAX_FILE_SIZE = 8 * 1024 * 1024; // 8MB Hard Limit
 const BATCH_SIZE = 25;
 
@@ -79,11 +79,10 @@ export async function POST(req: NextRequest) {
     // 3. Memory & Event-Loop Conscious Parsing
     const arrayBuffer = await file.arrayBuffer();
 
-    // Defer synchronous parse execution
     await new Promise((resolve) => setImmediate(resolve));
     const workbook = XLSX.read(arrayBuffer, {
       type: "array",
-      dense: true, // Optimizes V8 internal array representation
+      dense: true,
       cellDates: false,
     });
 
@@ -107,7 +106,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 4. Strict Pre-Flight Validation Phase (Zero DB Mutation on Schema Failure)
+    // 4. Strict Pre-Flight Validation Phase
     const validRows: { rowNum: number; data: ExcelProductRow }[] = [];
     const validationErrors: string[] = [];
     const requiredCategorySlugs = new Set<string>();
@@ -120,7 +119,6 @@ export async function POST(req: NextRequest) {
       const rowNum = i + 2;
       const row = rawRows[i];
 
-      // Discard trailing blank structural rows
       if (!row.code && !row.slug && !row.title_fa) continue;
 
       const parseResult = excelProductRowSchema.safeParse(row);
@@ -134,7 +132,6 @@ export async function POST(req: NextRequest) {
 
       const item = parseResult.data;
 
-      // Duplicate check within sheet
       if (codesInSheet.has(item.code)) {
         validationErrors.push(
           `ردیف ${rowNum}: کد تکراری "${item.code}" در فایل اکسل.`,
@@ -180,7 +177,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 5. Bulk Relational Resolution (Single DB Roundtrips)
+    // 5. Bulk Relational Resolution
     const [categoriesRes, colorsRes, veinPatternsRes] = await Promise.all([
       payload.find({
         collection: "categories",
@@ -217,7 +214,7 @@ export async function POST(req: NextRequest) {
       veinPatternsRes.docs.map((v: any) => [v.slug.toLowerCase(), v.id]),
     );
 
-    // Check for missing foreign relations
+    // Foreign Keys Integrity Guard
     for (const { rowNum, data } of validRows) {
       if (!categoryMap.has(data.category_slug)) {
         validationErrors.push(
@@ -279,14 +276,12 @@ export async function POST(req: NextRequest) {
       const batch = validRows.slice(i, i + BATCH_SIZE);
 
       const batchPromises = batch.map(async ({ data }) => {
-        const payloadData = {
+        // ساخت ساختار داده‌ای امن و دقیق برای ایجاد/بروزرسانی
+        const payloadData: Record<string, any> = {
           code: data.code,
           slug: data.slug,
           category: categoryMap.get(data.category_slug),
           color_family: colorMap.get(data.color_slug),
-          vein_pattern: data.vein_pattern_slug
-            ? veinPatternMap.get(data.vein_pattern_slug)
-            : null,
           is_in_stock: data.is_in_stock,
           title: {
             fa: data.title_fa,
@@ -310,6 +305,16 @@ export async function POST(req: NextRequest) {
           },
         };
 
+        // مدیریت صریح و بدون باگ فیلد اختیاری Vein Pattern
+        if (
+          data.vein_pattern_slug &&
+          veinPatternMap.has(data.vein_pattern_slug)
+        ) {
+          payloadData.vein_pattern = veinPatternMap.get(data.vein_pattern_slug);
+        } else {
+          payloadData.vein_pattern = null;
+        }
+
         const existingId =
           codeToIdMap.get(data.code) || slugToIdMap.get(data.slug);
 
@@ -319,7 +324,7 @@ export async function POST(req: NextRequest) {
             id: existingId,
             locale: "all",
             req,
-            data: payloadData as any,
+            data: payloadData,
           });
           return "updated";
         } else {

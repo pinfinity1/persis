@@ -46,6 +46,17 @@ export interface CategoryItem {
   order?: number;
   description?: string;
 }
+export interface ColorItem {
+  id: string;
+  title: string;
+  slug: string;
+}
+
+export interface VeinPatternItem {
+  id: string;
+  title: string;
+  slug: string;
+}
 
 export interface ProductItemDTO {
   id: string;
@@ -357,54 +368,70 @@ export const getCategoriesService = unstable_cache(
   { revalidate: TTL.STATIC_SEC, tags: ["categories"] },
 );
 
-export const getColorsService = unstable_cache(
-  async (locale: Locale): Promise<LookupItem[]> => {
-    try {
-      const payload = await getPayload({ config: configPromise });
-      const response = await payload.find({
-        collection: "colors",
-        locale,
-        limit: 100,
-        depth: 0,
-      });
+export async function getColorsService(
+  locale: "fa" | "en" | "ar" = "fa",
+): Promise<ColorItem[]> {
+  return unstable_cache(
+    async (): Promise<ColorItem[]> => {
+      try {
+        const payload = await getPayload({ config: configPromise });
+        const res = await payload.find({
+          collection: "colors",
+          locale,
+          limit: 100,
+          depth: 0,
+        });
 
-      return response.docs.map((doc: any) => ({
-        id: String(doc.id),
-        title: String(doc.title),
-        slug: String(doc.slug),
-        hex_code: doc.hex_code ? String(doc.hex_code) : undefined,
-      }));
-    } catch {
-      return [];
-    }
-  },
-  ["attributes-colors-cache"],
-  { revalidate: TTL.STATIC_SEC, tags: ["colors"] },
-);
+        return res.docs.map((doc: any) => ({
+          id: String(doc.id),
+          title: doc.title || "",
+          slug: doc.slug || "",
+          hex_code: doc.hex_code || undefined,
+        }));
+      } catch (error) {
+        console.error("Error fetching colors in service:", error);
+        return [];
+      }
+    },
+    ["colors-cache", locale],
+    {
+      revalidate: 86400,
+      tags: ["colors"],
+    },
+  )();
+}
 
-export const getVeinPatternsService = unstable_cache(
-  async (locale: Locale): Promise<LookupItem[]> => {
-    try {
-      const payload = await getPayload({ config: configPromise });
-      const response = await payload.find({
-        collection: "vein-patterns",
-        locale,
-        limit: 100,
-        depth: 0,
-      });
+export async function getVeinPatternsService(
+  locale: "fa" | "en" | "ar" = "fa",
+): Promise<VeinPatternItem[]> {
+  return unstable_cache(
+    async (): Promise<VeinPatternItem[]> => {
+      try {
+        const payload = await getPayload({ config: configPromise });
+        const res = await payload.find({
+          collection: "vein-patterns",
+          locale,
+          limit: 100,
+          depth: 0,
+        });
 
-      return response.docs.map((doc: any) => ({
-        id: String(doc.id),
-        title: String(doc.title),
-        slug: String(doc.slug),
-      }));
-    } catch {
-      return [];
-    }
-  },
-  ["attributes-vein-patterns-cache"],
-  { revalidate: TTL.STATIC_SEC, tags: ["vein-patterns"] },
-);
+        return res.docs.map((doc: any) => ({
+          id: String(doc.id),
+          title: doc.title || "",
+          slug: doc.slug || "",
+        }));
+      } catch (error) {
+        console.error("Error fetching vein patterns in service:", error);
+        return [];
+      }
+    },
+    ["vein-patterns-cache", locale],
+    {
+      revalidate: 86400,
+      tags: ["vein-patterns"],
+    },
+  )();
+}
 
 export const getAllDimensionsService = unstable_cache(
   async (): Promise<string[]> => {

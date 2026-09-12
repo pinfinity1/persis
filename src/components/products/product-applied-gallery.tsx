@@ -86,7 +86,7 @@ export const ProductAppliedGallery: React.FC<ProductAppliedGalleryProps> = ({
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="font-mono text-xs text-muted-foreground flex items-center gap-1">
+            <div className="text-xs text-muted-foreground flex items-center gap-1">
               <span className="text-foreground font-bold text-sm">
                 {String(selectedIndex + 1).padStart(2, "0")}
               </span>
