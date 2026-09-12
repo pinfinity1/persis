@@ -147,11 +147,9 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
       "@type": "AggregateOffer",
       priceCurrency: "IRR",
       availability:
-        product.is_in_stock === "in_stock"
+        product.is_in_stock === "active"
           ? "https://schema.org/InStock"
-          : product.is_in_stock === "on_demand"
-            ? "https://schema.org/PreOrder"
-            : "https://schema.org/Discontinued",
+          : "https://schema.org/Discontinued",
     },
   };
 
@@ -161,10 +159,14 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
       : allDimensions;
 
   const resolvedThicknesses =
-    Array.isArray(product.available_thicknesses) &&
-    product.available_thicknesses.length > 0
-      ? product.available_thicknesses
+    Array.isArray(product.thicknesses) && product.thicknesses.length > 0
+      ? product.thicknesses
       : allThicknesses;
+
+  const resolvedFinishes =
+    Array.isArray(product.finishes) && product.finishes.length > 0
+      ? product.finishes
+      : allFinishes.map((f) => f.title);
 
   return (
     <main className="container mx-auto px-4 sm:px-12 py-24 sm:py-28 min-h-screen space-y-14">
@@ -232,7 +234,8 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         locale={currentLocale}
         dimensions={resolvedDimensions}
         thicknesses={resolvedThicknesses}
-        finishes={allFinishes.map((f) => f.title)}
+        finishes={resolvedFinishes}
+        customThicknessAvailable={product.custom_thickness_available}
       />
     </main>
   );

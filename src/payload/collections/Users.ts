@@ -4,6 +4,7 @@ export const Users: CollectionConfig = {
   slug: "users",
   admin: {
     useAsTitle: "email",
+    group: "System",
     description: "مدیریت حساب کاربری ادمین",
   },
   auth: {

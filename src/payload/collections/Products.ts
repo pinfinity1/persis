@@ -6,7 +6,7 @@ export const Products: CollectionConfig = {
   slug: "products",
   admin: {
     useAsTitle: "title",
-    group: "Catalog",
+    group: "Products",
     defaultColumns: ["title", "code", "category", "is_in_stock", "updatedAt"],
     components: {
       beforeListTable: [
@@ -89,15 +89,14 @@ export const Products: CollectionConfig = {
     {
       name: "is_in_stock",
       type: "select",
-      defaultValue: "in_stock",
+      defaultValue: "active",
       options: [
-        { label: "موجود در انبار / تحویل فوری (In Stock)", value: "in_stock" },
-        {
-          label: "تولید سفارشی / استعلام زمان (On Demand)",
-          value: "on_demand",
-        },
+        { label: "فعال و در حال تولید (Active)", value: "active" },
         { label: "توقف تولید / آرشیو (Discontinued)", value: "discontinued" },
       ],
+      admin: {
+        description: "وضعیت تولید اسلب در کارخانه",
+      },
     },
     {
       name: "is_featured",
@@ -137,51 +136,32 @@ export const Products: CollectionConfig = {
       ],
     },
     {
-      name: "available_thicknesses",
-      type: "select",
+      name: "thicknesses",
+      type: "relationship",
+      relationTo: "thicknesses",
       hasMany: true,
-      options: [
-        { label: "10mm (1.0 cm)", value: "10mm" },
-        { label: "11mm (1.1 cm)", value: "11mm" },
-        { label: "12mm (1.2 cm)", value: "12mm" },
-        { label: "13mm (1.3 cm)", value: "13mm" },
-        { label: "14mm (1.4 cm)", value: "14mm" },
-        { label: "15mm (1.5 cm)", value: "15mm" },
-        { label: "16mm (1.6 cm)", value: "16mm" },
-        { label: "17mm (1.7 cm)", value: "17mm" },
-        { label: "18mm (1.8 cm)", value: "18mm" },
-        { label: "19mm (1.9 cm)", value: "19mm" },
-        { label: "20mm (2.0 cm)", value: "20mm" },
-        { label: "21mm (2.1 cm)", value: "21mm" },
-        { label: "22mm (2.2 cm)", value: "22mm" },
-        { label: "23mm (2.3 cm)", value: "23mm" },
-        { label: "24mm (2.4 cm)", value: "24mm" },
-        { label: "25mm (2.5 cm)", value: "25mm" },
-        { label: "26mm (2.6 cm)", value: "26mm" },
-        { label: "27mm (2.7 cm)", value: "27mm" },
-        { label: "28mm (2.8 cm)", value: "28mm" },
-        { label: "29mm (2.9 cm)", value: "29mm" },
-        { label: "30mm (3.0 cm)", value: "30mm" },
-      ],
-      defaultValue: ["12mm", "20mm"],
+      admin: {
+        description:
+          "انتخاب ضخامت‌های استاندارد خط تولید برای این اسلب از کالکشن ضخامت‌ها",
+      },
     },
     {
       name: "custom_thickness_available",
       type: "checkbox",
-      defaultValue: false,
-      admin: { description: "امکان سفارش تولید با ضخامت خاص سفارشی" },
+      defaultValue: true,
+      admin: {
+        description: "امکان سفارش تولید با ضخامت خاص سفارشی (پیش‌فرض فعال)",
+      },
     },
     {
       name: "finishes",
-      type: "select",
+      type: "relationship",
+      relationTo: "finishes",
       hasMany: true,
-      options: [
-        { label: "براق (Polished)", value: "polished" },
-        { label: "مات (Honed / Matt)", value: "honed" },
-        { label: "بافت‌دار (Textured / Suede)", value: "textured" },
-        { label: "چرمی (Leathered)", value: "leathered" },
-      ],
-      defaultValue: ["polished"],
+      admin: {
+        description:
+          "انتخاب پرداخت‌های سطحی قابل عرضه از بخش Attributes > Finishes",
+      },
     },
     {
       name: "dimensions",

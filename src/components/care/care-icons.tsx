@@ -23,7 +23,6 @@ const LUCIDE_NAME_MAP: Record<string, keyof typeof dynamicIconImports> = {
   impact: "shield-alert",
   hammer: "hammer",
   ban: "ban",
-
   balloon: "balloon",
   bicep: "biceps-flexed",
   bot: "bot",
@@ -68,15 +67,20 @@ function getLazyIcon(iconName: keyof typeof dynamicIconImports) {
   return Component;
 }
 
-export function renderCareIcon(
-  iconKey?: string,
+interface CareIconProps {
+  name?: string;
+  className?: string;
+}
+
+export const CareIcon: React.FC<CareIconProps> = ({
+  name,
   className = "h-5 w-5 text-primary",
-) {
-  if (!iconKey || iconKey === "dot") {
+}) => {
+  if (!name || name === "dot") {
     return <span className="size-2 rounded-full bg-primary block shrink-0" />;
   }
 
-  const lucideIconName = LUCIDE_NAME_MAP[iconKey];
+  const lucideIconName = LUCIDE_NAME_MAP[name];
 
   if (!lucideIconName || !dynamicIconImports[lucideIconName]) {
     return <span className="size-2 rounded-full bg-primary block shrink-0" />;
@@ -93,4 +97,12 @@ export function renderCareIcon(
       <DynamicIcon className={className} />
     </Suspense>
   );
+};
+
+// نگه‌داشتن تابع قبلی برای سازگاری در جاهای دیگر
+export function renderCareIcon(
+  iconKey?: string,
+  className = "h-5 w-5 text-primary",
+) {
+  return <CareIcon name={iconKey} className={className} />;
 }

@@ -1,3 +1,4 @@
+// src/components/products/product-specs-matrix.tsx
 import React from "react";
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
@@ -8,6 +9,7 @@ import {
   Utensils,
   Bath,
   Building2,
+  CheckCircle2,
 } from "lucide-react";
 
 interface ProductSpecsMatrixProps {
@@ -15,6 +17,7 @@ interface ProductSpecsMatrixProps {
   dimensions?: string[];
   thicknesses?: string[];
   finishes?: string[];
+  customThicknessAvailable?: boolean; // <-- اضافه شد
 }
 
 export async function ProductSpecsMatrix({
@@ -22,6 +25,7 @@ export async function ProductSpecsMatrix({
   dimensions = [],
   thicknesses = [],
   finishes = [],
+  customThicknessAvailable = false,
 }: ProductSpecsMatrixProps) {
   const tDetail = await getTranslations({ locale, namespace: "ProductDetail" });
   const tInfo = await getTranslations({ locale, namespace: "InfoCards" });
@@ -90,7 +94,6 @@ export async function ProductSpecsMatrix({
             {tDetail("techSubtitle")}
           </h2>
         </div>
-
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {techDetails.map((item, idx) => {
             const Icon = item.icon;
@@ -119,6 +122,20 @@ export async function ProductSpecsMatrix({
             );
           })}
         </div>
+        {/* بنر هوشمند امکان سفارش ضخامت سفارشی */}
+        {customThicknessAvailable && (
+          <div className="p-4 bg-muted/20 border border-primary/30 flex items-center gap-3">
+            <CheckCircle2 className="size-4 text-primary shrink-0" />
+            <span className="text-xs text-muted-foreground font-light leading-relaxed">
+              {locale === "fa" &&
+                "امکان تولید با ضخامت سفارشی برای این طرح بر اساس نیاز پروژه میسر می‌باشد."}
+              {locale === "en" &&
+                "Custom thickness production is available for this design based on project specifications."}
+              {locale === "ar" &&
+                "يمكن تصنيع هذا التصميم بسماكات مخصصة وفقاً لمتطلبات المشروع الهندسية."}
+            </span>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">

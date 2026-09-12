@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { PageWatermarkHeader } from "@/components/shared/page-watermark-header";
 import { RoutineAccordion } from "@/components/care/routine-accordion";
 import { getCarePageDataService } from "@/services/care.service";
-import { renderCareIcon } from "@/components/care/care-icons";
+import { CareIcon } from "@/components/care/care-icons";
 import { ArrowUpRight, FileText } from "lucide-react";
 
 interface PageProps {
@@ -173,7 +173,10 @@ export default async function CareAndMaintenancePage({ params }: PageProps) {
                 className="flex gap-5 items-start p-6 bg-neutral-900/50 border border-neutral-800/80 hover:border-neutral-700 transition-colors"
               >
                 <div className="shrink-0 size-11 bg-neutral-900 border border-neutral-700/60 flex items-center justify-center">
-                  {renderCareIcon(rule.iconType, "h-5 w-5 text-primary")}
+                  <CareIcon
+                    name={rule.iconType}
+                    className="h-5 w-5 text-primary"
+                  />
                 </div>
                 <div className="space-y-2">
                   <h4 className="text-sm sm:text-base font-medium text-white tracking-wide">

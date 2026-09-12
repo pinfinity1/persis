@@ -5,7 +5,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { renderCareIcon } from "@/components/care/care-icons";
+import { CareIcon } from "@/components/care/care-icons";
 import type { CareStepDTO } from "@/services/care.service";
 
 interface RoutineAccordionProps {
@@ -40,7 +40,7 @@ export const RoutineAccordion: React.FC<RoutineAccordionProps> = ({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-        {/* ۱. کادر مدیا همراه با سنترسازی هندسی شیک در حالت Placeholder */}
+        {/* ۱. کادر تصویر مدیا */}
         <div className="lg:col-span-5 w-full lg:sticky lg:top-28">
           <div
             className={cn(
@@ -71,7 +71,7 @@ export const RoutineAccordion: React.FC<RoutineAccordionProps> = ({
           </div>
         </div>
 
-        {/* ۲. لیست آکاردئون‌ها با قابلیت رندر تمامی آیکون‌ها و نقطه لوکس */}
+        {/* ۲. لیست مراحل آکاردئون */}
         <div className="lg:col-span-7 space-y-3">
           {items.map((item, index) => {
             const isOpen = openId === item.id;
@@ -102,13 +102,13 @@ export const RoutineAccordion: React.FC<RoutineAccordionProps> = ({
                           : "bg-muted/50 text-primary border-border/50",
                       )}
                     >
-                      {renderCareIcon(
-                        item.iconName,
-                        cn(
+                      <CareIcon
+                        name={item.iconName}
+                        className={cn(
                           "h-4 w-4",
                           isOpen ? "text-primary-foreground" : "text-primary",
-                        ),
-                      )}
+                        )}
+                      />
                     </div>
 
                     <div className="min-w-0">

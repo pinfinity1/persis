@@ -1,3 +1,4 @@
+// src/payload/collections/Categories.ts
 import { CollectionConfig } from "payload";
 import { revalidateTag } from "next/cache";
 
@@ -5,7 +6,7 @@ export const Categories: CollectionConfig = {
   slug: "categories",
   admin: {
     useAsTitle: "title",
-    group: "Catalog",
+    group: "Products",
     defaultColumns: ["title", "order", "slug", "updatedAt"],
     components: {
       beforeListTable: [
@@ -56,21 +57,6 @@ export const Categories: CollectionConfig = {
       name: "order",
       type: "number",
       defaultValue: 0,
-    },
-    {
-      name: "description",
-      type: "textarea",
-      localized: true,
-    },
-    {
-      name: "meta_title",
-      type: "text",
-      localized: true,
-    },
-    {
-      name: "meta_description",
-      type: "textarea",
-      localized: true,
     },
   ],
 };

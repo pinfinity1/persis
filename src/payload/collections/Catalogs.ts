@@ -5,7 +5,7 @@ export const Catalogs: CollectionConfig = {
   slug: "catalogs",
   admin: {
     useAsTitle: "title",
-    group: "Catalog",
+    group: "Publications",
     defaultColumns: ["title", "year", "catalog_type", "file_size_mb", "status"],
   },
   access: {

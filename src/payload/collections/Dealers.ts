@@ -7,7 +7,7 @@ export const Dealers: CollectionConfig = {
   slug: "dealers",
   admin: {
     useAsTitle: "title",
-    group: "Catalog",
+    group: "Sales Network",
     defaultColumns: ["title", "province", "city", "phone", "status"],
     components: {
       beforeListTable: [

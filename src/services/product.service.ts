@@ -66,11 +66,12 @@ export interface ProductItemDTO {
   category: LookupItem;
   color_family: LookupItem;
   vein_pattern?: LookupItem;
-  is_in_stock: "in_stock" | "on_demand" | "discontinued";
+  is_in_stock: "active" | "discontinued";
   is_featured: boolean;
   thumbnail: string;
   gallery: GalleryItemDTO[];
-  available_thicknesses: string[];
+  thicknesses: string[];
+  custom_thickness_available?: boolean;
   finishes: string[];
   dimensions: string[];
   description?: string;
@@ -136,9 +137,6 @@ function mapProductDocToDTO(doc: any): ProductItemDTO {
       id: String(doc.color_family?.id || ""),
       title: String(doc.color_family?.title || ""),
       slug: String(doc.color_family?.slug || ""),
-      hex_code: doc.color_family?.hex_code
-        ? String(doc.color_family.hex_code)
-        : undefined,
     },
     vein_pattern: doc.vein_pattern
       ? {
@@ -147,7 +145,7 @@ function mapProductDocToDTO(doc: any): ProductItemDTO {
           slug: String(doc.vein_pattern.slug || ""),
         }
       : undefined,
-    is_in_stock: doc.is_in_stock || "in_stock",
+    is_in_stock: doc.is_in_stock || "active",
     is_featured: Boolean(doc.is_featured),
     thumbnail: resolveMediaUrl(doc.thumbnail),
     gallery: Array.isArray(doc.gallery)
@@ -160,10 +158,17 @@ function mapProductDocToDTO(doc: any): ProductItemDTO {
           caption: g.caption ? String(g.caption) : undefined,
         }))
       : [],
-    available_thicknesses: Array.isArray(doc.available_thicknesses)
-      ? doc.available_thicknesses.map(String)
+    thicknesses: Array.isArray(doc.thicknesses)
+      ? doc.thicknesses.map((t: any) =>
+          typeof t === "object" ? String(t.title || t.slug) : String(t),
+        )
       : [],
-    finishes: Array.isArray(doc.finishes) ? doc.finishes.map(String) : [],
+    custom_thickness_available: doc.custom_thickness_available ?? true, // <-- باگ برطرف شد
+    finishes: Array.isArray(doc.finishes)
+      ? doc.finishes.map((f: any) =>
+          typeof f === "object" ? String(f.title || f.slug) : String(f),
+        )
+      : [],
     dimensions: Array.isArray(doc.dimensions)
       ? doc.dimensions.map((d: any) =>
           typeof d === "object" ? String(d.title || d.slug) : String(d),

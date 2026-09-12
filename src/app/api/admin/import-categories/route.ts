@@ -112,21 +112,6 @@ export async function POST(req: NextRequest) {
             en: item.title_en,
             ar: item.title_ar,
           },
-          description: {
-            fa: item.description_fa,
-            en: item.description_en,
-            ar: item.description_ar,
-          },
-          meta_title: {
-            fa: item.meta_title_fa,
-            en: item.meta_title_en,
-            ar: item.meta_title_ar,
-          },
-          meta_description: {
-            fa: item.meta_description_fa,
-            en: item.meta_description_en,
-            ar: item.meta_description_ar,
-          },
         };
 
         const existingId = existingCatMap.get(item.slug);
