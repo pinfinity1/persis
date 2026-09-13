@@ -261,7 +261,12 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
       {product.gallery && product.gallery.length > 0 && (
         <ProductAppliedGallery
           title={product.title}
-          gallery={product.gallery as any}
+          gallery={
+            product.gallery.filter(
+              (item: any) =>
+                typeof item?.url === "string" && item.url.trim().length > 0,
+            ) as any
+          }
         />
       )}
 

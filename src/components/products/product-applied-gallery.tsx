@@ -210,7 +210,7 @@ export const ProductAppliedGallery: React.FC<ProductAppliedGalleryProps> = ({
       <MediaLightboxDialog
         isOpen={isLightboxOpen}
         onClose={() => setIsLightboxOpen(false)}
-        images={gallery}
+        images={gallery.map((g) => ({ url: g.url, alt: title }))}
         currentIndex={selectedIndex}
         onIndexChange={(idx) => {
           setSelectedIndex(idx);
