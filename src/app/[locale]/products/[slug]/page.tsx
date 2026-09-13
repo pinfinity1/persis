@@ -2,6 +2,8 @@
 import React, { cache } from "react";
 import { notFound } from "next/navigation";
 import type { Metadata, ResolvingMetadata } from "next";
+import { getPayload } from "payload";
+import configPromise from "@/payload.config";
 import { Link } from "@/i18n/routing";
 import { getTranslations } from "next-intl/server";
 import {
@@ -26,6 +28,34 @@ import {
 
 interface ProductPageProps {
   params: Promise<{ locale: string; slug: string }>;
+}
+
+// ۱. پیش‌رندر و پیش‌تولید تمام اسلاگ‌ها در زمان بیلد جهت باز شدن کاملاً آنی صفحات
+export async function generateStaticParams() {
+  try {
+    const payload = await getPayload({ config: configPromise });
+    const products = await payload.find({
+      collection: "products",
+      limit: 500,
+      depth: 0,
+      pagination: false,
+      where: {
+        is_in_stock: { equals: "active" },
+      },
+    });
+
+    const locales: Locale[] = ["fa", "en", "ar"];
+
+    return products.docs.flatMap((doc) =>
+      locales.map((locale) => ({
+        locale,
+        slug: doc.slug,
+      })),
+    );
+  } catch (error) {
+    console.error("Failed to generate static params for products:", error);
+    return [];
+  }
 }
 
 const getCachedProduct = cache(async (slug: string, locale: Locale) => {
@@ -80,7 +110,6 @@ export async function generateMetadata(
     };
   }
 
-  // استفاده مستقیم از متد متمرکز سئو با دامنه کامل، توییتر و روبات‌ها
   return generateProductSeoMetadata({
     product: {
       title: product.title,
@@ -97,19 +126,30 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   const { locale, slug } = await params;
   const currentLocale = (locale as Locale) || "fa";
 
-  const [product, allDimensions, allThicknesses, allFinishes, t, tMeta] =
-    await Promise.all([
-      getCachedProduct(slug, currentLocale),
-      getAllDimensionsService(),
-      getAllThicknessesService(),
-      getAllFinishesService(currentLocale),
-      getTranslations({ locale: currentLocale, namespace: "ProductDetail" }),
-      getTranslations({ locale: currentLocale, namespace: "Metadata" }),
-    ]);
+  // بهینه‌سازی: واکشی هم‌زمان محصول و ترجمه‌ها؛ کوئری‌های عمومی در صورت نیاز اجرا می‌شوند
+  const [product, t, tMeta] = await Promise.all([
+    getCachedProduct(slug, currentLocale),
+    getTranslations({ locale: currentLocale, namespace: "ProductDetail" }),
+    getTranslations({ locale: currentLocale, namespace: "Metadata" }),
+  ]);
 
   if (!product) {
     notFound();
   }
+
+  // جلوگیری از اجرای کوئری‌های تکراری در صورتی که سنگ مشخصات اختصاصی خود را دارد
+  const [fallbackDimensions, fallbackThicknesses, fallbackFinishes] =
+    await Promise.all([
+      !product.dimensions?.length
+        ? getAllDimensionsService()
+        : Promise.resolve([]),
+      !product.thicknesses?.length
+        ? getAllThicknessesService()
+        : Promise.resolve([]),
+      !product.finishes?.length
+        ? getAllFinishesService(currentLocale)
+        : Promise.resolve([]),
+    ]);
 
   const categoryTitle = product.category?.title || "";
   const categorySlug = product.category?.slug || "";
@@ -119,16 +159,16 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   const BreadcrumbArrow = isRtl ? ChevronLeft : ChevronRight;
 
   const resolvedDimensions = normalizeToStringArray(
-    product.dimensions?.length ? product.dimensions : allDimensions,
+    product.dimensions?.length ? product.dimensions : fallbackDimensions,
   );
   const resolvedThicknesses = normalizeToStringArray(
-    product.thicknesses?.length ? product.thicknesses : allThicknesses,
+    product.thicknesses?.length ? product.thicknesses : fallbackThicknesses,
   );
   const resolvedFinishes = normalizeToStringArray(
-    product.finishes?.length ? product.finishes : allFinishes,
+    product.finishes?.length ? product.finishes : fallbackFinishes,
   );
 
-  // ۱. تولید اسکیمای ساختاریافته BreadcrumbList
+  // ۱. ساختاربندی Breadcrumb Schema
   const breadcrumbItems = [
     { name: tMeta("home.title"), path: "" },
     { name: tMeta("products.title"), path: "/products" },
@@ -146,7 +186,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
   const breadcrumbSchema = getBreadcrumbSchema(breadcrumbItems, currentLocale);
 
-  // ۲. تولید اسکیمای جامع Product متصل به گراف Brand و سازمان
+  // ۲. ساختاربندی جامع Product Schema
   const productSchema = getProductSchema({
     product: {
       title: product.title,

@@ -43,14 +43,17 @@ export async function generateMetadata({
   });
 }
 
-export default async function ProductsPage({
-  params,
-  searchParams,
-}: PageProps) {
-  const { locale } = await params;
-  const sParams = await searchParams;
-
-  const currentLocale = (locale as Locale) || "fa";
+// کامپوننت داخلی و نامرئی جهت فچ دیتای سنگین و اسکیما در پس‌زمینه
+async function ProductsDataWrapper({
+  locale,
+  searchParamsPromise,
+}: {
+  locale: Locale;
+  searchParamsPromise: Promise<{
+    [key: string]: string | string[] | undefined;
+  }>;
+}) {
+  const sParams = await searchParamsPromise;
 
   const rawCategory = sParams.category || sParams.cat;
   const category = typeof rawCategory === "string" ? rawCategory : undefined;
@@ -69,7 +72,7 @@ export default async function ProductsPage({
     tMeta,
   ] = await Promise.all([
     getProductsService({
-      locale: currentLocale,
+      locale,
       page: 1,
       limit: 9,
       category,
@@ -77,26 +80,26 @@ export default async function ProductsPage({
       vein_pattern,
       search,
     }),
-    getCategoriesService(currentLocale),
-    getColorsService(currentLocale),
-    getVeinPatternsService(currentLocale),
+    getCategoriesService(locale),
+    getColorsService(locale),
+    getVeinPatternsService(locale),
     getProductsService({
-      locale: currentLocale,
+      locale,
       limit: 1,
     }),
-    getTranslations({ locale: currentLocale, namespace: "Metadata" }),
+    getTranslations({ locale, namespace: "Metadata" }),
   ]);
 
-  // تولید Breadcrumb Schema با استفاده از تابع موجود در seo.ts
+  // ساخت Breadcrumb Schema
   const breadcrumbSchema = getBreadcrumbSchema(
     [
       { name: tMeta("home.title"), path: "" },
       { name: tMeta("products.title"), path: "/products" },
     ],
-    currentLocale,
+    locale,
   );
 
-  // تولید Collection Schema شامل اسلب‌های بارگذاری شده برای درک بهتر موتورهای AI
+  // ساخت Collection Schema
   const productsSchema = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
@@ -107,21 +110,48 @@ export default async function ProductsPage({
       itemListElement: initialProducts.map((product, idx) => ({
         "@type": "ListItem",
         position: idx + 1,
-        url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://persisquartz.com"}/${currentLocale}/products/${product.slug}`,
+        url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://persisquartz.com"}/${locale}/products/${product.slug}`,
       })),
     },
   };
 
-  // ارسال آرایه از اسکیماها به تابع ایمن‌ساز شما
   const jsonLdPayload = [breadcrumbSchema, productsSchema];
 
   return (
-    <main className="container mx-auto px-4 sm:px-12 pt-28 sm:pt-36 pb-20 min-h-screen select-none">
+    <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLdReplacer(jsonLdPayload) }}
       />
+      <ProductGridClient
+        initialProducts={initialProducts}
+        initialMeta={initialMeta}
+        totalCatalogCount={totalBaseResult.meta.total_items}
+        category={category}
+        color={color}
+        search={search}
+        filterControl={
+          <ProductFiltersClient
+            categories={categories}
+            colors={colors}
+            veinPatterns={veinPatterns}
+          />
+        }
+      />
+    </>
+  );
+}
 
+// کامپوننت اصلی که بلافاصله به کاربر پاسخ داده و اسکلتون را نشان می‌دهد
+export default async function ProductsPage({
+  params,
+  searchParams,
+}: PageProps) {
+  const { locale } = await params;
+  const currentLocale = (locale as Locale) || "fa";
+
+  return (
+    <main className="container mx-auto px-4 sm:px-12 pt-28 sm:pt-36 pb-20 min-h-screen select-none">
       <PageWatermarkHeader
         watermark="COLLECTION"
         title="Persis Quartz Catalog"
@@ -130,20 +160,9 @@ export default async function ProductsPage({
 
       <section className="w-full">
         <Suspense fallback={<SkeletonLoader />}>
-          <ProductGridClient
-            initialProducts={initialProducts}
-            initialMeta={initialMeta}
-            totalCatalogCount={totalBaseResult.meta.total_items}
-            category={category}
-            color={color}
-            search={search}
-            filterControl={
-              <ProductFiltersClient
-                categories={categories}
-                colors={colors}
-                veinPatterns={veinPatterns}
-              />
-            }
+          <ProductsDataWrapper
+            locale={currentLocale}
+            searchParamsPromise={searchParams}
           />
         </Suspense>
       </section>
