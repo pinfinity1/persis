@@ -1,16 +1,16 @@
+// src/app/[locale]/contact/page.tsx
 import React, { Suspense } from "react";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { ContactFormClient } from "@/components/contact/contact-form-client";
-import {
-  Phone,
-  Mail,
-  Factory,
-  Clock,
-  ShieldCheck,
-  ArrowUpRight,
-} from "lucide-react";
+import { Phone, Mail, Factory, ArrowUpRight } from "lucide-react";
 import { PageWatermarkHeader } from "@/components/shared/page-watermark-header";
+import {
+  generateSeoMetadata,
+  getOrganizationSchema,
+  safeJsonLdReplacer,
+  type Locale,
+} from "@/lib/seo";
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -20,25 +20,47 @@ export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "ContactPage" });
+  const currentLocale = (locale as Locale) || "fa";
+  const t = await getTranslations({
+    locale: currentLocale,
+    namespace: "Metadata",
+  });
 
-  return {
-    title: t("metaTitle"),
-    description: t("metaDescription"),
-    openGraph: {
-      title: t("metaTitle"),
-      description: t("metaDescription"),
-      images: ["/PersisQuartz-Red.png"],
-    },
-  };
+  return generateSeoMetadata({
+    title: t("contact.title"),
+    description: t("contact.description"),
+    locale: currentLocale,
+    path: "/contact",
+  });
 }
 
 export default async function ContactPage({ params }: PageProps) {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "ContactPage" });
+  const currentLocale = (locale as Locale) || "fa";
+  const t = await getTranslations({
+    locale: currentLocale,
+    namespace: "ContactPage",
+  });
+  const tMeta = await getTranslations({
+    locale: currentLocale,
+    namespace: "Metadata",
+  });
+
+  const contactSchema = {
+    "@context": "https://schema.org",
+    "@type": "ContactPage",
+    name: tMeta("contact.title"),
+    description: tMeta("contact.description"),
+    mainEntity: getOrganizationSchema(currentLocale),
+  };
 
   return (
     <main className="min-h-screen bg-background pt-28 sm:pt-36 pb-20 select-none">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLdReplacer(contactSchema) }}
+      />
+
       <div className="container mx-auto px-4 sm:px-12 space-y-10 sm:space-y-14">
         <PageWatermarkHeader
           watermark="CONTACT"
@@ -114,7 +136,6 @@ export default async function ContactPage({ params }: PageProps) {
             </div>
           </div>
 
-          {/* ستون فرم و تعاملات */}
           {/* ستون فرم و تعاملات با لودینگ آیکون‌دار */}
           <div className="lg:col-span-8 bg-card border border-border/60 p-5 sm:p-8 shadow-sm">
             <Suspense

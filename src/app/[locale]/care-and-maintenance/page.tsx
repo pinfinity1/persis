@@ -1,3 +1,4 @@
+// src/app/[locale]/care-and-maintenance/page.tsx
 import React from "react";
 import type { Metadata } from "next";
 import Image from "next/image";
@@ -9,6 +10,11 @@ import { RoutineAccordion } from "@/components/care/routine-accordion";
 import { getCarePageDataService } from "@/services/care.service";
 import { CareIcon } from "@/components/care/care-icons";
 import { ArrowUpRight, FileText } from "lucide-react";
+import {
+  safeJsonLdReplacer,
+  generateSeoMetadata,
+  type Locale,
+} from "@/lib/seo";
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -18,22 +24,23 @@ export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "CareMaintenance" });
+  const currentLocale = (locale as Locale) || "fa";
+  const t = await getTranslations({
+    locale: currentLocale,
+    namespace: "Metadata",
+  });
 
-  return {
-    title: t("metaTitle"),
-    description: t("metaDescription"),
-    openGraph: {
-      title: t("metaTitle"),
-      description: t("metaDescription"),
-      images: ["/PersisQuartz-Red.png"],
-    },
-  };
+  return generateSeoMetadata({
+    title: t("care.title"),
+    description: t("care.description"),
+    locale: currentLocale,
+    path: "/care-and-maintenance",
+  });
 }
 
 export default async function CareAndMaintenancePage({ params }: PageProps) {
   const { locale } = await params;
-  const currentLocale = (locale as "fa" | "en" | "ar") || "fa";
+  const currentLocale = (locale as Locale) || "fa";
 
   const [t, careData] = await Promise.all([
     getTranslations({ locale: currentLocale, namespace: "CareMaintenance" }),
@@ -102,25 +109,50 @@ export default async function CareAndMaintenancePage({ params }: PageProps) {
 
   const finalRoutineSteps =
     careData.steps.length > 0 ? careData.steps : defaultRoutineSteps;
-
   const finalRules = careData.rules.length > 0 ? careData.rules : defaultRules;
 
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      ...finalRoutineSteps.map((step) => ({
+        "@type": "Question",
+        name: step.title,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: step.desc,
+        },
+      })),
+      ...finalRules.map((rule) => ({
+        "@type": "Question",
+        name: rule.title,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: rule.desc,
+        },
+      })),
+    ],
+  };
+
   return (
-    <main className="min-h-screen bg-background pb-20 sm:pb-32 select-none">
-      {/* 1. Page Header */}
-      <div className="container mx-auto px-4 sm:px-12 pt-28 sm:pt-36 pb-2 select-none">
+    <main className="min-h-screen bg-background pb-20 sm:pb-32">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLdReplacer(faqJsonLd) }}
+      />
+
+      <div className="container mx-auto px-4 sm:px-12 pt-28 sm:pt-36 pb-2">
         <PageWatermarkHeader watermark="MAINTENANCE" title={t("tagline")} />
       </div>
 
-      {/* 2. Material DNA Grid */}
       <section className="container mx-auto px-6 sm:px-12 pt-16 sm:pt-20">
         <div className="mb-8 space-y-1">
           <span className="text-[10px] sm:text-xs uppercase tracking-widest text-primary block">
             {t("sectionDnaTag")}
           </span>
-          <h2 className="text-xl sm:text-2xl font-light text-foreground">
+          <h1 className="text-xl sm:text-2xl font-light text-foreground">
             {t("featuresSectionTitle")}
-          </h2>
+          </h1>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
@@ -146,7 +178,6 @@ export default async function CareAndMaintenancePage({ params }: PageProps) {
         </div>
       </section>
 
-      {/* 3. Routine Accordion */}
       <RoutineAccordion
         sectionTag={t("sectionRoutineTag")}
         sectionTitle={t("routineSectionTitle")}
@@ -154,7 +185,6 @@ export default async function CareAndMaintenancePage({ params }: PageProps) {
         mediaSrc={careData.mediaSrc}
       />
 
-      {/* 4. Dark Preventive Rules Box */}
       <section className="container mx-auto px-6 sm:px-12 pt-20 sm:pt-24">
         <div className="bg-neutral-950 text-neutral-200 border border-neutral-800 p-8 sm:p-14 lg:p-16">
           <div className="max-w-2xl mb-12 sm:mb-16 space-y-2">
@@ -179,9 +209,9 @@ export default async function CareAndMaintenancePage({ params }: PageProps) {
                   />
                 </div>
                 <div className="space-y-2">
-                  <h4 className="text-sm sm:text-base font-medium text-white tracking-wide">
+                  <h3 className="text-sm sm:text-base font-medium text-white tracking-wide">
                     {rule.title}
-                  </h4>
+                  </h3>
                   <p className="text-xs sm:text-sm font-light text-neutral-400 leading-relaxed text-justify">
                     {rule.desc}
                   </p>
@@ -192,7 +222,6 @@ export default async function CareAndMaintenancePage({ params }: PageProps) {
         </div>
       </section>
 
-      {/* 5. CTA Section */}
       <section className="container mx-auto px-6 sm:px-12 pt-16 sm:pt-20">
         <div className="p-8 sm:p-12 bg-card border border-border/60 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="space-y-2 text-center md:text-start">

@@ -5,6 +5,12 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { getAboutPageDataService } from "@/services/about.service";
 import { PageWatermarkHeader } from "@/components/shared/page-watermark-header";
+import {
+  generateSeoMetadata,
+  getOrganizationSchema,
+  safeJsonLdReplacer,
+  type Locale,
+} from "@/lib/seo";
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -14,24 +20,22 @@ export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "About" });
+  const currentLocale = (locale as Locale) || "fa";
+  const t = await getTranslations({
+    locale: currentLocale,
+    namespace: "Metadata",
+  });
 
-  return {
-    title: t("metaTitle"),
-    description: t("metaDescription"),
-    openGraph: {
-      title: t("metaTitle"),
-      description: t("metaDescription"),
-      images: ["/PersisQuartz-Red.png"],
-    },
-  };
+  return generateSeoMetadata({
+    title: t("about.title"),
+    description: t("about.description"),
+    locale: currentLocale,
+    path: "/about-persis",
+  });
 }
 
 const FALLBACK_IMG = "/PersisQuartz-Red.png";
 
-/**
- * کامپوننت پایدار جهت سنترسازی هندسی Placeholder لوگو در برابر عکس‌های واقعی
- */
 const SmartMediaBox = ({
   src,
   alt,
@@ -79,11 +83,16 @@ const SmartMediaBox = ({
 
 export default async function AboutPersisPage({ params }: PageProps) {
   const { locale } = await params;
-  const currentLocale = (locale as "fa" | "en" | "ar") || "fa";
+  const currentLocale = (locale as Locale) || "fa";
+  const t = await getTranslations({
+    locale: currentLocale,
+    namespace: "Metadata",
+  });
 
-  const [data, t] = await Promise.all([
+  const [data, tGlobal, tMeta] = await Promise.all([
     getAboutPageDataService(currentLocale),
     getTranslations({ locale: currentLocale, namespace: "About" }),
+    getTranslations({ locale: currentLocale, namespace: "Metadata" }),
   ]);
 
   const gallery = data.gallery.images;
@@ -93,8 +102,21 @@ export default async function AboutPersisPage({ params }: PageProps) {
     ? gallery.slice(mid)
     : galleryRow1;
 
+  const aboutSchema = {
+    "@context": "https://schema.org",
+    "@type": "AboutPage",
+    name: tMeta("about.title"),
+    description: tMeta("about.description"),
+    mainEntity: getOrganizationSchema(currentLocale),
+  };
+
   return (
     <main className="min-h-screen bg-background select-none flex flex-col overflow-hidden">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLdReplacer(aboutSchema) }}
+      />
+
       {/* 1. Header Hero with Watermark */}
       <section className="relative w-full pt-28 pb-14 sm:pt-36 sm:pb-20 bg-muted/20 border-b border-border/40 overflow-hidden select-none">
         <div

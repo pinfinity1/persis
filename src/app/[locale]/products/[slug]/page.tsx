@@ -16,6 +16,7 @@ import { ProductConfigurator } from "@/components/products/product-configurator"
 import { ProductSpecsMatrix } from "@/components/products/product-specs-matrix";
 import { ProductAppliedGallery } from "@/components/products/product-applied-gallery";
 import { ChevronRight, ChevronLeft } from "lucide-react";
+import { safeJsonLdReplacer } from "@/lib/seo";
 
 interface ProductPageProps {
   params: Promise<{ locale: string; slug: string }>;
@@ -25,17 +26,8 @@ const getCachedProduct = cache(async (slug: string, locale: Locale) => {
   return await getProductBySlugService(slug, locale);
 });
 
-function safeJsonLdReplacer(data: Record<string, unknown>): string {
-  return JSON.stringify(data)
-    .replace(/</g, "\\u003c")
-    .replace(/>/g, "\\u003e")
-    .replace(/&/g, "\\u0026")
-    .replace(/\u2028/g, "\\u2028")
-    .replace(/\u2029/g, "\\u2029");
-}
-
 function resolveMediaUrl(
-  thumbnailUrl: string | undefined,
+  thumbnailUrl: string | undefined | null,
   fallback = "/PersisQuartz-Red.png",
 ): string {
   if (
@@ -46,6 +38,20 @@ function resolveMediaUrl(
     return fallback;
   }
   return thumbnailUrl;
+}
+
+// حل مشکل Property 'title' does not exist on type 'string'
+function normalizeToStringArray(items: unknown): string[] {
+  if (!Array.isArray(items)) return [];
+  return items
+    .map((item) => {
+      if (typeof item === "string") return item;
+      if (typeof item === "object" && item !== null && "title" in item) {
+        return String((item as Record<string, unknown>).title || "");
+      }
+      return "";
+    })
+    .filter(Boolean);
 }
 
 export async function generateMetadata(
@@ -69,13 +75,13 @@ export async function generateMetadata(
     };
   }
 
+  // حذف کامل اسامی فارسی برند و جایگزینی با Persis Quartz
   const metaTitle =
     product.meta_title || `${product.title} (${product.code}) | Persis Quartz`;
   const metaDescription =
     product.meta_description ||
     product.description ||
-    `اسلب سنگ کوارتز کد ${product.code}`;
-
+    `Engineered quartz slab model ${product.title} by Persis Quartz.`;
   const imageUrl = resolveMediaUrl(product.thumbnail);
 
   return {
@@ -87,6 +93,7 @@ export async function generateMetadata(
         fa: `/fa/products/${slug}`,
         en: `/en/products/${slug}`,
         ar: `/ar/products/${slug}`,
+        "x-default": `/fa/products/${slug}`,
       },
     },
     openGraph: {
@@ -94,14 +101,7 @@ export async function generateMetadata(
       description: metaDescription,
       url: `/${currentLocale}/products/${slug}`,
       siteName: "Persis Quartz",
-      images: [
-        {
-          url: imageUrl,
-          width: 1200,
-          height: 900,
-          alt: product.title,
-        },
-      ],
+      images: [{ url: imageUrl, width: 1200, height: 900, alt: product.title }],
       type: "website",
     },
   };
@@ -111,6 +111,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   const { locale, slug } = await params;
   const currentLocale = (locale as Locale) || "fa";
 
+  // رفع ارور Expected 1 arguments با پاس دادن currentLocale
   const [product, allDimensions, allThicknesses, allFinishes, t] =
     await Promise.all([
       getCachedProduct(slug, currentLocale),
@@ -141,7 +142,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     category: categoryTitle,
     brand: {
       "@type": "Brand",
-      name: "Persis Quartz",
+      name: "Persis Quartz", // هاردکد شدن نام انگلیسی برای حفظ گراف هویتی
     },
     offers: {
       "@type": "AggregateOffer",
@@ -153,30 +154,23 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     },
   };
 
-  const resolvedDimensions =
-    Array.isArray(product.dimensions) && product.dimensions.length > 0
-      ? product.dimensions
-      : allDimensions;
-
-  const resolvedThicknesses =
-    Array.isArray(product.thicknesses) && product.thicknesses.length > 0
-      ? product.thicknesses
-      : allThicknesses;
-
-  const resolvedFinishes =
-    Array.isArray(product.finishes) && product.finishes.length > 0
-      ? product.finishes
-      : allFinishes.map((f) => f.title);
+  const resolvedDimensions = normalizeToStringArray(
+    product.dimensions?.length ? product.dimensions : allDimensions,
+  );
+  const resolvedThicknesses = normalizeToStringArray(
+    product.thicknesses?.length ? product.thicknesses : allThicknesses,
+  );
+  const resolvedFinishes = normalizeToStringArray(
+    product.finishes?.length ? product.finishes : allFinishes,
+  );
 
   return (
     <main className="container mx-auto px-4 sm:px-12 py-24 sm:py-28 min-h-screen space-y-14">
-      {/* ۱. سئوی ساختاریافته */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLdReplacer(jsonLdPayload) }}
       />
 
-      {/* ۲. مسیر ناوبری (Breadcrumbs) */}
       <nav
         aria-label="Breadcrumb"
         className="flex items-center gap-2 text-xs text-muted-foreground pb-3 border-b border-border/30"
@@ -208,7 +202,6 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         </span>
       </nav>
 
-      {/* ۳. اسلب اصلی با زوم + بخش تنظیمات B2B محصول */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-stretch">
         <div className="lg:col-span-6 flex flex-col">
           <ProductGallery
@@ -217,7 +210,6 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             code={product.code}
           />
         </div>
-
         <div className="lg:col-span-6 flex flex-col">
           <ProductConfigurator
             product={product}
@@ -226,10 +218,13 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         </div>
       </div>
 
-      {/* ۴. گالری افقی تصاویر اجرا شده در محیط (دقیقاً زیر گرید بالا و بالای مشخصات) */}
-      <ProductAppliedGallery title={product.title} gallery={product.gallery} />
+      {product.gallery && product.gallery.length > 0 && (
+        <ProductAppliedGallery
+          title={product.title}
+          gallery={product.gallery as any}
+        />
+      )}
 
-      {/* ۵. ماتریس مشخصات مهندسی سنگ */}
       <ProductSpecsMatrix
         locale={currentLocale}
         dimensions={resolvedDimensions}

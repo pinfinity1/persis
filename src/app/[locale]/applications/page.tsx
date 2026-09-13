@@ -5,6 +5,12 @@ import { PageWatermarkHeader } from "@/components/shared/page-watermark-header";
 import { PinnedApplicationsShowcase } from "@/components/applications/pinned-applications-showcase";
 import { ApplicationSectionsList } from "@/components/applications/application-sections-list";
 import { getApplicationsPageDataService } from "@/services/application.service";
+import { getTranslations } from "next-intl/server";
+import {
+  generateSeoMetadata,
+  safeJsonLdReplacer,
+  type Locale,
+} from "@/lib/seo";
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -14,25 +20,52 @@ export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { locale } = await params;
-  return {
-    title:
-      locale === "fa"
-        ? "کاربردها و فضاهای معماری | پرسیس کوارتز"
-        : "Architectural Applications | Persis Quartz",
-    description:
-      "بررسی مشخصات فنی و کاربری اسلب‌های مهندسی‌شده پرسیس کوارتز در فضاهای مسکونی، محیط‌های بهداشتی، و پروژه‌های پرتردد تجاری.",
-  };
+  const currentLocale = (locale as Locale) || "fa";
+  const t = await getTranslations({
+    locale: currentLocale,
+    namespace: "Metadata",
+  });
+
+  return generateSeoMetadata({
+    title: t("applications.title"),
+    description: t("applications.description"),
+    locale: currentLocale,
+    path: "/applications",
+  });
 }
 
 export default async function ApplicationsPage({ params }: PageProps) {
   const { locale } = await params;
-  const currentLocale = (locale as "fa" | "en" | "ar") || "fa";
+  const currentLocale = (locale as Locale) || "fa";
 
-  const data = await getApplicationsPageDataService(currentLocale);
+  const [data, tMeta] = await Promise.all([
+    getApplicationsPageDataService(currentLocale),
+    getTranslations({ locale: currentLocale, namespace: "Metadata" }),
+  ]);
+
+  const appSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: tMeta("applications.title"),
+    description: tMeta("applications.description"),
+    mainEntity: {
+      "@type": "ItemList",
+      itemListElement: data.sections.map((sec, idx) => ({
+        "@type": "ListItem",
+        position: idx + 1,
+        name: sec.title,
+        description: sec.desc,
+      })),
+    },
+  };
 
   return (
     <div className="relative min-h-screen bg-background">
-      {/* هدر و مانیفست ادیتوریال */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLdReplacer(appSchema) }}
+      />
+
       <div className="container mx-auto px-6 sm:px-12 pt-28 sm:pt-36 pb-16 sm:pb-20 select-none">
         <PageWatermarkHeader
           watermark="APPLICATIONS"
@@ -60,12 +93,10 @@ export default async function ApplicationsPage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* شوکیس پین‌شده */}
       {data.showcase.length > 0 && (
         <PinnedApplicationsShowcase items={data.showcase} />
       )}
 
-      {/* لیست بخش‌های کاربری */}
       {data.sections.length > 0 && (
         <ApplicationSectionsList sections={data.sections} />
       )}

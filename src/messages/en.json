@@ -1,4 +1,38 @@
 {
+  "Metadata": {
+    "home": {
+      "title": "Engineered Quartz Surfaces & Architectural Slabs",
+      "description": "Persis Quartz manufacturer of premium engineered quartz surfaces and architectural slabs with zero water absorption and unmatched durability."
+    },
+    "about": {
+      "title": "About Us | Pioneering Innovation & Engineering",
+      "description": "Discover our automated manufacturing, quality benchmarks, and the harmonious integration of artistry and industrial precision."
+    },
+    "contact": {
+      "title": "Contact Us | Client Services & Global Inquiries",
+      "description": "Get in touch with Persis Quartz headquarters, manufacturing plant, and engineering consultants for bespoke architectural inquiries."
+    },
+    "dealers": {
+      "title": "Authorized Dealers & Showroom Network",
+      "description": "Locate official distributors, fabrication partners, and luxury architectural showrooms representing Persis Quartz."
+    },
+    "products": {
+      "title": "Quartz Slabs & Comprehensive Collections",
+      "description": "Explore the full spectrum of engineered quartz slabs, color families, and thickness options designed for luxury surfaces."
+    },
+    "applications": {
+      "title": "Architectural Applications & Spatial Design",
+      "description": "Explore standards and spatial integration of engineered slabs across kitchen countertops, wellness bathrooms, and commercial zones."
+    },
+    "catalogs": {
+      "title": "Publications & Technical Documentation",
+      "description": "Download official annual catalogs, physical and chemical testing data, and architectural installation manuals."
+    },
+    "care": {
+      "title": "Care & Maintenance Instructions",
+      "description": "Official maintenance protocol for daily cleaning, stain removal techniques, and preventive care for quartz surfaces."
+    }
+  },
   "Index": {
     "title": "Persis Quartz"
   },

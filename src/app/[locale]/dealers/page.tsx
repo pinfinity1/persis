@@ -10,6 +10,11 @@ import { DealerFilterClient } from "@/components/dealers/dealer-filter-client";
 import { DealerCard } from "@/components/dealers/dealer-card";
 import SkeletonLoader from "@/components/products/skeleton-loader";
 import { PageWatermarkHeader } from "@/components/shared/page-watermark-header";
+import {
+  generateSeoMetadata,
+  safeJsonLdReplacer,
+  type Locale,
+} from "@/lib/seo";
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -20,56 +25,56 @@ export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "Dealers" });
+  const currentLocale = (locale as Locale) || "fa";
+  const t = await getTranslations({
+    locale: currentLocale,
+    namespace: "Metadata",
+  });
 
-  return {
-    title: t("metaTitle"),
-    description: t("metaDescription"),
-    openGraph: {
-      title: t("metaTitle"),
-      description: t("metaDescription"),
-      images: ["/PersisQuartz-Red.png"],
-    },
-  };
-}
-
-function safeJsonLdReplacer(data: Record<string, unknown>): string {
-  return JSON.stringify(data)
-    .replace(/</g, "\\u003c")
-    .replace(/>/g, "\\u003e")
-    .replace(/&/g, "\\u0026");
+  return generateSeoMetadata({
+    title: t("dealers.title"),
+    description: t("dealers.description"),
+    locale: currentLocale,
+    path: "/dealers",
+  });
 }
 
 export default async function DealersPage({ params, searchParams }: PageProps) {
   const { locale } = await params;
   const sParams = await searchParams;
-  const currentLocale = (locale as "fa" | "en" | "ar") || "fa";
+  const currentLocale = (locale as Locale) || "fa";
 
   const selectedProvince =
     typeof sParams.province === "string" ? sParams.province : undefined;
 
-  const [dealers, provinces, t] = await Promise.all([
+  const [dealers, provinces, t, tMeta] = await Promise.all([
     getDealersService({ locale: currentLocale, province: selectedProvince }),
     getActiveProvincesService(currentLocale),
     getTranslations({ locale: currentLocale, namespace: "Dealers" }),
+    getTranslations({ locale: currentLocale, namespace: "Metadata" }),
   ]);
 
   const jsonLdPayload = {
     "@context": "https://schema.org",
-    "@type": "Organization",
-    name: "Persis Quartz",
-    department: dealers.map((d) => ({
-      "@type": "LocalBusiness",
-      name: d.title,
-      telephone: d.phone,
-      address: {
-        "@type": "PostalAddress",
-        streetAddress: d.address,
-        addressLocality: d.city,
-        addressRegion: d.province,
-        addressCountry: "IR",
-      },
-    })),
+    "@type": "WebPage",
+    name: tMeta("dealers.title"),
+    description: tMeta("dealers.description"),
+    mainEntity: {
+      "@type": "Organization",
+      name: "Persis Quartz",
+      department: dealers.map((d) => ({
+        "@type": "LocalBusiness",
+        name: d.title,
+        telephone: d.phone,
+        address: {
+          "@type": "PostalAddress",
+          streetAddress: d.address,
+          addressLocality: d.city,
+          addressRegion: d.province,
+          addressCountry: "IR",
+        },
+      })),
+    },
   };
 
   return (
