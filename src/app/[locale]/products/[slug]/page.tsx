@@ -1,3 +1,4 @@
+// src/app/[locale]/products/[slug]/page.tsx
 import React, { cache } from "react";
 import { notFound } from "next/navigation";
 import type { Metadata, ResolvingMetadata } from "next";
@@ -16,7 +17,12 @@ import { ProductConfigurator } from "@/components/products/product-configurator"
 import { ProductSpecsMatrix } from "@/components/products/product-specs-matrix";
 import { ProductAppliedGallery } from "@/components/products/product-applied-gallery";
 import { ChevronRight, ChevronLeft } from "lucide-react";
-import { safeJsonLdReplacer } from "@/lib/seo";
+import {
+  generateProductSeoMetadata,
+  getProductSchema,
+  getBreadcrumbSchema,
+  safeJsonLdReplacer,
+} from "@/lib/seo";
 
 interface ProductPageProps {
   params: Promise<{ locale: string; slug: string }>;
@@ -40,7 +46,6 @@ function resolveMediaUrl(
   return thumbnailUrl;
 }
 
-// حل مشکل Property 'title' does not exist on type 'string'
 function normalizeToStringArray(items: unknown): string[] {
   if (!Array.isArray(items)) return [];
   return items
@@ -65,7 +70,7 @@ export async function generateMetadata(
   try {
     product = await getCachedProduct(slug, currentLocale);
   } catch (error) {
-    console.error("Metadata error:", error);
+    console.error("Metadata fetch error:", error);
   }
 
   if (!product) {
@@ -75,50 +80,31 @@ export async function generateMetadata(
     };
   }
 
-  // حذف کامل اسامی فارسی برند و جایگزینی با Persis Quartz
-  const metaTitle =
-    product.meta_title || `${product.title} (${product.code}) | Persis Quartz`;
-  const metaDescription =
-    product.meta_description ||
-    product.description ||
-    `Engineered quartz slab model ${product.title} by Persis Quartz.`;
-  const imageUrl = resolveMediaUrl(product.thumbnail);
-
-  return {
-    title: metaTitle,
-    description: metaDescription,
-    alternates: {
-      canonical: `/${currentLocale}/products/${slug}`,
-      languages: {
-        fa: `/fa/products/${slug}`,
-        en: `/en/products/${slug}`,
-        ar: `/ar/products/${slug}`,
-        "x-default": `/fa/products/${slug}`,
-      },
+  // استفاده مستقیم از متد متمرکز سئو با دامنه کامل، توییتر و روبات‌ها
+  return generateProductSeoMetadata({
+    product: {
+      title: product.title,
+      code: product.code,
+      description: product.description,
+      thumbnail: resolveMediaUrl(product.thumbnail),
+      slug: product.slug,
     },
-    openGraph: {
-      title: metaTitle,
-      description: metaDescription,
-      url: `/${currentLocale}/products/${slug}`,
-      siteName: "Persis Quartz",
-      images: [{ url: imageUrl, width: 1200, height: 900, alt: product.title }],
-      type: "website",
-    },
-  };
+    locale: currentLocale,
+  });
 }
 
 export default async function ProductDetailPage({ params }: ProductPageProps) {
   const { locale, slug } = await params;
   const currentLocale = (locale as Locale) || "fa";
 
-  // رفع ارور Expected 1 arguments با پاس دادن currentLocale
-  const [product, allDimensions, allThicknesses, allFinishes, t] =
+  const [product, allDimensions, allThicknesses, allFinishes, t, tMeta] =
     await Promise.all([
       getCachedProduct(slug, currentLocale),
       getAllDimensionsService(),
       getAllThicknessesService(),
       getAllFinishesService(currentLocale),
       getTranslations({ locale: currentLocale, namespace: "ProductDetail" }),
+      getTranslations({ locale: currentLocale, namespace: "Metadata" }),
     ]);
 
   if (!product) {
@@ -132,28 +118,6 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   const isRtl = currentLocale === "fa" || currentLocale === "ar";
   const BreadcrumbArrow = isRtl ? ChevronLeft : ChevronRight;
 
-  const jsonLdPayload: Record<string, unknown> = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: product.title,
-    image: [thumbnailUrl],
-    description: product.description || "",
-    sku: product.code,
-    category: categoryTitle,
-    brand: {
-      "@type": "Brand",
-      name: "Persis Quartz", // هاردکد شدن نام انگلیسی برای حفظ گراف هویتی
-    },
-    offers: {
-      "@type": "AggregateOffer",
-      priceCurrency: "IRR",
-      availability:
-        product.is_in_stock === "active"
-          ? "https://schema.org/InStock"
-          : "https://schema.org/Discontinued",
-    },
-  };
-
   const resolvedDimensions = normalizeToStringArray(
     product.dimensions?.length ? product.dimensions : allDimensions,
   );
@@ -163,6 +127,42 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   const resolvedFinishes = normalizeToStringArray(
     product.finishes?.length ? product.finishes : allFinishes,
   );
+
+  // ۱. تولید اسکیمای ساختاریافته BreadcrumbList
+  const breadcrumbItems = [
+    { name: tMeta("home.title"), path: "" },
+    { name: tMeta("products.title"), path: "/products" },
+  ];
+  if (categoryTitle && categorySlug) {
+    breadcrumbItems.push({
+      name: categoryTitle,
+      path: `/products?category=${categorySlug}`,
+    });
+  }
+  breadcrumbItems.push({
+    name: product.title,
+    path: `/products/${product.slug}`,
+  });
+
+  const breadcrumbSchema = getBreadcrumbSchema(breadcrumbItems, currentLocale);
+
+  // ۲. تولید اسکیمای جامع Product متصل به گراف Brand و سازمان
+  const productSchema = getProductSchema({
+    product: {
+      title: product.title,
+      code: product.code,
+      slug: product.slug,
+      description: product.description,
+      thumbnail: thumbnailUrl,
+      is_in_stock: product.is_in_stock,
+    },
+    categoryTitle,
+    dimensions: resolvedDimensions,
+    thicknesses: resolvedThicknesses,
+    locale: currentLocale,
+  });
+
+  const jsonLdPayload = [breadcrumbSchema, productSchema];
 
   return (
     <main className="container mx-auto px-4 sm:px-12 py-24 sm:py-28 min-h-screen space-y-14">

@@ -1,5 +1,6 @@
 import { ExcelProductImportControl } from "@/components/admin/ExcelProductImportControl";
 import { ExcelCategoryImportControl } from "@/components/admin/ExcelCategoryImportControl";
+import { ExcelDealerImportControl } from "@/components/admin/ExcelDealerImportControl";
 import { CollectionCards } from "@payloadcms/next/rsc";
 
 export const importMap: Record<string, any> = {
@@ -7,5 +8,7 @@ export const importMap: Record<string, any> = {
     ExcelProductImportControl,
   "@/components/admin/ExcelCategoryImportControl#ExcelCategoryImportControl":
     ExcelCategoryImportControl,
+  "@/components/admin/ExcelDealerImportControl#ExcelDealerImportControl":
+    ExcelDealerImportControl,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards,
 };

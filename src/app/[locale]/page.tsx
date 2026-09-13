@@ -25,7 +25,7 @@ export async function generateMetadata({
 }: PageProps): Promise<Metadata> {
   const { locale } = await params;
   const currentLocale = (locale as Locale) || "fa";
-  // فراخوانی متمرکز از فضای Metadata در فایل JSON
+
   const t = await getTranslations({
     locale: currentLocale,
     namespace: "Metadata",
@@ -41,8 +41,9 @@ export async function generateMetadata({
 
 export default async function HomePage({ params }: PageProps) {
   const { locale } = await params;
-  const currentLocale = (locale as Locale) || "fa";
+  const currentLocale = (locale as "fa" | "en" | "ar") || "fa";
 
+  // دو واکشی موازی سروری
   const [homeData, featuredProducts] = await Promise.all([
     getHomePageDataService(currentLocale),
     getFeaturedProductsService(currentLocale),
@@ -62,9 +63,9 @@ export default async function HomePage({ params }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLdReplacer(homeGraph) }}
       />
-      {homeData.hero && <HeroBanner heroData={homeData.hero} />}
+      <HeroBanner heroData={homeData.hero} />
       <BrandIntro />
-      {featuredProducts.length > 0 && (
+      {featuredProducts && featuredProducts.length > 0 && (
         <ProductShowcase products={featuredProducts} />
       )}
       <InfoCardsStack images={homeData.infoCardsImages} />
