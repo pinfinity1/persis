@@ -6,7 +6,8 @@
     "dev": "next dev",
     "clean": "rm -rf .next && next dev",
     "build": "next build",
-    "start": "node .next/standalone/server.js",
+    "build:local": "next build && cp -r public .next/standalone/ && cp -r .next/static .next/standalone/.next/",
+    "start": "node --env-file=.env.local .next/standalone/server.js",
     "lint": "eslint",
     "payload": "payload"
   },

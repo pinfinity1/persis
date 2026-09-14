@@ -60,7 +60,7 @@ export default buildConfig({
     fallback: true,
   },
 
-  secret: process.env.PAYLOAD_SECRET || "",
+  secret: process.env.PAYLOAD_SECRET || "fallback-secret-key-for-build-step",
 
   typescript: {
     outputFile: path.resolve(dirname, "payload-types.ts"),
@@ -70,24 +70,24 @@ export default buildConfig({
     pool: {
       connectionString: process.env.DATABASE_URI || "",
     },
-    push: true,
+    push: false,
   }),
 
   plugins: [
     s3Storage({
       collections: {
         media: {
-          prefix: "media", // پوشه‌بندی مرتب داخل باکت
+          prefix: "media",
         },
       },
-      bucket: process.env.S3_BUCKET || "persisquartz-media",
+      bucket: process.env.S3_BUCKET || "persisquartz",
       config: {
         credentials: {
           accessKeyId: process.env.S3_ACCESS_KEY || "",
           secretAccessKey: process.env.S3_SECRET_KEY || "",
         },
-        region: process.env.S3_REGION || "default",
-        endpoint: process.env.S3_ENDPOINT || "http://127.0.0.1:9000",
+        region: process.env.S3_REGION || "us-east-1",
+        endpoint: process.env.S3_ENDPOINT || "http://minio:9000",
         forcePathStyle: true,
       },
     }),

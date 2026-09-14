@@ -1,24 +1,4 @@
 services:
-  app:
-    image: ${DOCKER_IMAGE}
-    container_name: persis_app
-    restart: always
-    env_file:
-      - .env
-    ports:
-      - "127.0.0.1:3000:3000"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      minio-setup:
-        condition: service_completed_successfully
-    networks:
-      - prod_network
-    deploy:
-      resources:
-        limits:
-          memory: 1500M
-
   postgres:
     image: postgres:15-alpine
     container_name: persis_postgres
@@ -38,6 +18,53 @@ services:
       resources:
         limits:
           memory: 1000M
+
+  # سرویس مجزا برای همگام‌سازی تضمینی اسکیما بدون متوقف کردن سرور
+  db-init:
+    image: ${DOCKER_IMAGE}
+    container_name: persis_db_init
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      node -e "
+        import('./src/payload.config.ts').then(async (m) => {
+          const { getPayload } = await import('payload');
+          const config = await (m.default || m);
+          await getPayload({ config: { ...config, db: { ...config.db, push: true } } });
+          console.log('✅ [Production] DB schema synced successfully.');
+          process.exit(0);
+        }).catch((err) => {
+          console.error('❌ DB Sync Failed:', err);
+          process.exit(1);
+        });
+      "
+    networks:
+      - prod_network
+
+  app:
+    image: ${DOCKER_IMAGE}
+    container_name: persis_app
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
+      minio-setup:
+        condition: service_completed_successfully
+    networks:
+      - prod_network
+    deploy:
+      resources:
+        limits:
+          memory: 1500M
 
   minio:
     image: quay.io/minio/minio:latest
