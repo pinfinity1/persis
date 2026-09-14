@@ -9,38 +9,9 @@ services:
       - pg_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-      interval: 10s
+      interval: 5s
       timeout: 5s
       retries: 5
-    networks:
-      - prod_network
-    deploy:
-      resources:
-        limits:
-          memory: 1000M
-
-  # سرویس مجزا برای همگام‌سازی تضمینی اسکیما بدون متوقف کردن سرور
-  db-init:
-    image: ${DOCKER_IMAGE}
-    container_name: persis_db_init
-    env_file:
-      - .env
-    depends_on:
-      postgres:
-        condition: service_healthy
-    command: >
-      node -e "
-        import('./src/payload.config.ts').then(async (m) => {
-          const { getPayload } = await import('payload');
-          const config = await (m.default || m);
-          await getPayload({ config: { ...config, db: { ...config.db, push: true } } });
-          console.log('✅ [Production] DB schema synced successfully.');
-          process.exit(0);
-        }).catch((err) => {
-          console.error('❌ DB Sync Failed:', err);
-          process.exit(1);
-        });
-      "
     networks:
       - prod_network
 
@@ -55,16 +26,10 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      db-init:
-        condition: service_completed_successfully
       minio-setup:
         condition: service_completed_successfully
     networks:
       - prod_network
-    deploy:
-      resources:
-        limits:
-          memory: 1500M
 
   minio:
     image: quay.io/minio/minio:latest
@@ -83,10 +48,6 @@ services:
       - minio_data:/data
     networks:
       - prod_network
-    deploy:
-      resources:
-        limits:
-          memory: 800M
 
   minio-setup:
     image: quay.io/minio/mc:latest
@@ -103,7 +64,6 @@ services:
       done;
       /usr/bin/mc mb myminio/$$S3_BUCKET --ignore-existing;
       /usr/bin/mc anonymous set download myminio/$$S3_BUCKET;
-      echo 'MinIO setup ready';
       exit 0;
       "
     networks:
