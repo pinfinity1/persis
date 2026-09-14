@@ -1,4 +1,3 @@
-// src/app/[locale]/products/[slug]/page.tsx
 import React, { cache } from "react";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -31,7 +30,6 @@ interface ProductPageProps {
   params: Promise<{ locale: string; slug: string }>;
 }
 
-// ۱. پیش‌رندر و پیش‌تولید تمام اسلاگ‌ها در زمان بیلد جهت باز شدن کاملاً آنی صفحات
 export async function generateStaticParams() {
   try {
     const payload = await getPayload({ config: configPromise });
@@ -53,8 +51,7 @@ export async function generateStaticParams() {
         slug: doc.slug,
       })),
     );
-  } catch (error) {
-    console.error("Failed to generate static params for products:", error);
+  } catch {
     return [];
   }
 }
@@ -99,8 +96,8 @@ export async function generateMetadata({
   let product: ProductItemDTO | null = null;
   try {
     product = await getCachedProduct(slug, currentLocale);
-  } catch (error) {
-    console.error("Metadata fetch error:", error);
+  } catch {
+    // Silent fail for build phase
   }
 
   if (!product) {
@@ -126,7 +123,6 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   const { locale, slug } = await params;
   const currentLocale = (locale as Locale) || "fa";
 
-  // بهینه‌سازی: واکشی هم‌زمان محصول و ترجمه‌ها؛ کوئری‌های عمومی در صورت نیاز اجرا می‌شوند
   const [product, t, tMeta] = await Promise.all([
     getCachedProduct(slug, currentLocale),
     getTranslations({ locale: currentLocale, namespace: "ProductDetail" }),
@@ -137,7 +133,6 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     notFound();
   }
 
-  // جلوگیری از اجرای کوئری‌های تکراری در صورتی که سنگ مشخصات اختصاصی خود را دارد
   const [fallbackDimensions, fallbackThicknesses, fallbackFinishes] =
     await Promise.all([
       !product.dimensions?.length
@@ -168,7 +163,6 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     product.finishes?.length ? product.finishes : fallbackFinishes,
   );
 
-  // ۱. ساختاربندی Breadcrumb Schema
   const breadcrumbItems = [
     { name: tMeta("home.title"), path: "" },
     { name: tMeta("products.title"), path: "/products" },
@@ -186,7 +180,6 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
   const breadcrumbSchema = getBreadcrumbSchema(breadcrumbItems, currentLocale);
 
-  // ۲. ساختاربندی جامع Product Schema
   const productSchema = getProductSchema({
     product: {
       title: product.title,

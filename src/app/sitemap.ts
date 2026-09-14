@@ -24,7 +24,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const entries: MetadataRoute.Sitemap = [];
 
-  // ۱. تولید متادیتا و لینک‌های متقابل (Alternate Hreflang) برای روت‌های استاتیک
   for (const route of staticRoutes) {
     for (const locale of LOCALES) {
       const pathSuffix = route ? route : "";
@@ -45,7 +44,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
-  // ۲. واکشی دسته‌ای محصولات فعال با جلوگیری از مصرف بیش‌ازحد حافظه (Chunking)
   try {
     const payload = await getPayload({ config: configPromise });
 
@@ -98,11 +96,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       hasNextPage = productsBatch.hasNextPage;
       page += 1;
     }
-  } catch (error) {
-    console.error(
-      "Critical: Failed to generate dynamic sitemap entries:",
-      error,
-    );
+  } catch {
+    // Silent catch for build time without live DB
   }
 
   return entries;
