@@ -24,7 +24,7 @@ export default function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     // جلوگیری از اجرای میدل‌ور روی فایل‌های استاتیک، مدیا و مسیرهای اختصاصی ادمین
-    "/((?!api|_next/static|_next/image|admin|favicon.ico|.*\\..*).*)",
+    "/((?!api|_next/static|_next/image|persis-cp|admin|favicon.ico|.*\\..*).*)",
     "/",
     "/(fa|en|ar)/:path*",
   ],
