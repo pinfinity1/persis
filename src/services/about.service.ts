@@ -51,7 +51,7 @@ export async function getAboutPageDataService(
           slug: "about-page",
           locale,
           depth: 1,
-        })) as Record<string, unknown>;
+        })) as unknown as Record<string, unknown>;
 
         let galleryUrls: string[] = [];
         if (

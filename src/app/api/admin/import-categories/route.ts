@@ -116,7 +116,11 @@ export async function POST(req: NextRequest) {
         const existingId = existingCatMap.get(item.slug);
 
         if (existingId) {
-          await payload.update({
+          await (
+            payload.update as unknown as (
+              args: Record<string, unknown>,
+            ) => Promise<unknown>
+          )({
             collection: "categories",
             id: existingId,
             locale: "all",
@@ -125,7 +129,11 @@ export async function POST(req: NextRequest) {
           });
           return "updated";
         } else {
-          await payload.create({
+          await (
+            payload.create as unknown as (
+              args: Record<string, unknown>,
+            ) => Promise<unknown>
+          )({
             collection: "categories",
             locale: "all",
             req,

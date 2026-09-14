@@ -417,7 +417,7 @@ export const getCategoriesService = (locale: Locale) =>
         });
 
         return response.docs.map((doc) => {
-          const rawDoc = doc as Record<string, unknown>;
+          const rawDoc = doc as unknown as Record<string, unknown>;
           return {
             id: String(rawDoc.id ?? ""),
             title: String(rawDoc.title || rawDoc.slug || ""),
@@ -446,11 +446,11 @@ export async function getColorsService(
           depth: 0,
         });
 
-        return res.docs.map((doc: Record<string, unknown>) => ({
+        return res.docs.map((doc) => ({
           id: String(doc.id ?? ""),
           title: String(doc.title ?? ""),
           slug: String(doc.slug ?? ""),
-          hex_code: typeof doc.hex_code === "string" ? doc.hex_code : undefined,
+          hex_code: undefined,
         }));
       } catch (error: unknown) {
         console.error("Error fetching colors in service:", error);
@@ -479,7 +479,7 @@ export async function getVeinPatternsService(
           depth: 0,
         });
 
-        return res.docs.map((doc: Record<string, unknown>) => ({
+        return res.docs.map((doc) => ({
           id: String(doc.id ?? ""),
           title: String(doc.title ?? ""),
           slug: String(doc.slug ?? ""),
@@ -506,9 +506,8 @@ export const getAllDimensionsService = unstable_cache(
         limit: 50,
         depth: 0,
       });
-      return response.docs.map((d: Record<string, unknown>) =>
-        String(d.title ?? ""),
-      );
+
+      return response.docs.map((d) => String(d.title ?? ""));
     } catch {
       return [];
     }
@@ -526,9 +525,7 @@ export const getAllThicknessesService = unstable_cache(
         limit: 50,
         depth: 0,
       });
-      return response.docs.map((d: Record<string, unknown>) =>
-        String(d.slug || d.title || ""),
-      );
+      return response.docs.map((d) => String(d.slug || d.title || ""));
     } catch {
       return [];
     }
@@ -547,7 +544,7 @@ export const getAllFinishesService = unstable_cache(
         limit: 50,
         depth: 0,
       });
-      return response.docs.map((d: Record<string, unknown>) => ({
+      return response.docs.map((d) => ({
         title: String(d.title ?? ""),
         slug: String(d.slug ?? ""),
       }));

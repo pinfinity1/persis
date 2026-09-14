@@ -97,7 +97,7 @@ export async function getActiveProvincesService(
 
         const rawSlugs = response.docs
           .map((doc) => doc.province)
-          .filter((item): item is string => typeof item === "string");
+          .filter(Boolean);
         const uniqueSlugs = Array.from(new Set(rawSlugs));
 
         const provinceMap = new Map<string, ProvinceOption>();

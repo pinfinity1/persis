@@ -140,6 +140,8 @@ export async function POST(req: NextRequest) {
         const productData = {
           code: item.code,
           slug: item.slug,
+          is_in_stock: "active" as const,
+          custom_thickness_available: true,
           title: {
             fa: item.title_fa,
             en: item.title_en,
@@ -155,7 +157,11 @@ export async function POST(req: NextRequest) {
         const existingId = existingProductMap.get(item.code);
 
         if (existingId) {
-          await payload.update({
+          await (
+            payload.update as unknown as (
+              args: Record<string, unknown>,
+            ) => Promise<unknown>
+          )({
             collection: "products",
             id: existingId,
             locale: "all",
@@ -164,16 +170,15 @@ export async function POST(req: NextRequest) {
           });
           return "updated";
         } else {
-          await payload.create({
+          await (
+            payload.create as unknown as (
+              args: Record<string, unknown>,
+            ) => Promise<unknown>
+          )({
             collection: "products",
             locale: "all",
             req,
-            data: {
-              ...productData,
-              is_in_stock: "in_stock",
-              available_thicknesses: ["12mm", "20mm"],
-              finishes: ["polished"],
-            } as Parameters<typeof payload.create>[0]["data"],
+            data: productData,
           });
           return "created";
         }

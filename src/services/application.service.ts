@@ -61,7 +61,7 @@ export async function getApplicationsPageDataService(
           slug: "applications-page",
           locale,
           depth: 1,
-        })) as Record<string, unknown>;
+        })) as unknown as Record<string, unknown>;
 
         const rawShowcase = Array.isArray(rawData?.showcaseItems)
           ? rawData.showcaseItems

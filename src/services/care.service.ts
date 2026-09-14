@@ -36,7 +36,7 @@ export async function getCarePageDataService(
           slug: "care-page",
           locale,
           depth: 1,
-        })) as Record<string, unknown>;
+        })) as unknown as Record<string, unknown>;
 
         const mediaObj = rawData?.media as { url?: string } | null;
         const mediaSrc = mediaObj?.url || null;

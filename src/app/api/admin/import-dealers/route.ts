@@ -131,7 +131,11 @@ export async function POST(req: NextRequest) {
         const existingId = existingDealerMap.get(item.phone);
 
         if (existingId) {
-          await payload.update({
+          await (
+            payload.update as unknown as (
+              args: Record<string, unknown>,
+            ) => Promise<unknown>
+          )({
             collection: "dealers",
             id: existingId,
             locale: "all",
@@ -140,7 +144,11 @@ export async function POST(req: NextRequest) {
           });
           return "updated";
         } else {
-          await payload.create({
+          await (
+            payload.create as unknown as (
+              args: Record<string, unknown>,
+            ) => Promise<unknown>
+          )({
             collection: "dealers",
             locale: "all",
             req,

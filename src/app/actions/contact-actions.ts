@@ -221,8 +221,8 @@ export async function submitContactFormAction(
 
     inquiryRecord = await payload.create({
       collection: "inquiries",
-      data: dbPayload as Parameters<typeof payload.create>[0]["data"],
-    });
+      data: dbPayload as unknown as Record<string, unknown>,
+    } as unknown as Parameters<typeof payload.create>[0]);
   } catch (error: unknown) {
     const durationMs = Math.round(performance.now() - startTime);
     const errorMessage = error instanceof Error ? error.message : String(error);

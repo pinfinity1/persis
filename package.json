@@ -1,6 +1,7 @@
 {
   "name": "persisquartz",
   "version": "0.1.0",
+  "type": "module",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -9,7 +10,7 @@
     "build:local": "next build && cp -r public .next/standalone/ && cp -r .next/static .next/standalone/.next/",
     "start": "node --env-file=.env.local .next/standalone/server.js",
     "lint": "eslint",
-    "payload": "payload"
+    "payload": "cross-env NODE_OPTIONS=\"--no-deprecation\" payload"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.5.7",
@@ -51,6 +52,7 @@
     "@types/nodemailer": "^8.0.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "15.4.11",
     "tailwindcss": "^4",
