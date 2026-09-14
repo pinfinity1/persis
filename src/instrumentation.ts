@@ -1,6 +1,6 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
-    console.log("⏳ [Boot] Enforcing PostgreSQL Schema Push...");
+    console.log("⏳ [Boot] Initializing Payload DB Adapter & Schema...");
 
     try {
       const { getPayload } = await import("payload");
@@ -9,20 +9,19 @@ export async function register() {
 
       const payload = await getPayload({ config });
 
-      // اجرای صریح ایجاد ساختار جداول روی دیتابیس
-      if (payload.db && typeof payload.db.pushSchema === "function") {
-        await payload.db.pushSchema();
-        console.log(
-          "✅ [Boot] Database tables successfully created via pushSchema.",
-        );
-      } else if (payload.db && typeof (payload.db as any).sync === "function") {
-        await (payload.db as any).sync();
-        console.log("✅ [Boot] Database tables successfully created via sync.");
-      } else {
-        console.log("ℹ️ [Boot] Schema verification completed.");
+      // فراخوانی متد داخلی آداپتر پستگرس جهت اطمینان از همگام‌سازی جداول
+      const dbAdapter = payload.db as unknown as {
+        init?: () => Promise<void>;
+        connect?: () => Promise<void>;
+      };
+
+      if (typeof dbAdapter.init === "function") {
+        await dbAdapter.init();
       }
+
+      console.log("✅ [Boot] Payload DB Adapter is initialized and ready.");
     } catch (error) {
-      console.error("❌ [Boot] Critical error executing schema push:", error);
+      console.error("❌ [Boot] Database init error:", error);
     }
   }
 }
