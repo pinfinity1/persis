@@ -29,6 +29,9 @@ export default buildConfig({
   admin: {
     user: Users.slug,
   },
+  routes: {
+    admin: "/persis-cp",
+  },
   sharp,
   collections: [
     Users,
@@ -81,7 +84,7 @@ export default buildConfig({
         },
         region: process.env.S3_REGION || "default",
         endpoint: process.env.S3_ENDPOINT || "http://127.0.0.1:9000",
-        forcePathStyle: true, // برای MinIO و S3 داخلی الزامی است
+        forcePathStyle: true,
       },
     }),
   ],
