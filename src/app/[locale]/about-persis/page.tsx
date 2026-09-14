@@ -4,7 +4,6 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { getAboutPageDataService } from "@/services/about.service";
-import { PageWatermarkHeader } from "@/components/shared/page-watermark-header";
 import {
   generateSeoMetadata,
   getOrganizationSchema,
@@ -89,7 +88,7 @@ export default async function AboutPersisPage({ params }: PageProps) {
     namespace: "Metadata",
   });
 
-  const [data, tGlobal, tMeta] = await Promise.all([
+  const [data, tMeta] = await Promise.all([
     getAboutPageDataService(currentLocale),
     getTranslations({ locale: currentLocale, namespace: "About" }),
     getTranslations({ locale: currentLocale, namespace: "Metadata" }),
@@ -107,7 +106,7 @@ export default async function AboutPersisPage({ params }: PageProps) {
     "@type": "AboutPage",
     name: tMeta("about.title"),
     description: tMeta("about.description"),
-    mainEntity: getOrganizationSchema(currentLocale),
+    mainEntity: getOrganizationSchema(),
   };
 
   return (

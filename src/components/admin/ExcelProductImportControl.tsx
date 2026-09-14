@@ -3,9 +3,16 @@
 
 import React, { useState } from "react";
 
+interface ImportSummary {
+  createdCount: number;
+  updatedCount: number;
+  failedCount: number;
+  errors: string[];
+}
+
 export const ExcelProductImportControl: React.FC = () => {
   const [loading, setLoading] = useState(false);
-  const [report, setReport] = useState<any>(null);
+  const [report, setReport] = useState<ImportSummary | null>(null);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

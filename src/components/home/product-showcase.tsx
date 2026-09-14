@@ -8,10 +8,10 @@ import { Button } from "@/components/ui/button";
 import { ChevronRight, ChevronLeft, ArrowUpRight } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { ProductCard } from "@/components/products/product-card";
-import type { ProductItem } from "@/services/product.service";
+import type { ProductItemDTO } from "@/services/product.service";
 
 interface ProductShowcaseProps {
-  products: ProductItem[];
+  products: ProductItemDTO[];
 }
 
 export const ProductShowcase: React.FC<ProductShowcaseProps> = ({

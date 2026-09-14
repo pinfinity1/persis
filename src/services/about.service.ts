@@ -31,7 +31,7 @@ function extractUrl(media: unknown): string {
   if (!media) return FALLBACK_IMG;
   if (typeof media === "string" && media.trim().length > 0) return media.trim();
   if (typeof media === "object" && media !== null) {
-    const obj = media as Record<string, any>;
+    const obj = media as Record<string, unknown>;
     if (typeof obj.url === "string" && obj.url.trim().length > 0) {
       return obj.url.trim();
     }
@@ -47,24 +47,22 @@ export async function getAboutPageDataService(
       try {
         const payload = await getPayload({ config: configPromise });
 
-        const rawData: any = await payload.findGlobal({
+        const rawData = (await payload.findGlobal({
           slug: "about-page",
           locale,
-          depth: 1, // حتماً Depth 1 برای Populate شدن مدیاها الزامی است
-        });
+          depth: 1,
+        })) as Record<string, unknown>;
 
-        // ۱. استخراج تصاویر گالری انتخاب‌شده توسط ادمین
         let galleryUrls: string[] = [];
         if (
           Array.isArray(rawData?.galleryImages) &&
           rawData.galleryImages.length > 0
         ) {
           galleryUrls = rawData.galleryImages
-            .map((item: any) => extractUrl(item))
+            .map((item: unknown) => extractUrl(item))
             .filter((url: string) => url !== FALLBACK_IMG);
         }
 
-        // ۲. فال‌بک خودکار گالری در صورت خالی بودن انتخاب ادمین
         if (galleryUrls.length === 0) {
           const fallbackMedia = await payload.find({
             collection: "media",
@@ -76,7 +74,7 @@ export async function getAboutPageDataService(
           });
 
           galleryUrls = fallbackMedia.docs
-            .map((doc: any) => extractUrl(doc))
+            .map((doc: unknown) => extractUrl(doc))
             .filter((url: string) => url !== FALLBACK_IMG);
         }
 
@@ -86,25 +84,25 @@ export async function getAboutPageDataService(
 
         return {
           vision: {
-            tag: rawData?.visionTag || "",
-            title: rawData?.visionTitle || "",
-            desc1: rawData?.visionDesc1 || "",
-            desc2: rawData?.visionDesc2 || "",
+            tag: (rawData?.visionTag as string) || "",
+            title: (rawData?.visionTitle as string) || "",
+            desc1: (rawData?.visionDesc1 as string) || "",
+            desc2: (rawData?.visionDesc2 as string) || "",
             imageUrl: extractUrl(rawData?.visionImage),
           },
           gallery: {
-            tag: rawData?.galleryTag || "",
-            title: rawData?.galleryTitle || "",
+            tag: (rawData?.galleryTag as string) || "",
+            title: (rawData?.galleryTitle as string) || "",
             images: galleryUrls,
           },
           craftsmanship: {
-            tag: rawData?.craftsmanshipTag || "",
-            title: rawData?.craftsmanshipTitle || "",
-            desc: rawData?.craftsmanshipDesc || "",
+            tag: (rawData?.craftsmanshipTag as string) || "",
+            title: (rawData?.craftsmanshipTitle as string) || "",
+            desc: (rawData?.craftsmanshipDesc as string) || "",
             imageUrl: extractUrl(rawData?.craftsmanshipImage),
           },
         };
-      } catch (error) {
+      } catch (error: unknown) {
         console.error("Critical error in getAboutPageDataService:", error);
         return {
           vision: {
@@ -124,7 +122,7 @@ export async function getAboutPageDataService(
         };
       }
     },
-    ["about-page-global-cache", locale], // رفع باگ: اضافه شدن locale به کلید کش
+    ["about-page-global-cache", locale],
     {
       revalidate: 86400,
       tags: ["about-page"],

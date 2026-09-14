@@ -4,6 +4,7 @@ import { getPayload } from "payload";
 import configPromise from "@/payload.config";
 import { IRAN_PROVINCES } from "@/lib/constants/provinces";
 import { unstable_cache } from "next/cache";
+import type { Where } from "payload";
 
 export interface ProvinceOption {
   slug: string;
@@ -38,7 +39,8 @@ export async function getDealersService({
     async (): Promise<DealerItem[]> => {
       try {
         const payload = await getPayload({ config: configPromise });
-        const where: Record<string, any> = {
+
+        const whereClause: Where = {
           status: { equals: "published" },
         };
 
@@ -47,12 +49,12 @@ export async function getDealersService({
             (p) => p.slug === safeProvince || p.fa === safeProvince,
           );
           if (match) {
-            where.or = [
+            whereClause.or = [
               { province: { equals: match.slug } },
               { province: { equals: match.fa } },
             ];
           } else {
-            where.province = { equals: safeProvince };
+            whereClause.province = { equals: safeProvince };
           }
         }
 
@@ -60,20 +62,20 @@ export async function getDealersService({
           collection: "dealers",
           locale: (locale as "fa" | "en" | "ar") || "fa",
           limit: 100,
-          where,
+          where: whereClause,
           sort: "order",
           depth: 0,
         });
 
         return (response.docs as unknown as DealerItem[]) || [];
-      } catch (error) {
+      } catch (error: unknown) {
         console.error("Payload error in getDealersService:", error);
         return [];
       }
     },
     ["dealers-list-cache", locale, safeProvince],
     {
-      revalidate: 86400, // 24 Hours
+      revalidate: 86400,
       tags: ["dealers"],
     },
   )();
@@ -94,9 +96,9 @@ export async function getActiveProvincesService(
         });
 
         const rawSlugs = response.docs
-          .map((doc: any) => doc.province)
-          .filter(Boolean);
-        const uniqueSlugs = Array.from(new Set(rawSlugs)) as string[];
+          .map((doc) => doc.province)
+          .filter((item): item is string => typeof item === "string");
+        const uniqueSlugs = Array.from(new Set(rawSlugs));
 
         const provinceMap = new Map<string, ProvinceOption>();
 
@@ -117,7 +119,7 @@ export async function getActiveProvincesService(
         });
 
         return Array.from(provinceMap.values());
-      } catch (error) {
+      } catch (error: unknown) {
         console.error("Payload error in getActiveProvincesService:", error);
         return [];
       }

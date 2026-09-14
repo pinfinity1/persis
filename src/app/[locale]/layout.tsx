@@ -8,6 +8,7 @@ import { notFound } from "next/navigation";
 import { Header } from "@/components/shared/header";
 import { Footer } from "@/components/shared/footer";
 import { getCategoriesService } from "@/services/product.service";
+import { type Locale } from "@/lib/seo";
 import "../globals.css";
 
 const vazirmatn = localFont({
@@ -46,13 +47,12 @@ export default async function RootLayout({
 }>) {
   const { locale } = await params;
 
-  if (!routing.locales.includes(locale as any)) {
+  if (!(routing.locales as readonly string[]).includes(locale)) {
     notFound();
   }
 
   const messages = await getMessages();
-  // دریافت مستقیم دسته‌بندی‌های پویا از دیتابیس
-  const categories = await getCategoriesService(locale as "fa" | "en" | "ar");
+  const categories = await getCategoriesService(locale as Locale);
 
   return (
     <html

@@ -2,9 +2,16 @@
 
 import React, { useState } from "react";
 
+interface ImportSummary {
+  createdCount: number;
+  updatedCount: number;
+  failedCount: number;
+  errors: string[];
+}
+
 export const ExcelDealerImportControl: React.FC = () => {
   const [loading, setLoading] = useState(false);
-  const [report, setReport] = useState<any>(null);
+  const [report, setReport] = useState<ImportSummary | null>(null);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -115,7 +122,7 @@ export const ExcelDealerImportControl: React.FC = () => {
             <div style={{ color: "#ef4444", marginTop: "6px" }}>
               <p>⚠️ موارد نادیده گرفته شده ({report.failedCount} مورد):</p>
               <ul style={{ paddingRight: "16px", margin: "4px 0" }}>
-                {report.errors.map((err: string, i: number) => (
+                {report.errors.map((err, i) => (
                   <li key={i}>{err}</li>
                 ))}
               </ul>

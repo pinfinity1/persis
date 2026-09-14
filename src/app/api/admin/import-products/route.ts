@@ -18,7 +18,6 @@ export async function POST(req: NextRequest) {
   try {
     const payload = await getPayload({ config: configPromise });
 
-    // 1. احراز هویت ادمین
     const { user } = await payload.auth({ headers: req.headers });
     if (!user) {
       return NextResponse.json(
@@ -27,7 +26,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2. دریافت و بررسی فایل
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
 
@@ -45,7 +43,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 3. پارس بافر اکسل
     const arrayBuffer = await file.arrayBuffer();
     const workbook = XLSX.read(arrayBuffer, { type: "array" });
 
@@ -57,7 +54,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const rawRows = XLSX.utils.sheet_to_json<Record<string, any>>(
+    const rawRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(
       workbook.Sheets[sheetName],
       { defval: "", blankrows: false },
     );
@@ -69,7 +66,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 4. اعتبارسنجی ردیف‌ها با Zod
     const validRows: { rowNum: number; data: ExcelProductRow }[] = [];
     const validationErrors: string[] = [];
     const codesInSheet = new Set<string>();
@@ -78,7 +74,11 @@ export async function POST(req: NextRequest) {
       const rowNum = i + 2;
       const row = rawRows[i];
 
-      if (!row.code && !row.slug && !row.title_fa) continue;
+      const code = (row as Record<string, unknown>).code;
+      const slug = (row as Record<string, unknown>).slug;
+      const title_fa = (row as Record<string, unknown>).title_fa;
+
+      if (!code && !slug && !title_fa) continue;
 
       const parseResult = excelProductRowSchema.safeParse(row);
       if (!parseResult.success) {
@@ -112,7 +112,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 5. بررسی و دریافت شناسه‌های موجود بر اساس Code برای پیشگیری از N+1 Query
     const existingProductsRes = await payload.find({
       collection: "products",
       where: {
@@ -124,18 +123,20 @@ export async function POST(req: NextRequest) {
     });
 
     const existingProductMap = new Map<string, string | number>(
-      existingProductsRes.docs.map((doc: any) => [doc.code, doc.id]),
+      existingProductsRes.docs.map((doc) => [
+        doc.code as string,
+        doc.id as string | number,
+      ]),
     );
 
     let createdCount = 0;
     let updatedCount = 0;
     const executionErrors: string[] = [];
 
-    // 6. درج و به‌روزرسانی دسته‌ای اتمیک (Chunked Atomic Execution)
     for (let i = 0; i < validRows.length; i += BATCH_SIZE) {
       const chunk = validRows.slice(i, i + BATCH_SIZE);
 
-      const chunkPromises = chunk.map(async ({ rowNum, data: item }) => {
+      const chunkPromises = chunk.map(async ({ data: item }) => {
         const productData = {
           code: item.code,
           slug: item.slug,
@@ -159,7 +160,7 @@ export async function POST(req: NextRequest) {
             id: existingId,
             locale: "all",
             req,
-            data: productData as any,
+            data: productData,
           });
           return "updated";
         } else {
@@ -172,7 +173,7 @@ export async function POST(req: NextRequest) {
               is_in_stock: "in_stock",
               available_thicknesses: ["12mm", "20mm"],
               finishes: ["polished"],
-            } as any,
+            } as Parameters<typeof payload.create>[0]["data"],
           });
           return "created";
         }
@@ -186,9 +187,11 @@ export async function POST(req: NextRequest) {
           if (res.value === "updated") updatedCount++;
         } else {
           const rowNum = chunk[index].rowNum;
-          executionErrors.push(
-            `ردیف ${rowNum}: ${res.reason?.message || "خطای پایگاه‌داده"}`,
-          );
+          const message =
+            res.reason instanceof Error
+              ? res.reason.message
+              : "خطای پایگاه‌داده";
+          executionErrors.push(`ردیف ${rowNum}: ${message}`);
         }
       });
 
@@ -204,10 +207,19 @@ export async function POST(req: NextRequest) {
         errors: executionErrors,
       },
     });
-  } catch (error: any) {
-    console.error("Critical error in import-products route:", error);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.error(
+      JSON.stringify({
+        level: "CRITICAL",
+        module: "api.admin.import-products",
+        correlationId,
+        error: message,
+        timestamp: new Date().toISOString(),
+      }),
+    );
     return NextResponse.json(
-      { error: "پردازش فایل با خطای سیستمی مواجه شد.", details: error.message },
+      { error: "پردازش فایل با خطای سیستمی مواجه شد.", details: message },
       { status: 500 },
     );
   }

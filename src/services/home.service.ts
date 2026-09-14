@@ -26,9 +26,12 @@ export interface HomePageDataDTO {
   infoCardsImages: HomePageInfoCardsDTO;
 }
 
-const extractUrl = (media: any): string | undefined => {
+const extractUrl = (media: unknown): string | undefined => {
   if (!media) return undefined;
-  if (typeof media === "object" && media?.url) return media.url;
+  if (typeof media === "object" && media !== null && "url" in media) {
+    const url = (media as { url?: unknown }).url;
+    return typeof url === "string" ? url : undefined;
+  }
   if (typeof media === "string") return media;
   return undefined;
 };
@@ -37,11 +40,11 @@ export const getHomePageDataService = cache(
   async (locale: "fa" | "en" | "ar" = "fa"): Promise<HomePageDataDTO> => {
     try {
       const payload = await getPayload({ config: configPromise });
-      const res: any = await payload.findGlobal({
+      const res = (await payload.findGlobal({
         slug: "home-page",
         locale,
         depth: 1,
-      });
+      })) as Record<string, unknown> | null;
 
       if (!res) {
         return { hero: null, infoCardsImages: {} };
@@ -49,9 +52,9 @@ export const getHomePageDataService = cache(
 
       const hero: HomePageHeroDTO | null = res.title
         ? {
-            tagline: res.tagline || undefined,
-            title: res.title,
-            subtitle: res.subtitle || undefined,
+            tagline: (res.tagline as string) || undefined,
+            title: res.title as string,
+            subtitle: (res.subtitle as string) || undefined,
             desktopPoster:
               extractUrl(res.desktopPoster) || "/PersisQuartz-Red.png",
             desktopVideo: extractUrl(res.desktopVideo),
@@ -63,7 +66,7 @@ export const getHomePageDataService = cache(
           }
         : null;
 
-      const infoCards = res.infoCardsImages || {};
+      const infoCards = (res.infoCardsImages as Record<string, unknown>) || {};
 
       return {
         hero,
@@ -74,7 +77,7 @@ export const getHomePageDataService = cache(
           sampleImage: extractUrl(infoCards.sampleImage),
         },
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error fetching HomePage data:", error);
       return { hero: null, infoCardsImages: {} };
     }

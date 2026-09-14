@@ -158,8 +158,7 @@ export function safeJsonLdReplacer(
     .replace(/\u2029/g, "\\u2029");
 }
 
-// ۴. گراف هویتی سازمان برای موتورهای هوش مصنوعی (GEO)
-export function getOrganizationSchema(locale: Locale) {
+export function getOrganizationSchema() {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",

@@ -1,6 +1,6 @@
 // src/services/product.service.ts
 import "server-only";
-import { getPayload } from "payload";
+import { getPayload, type Where } from "payload";
 import configPromise from "@/payload.config";
 import { unstable_cache } from "next/cache";
 
@@ -46,6 +46,7 @@ export interface CategoryItem {
   order?: number;
   description?: string;
 }
+
 export interface ColorItem {
   id: string;
   title: string;
@@ -100,7 +101,6 @@ const MAX_PAGE_LIMIT = 48;
 function sanitizeSearchTerm(input?: string): string | undefined {
   if (!input) return undefined;
 
-  // Moving the hyphen to the very end or escaping it avoids character-range collision
   const sanitized = input
     .trim()
     .replace(/[^\p{L}\p{N}\s_\-]/gu, "")
@@ -122,58 +122,105 @@ function resolveMediaUrl(
   return fallback;
 }
 
-function mapProductDocToDTO(doc: any): ProductItemDTO {
+function mapProductDocToDTO(raw: unknown): ProductItemDTO {
+  const doc = (raw && typeof raw === "object" ? raw : {}) as Record<
+    string,
+    unknown
+  >;
+
+  const category = (
+    doc.category && typeof doc.category === "object" ? doc.category : {}
+  ) as Record<string, unknown>;
+
+  const colorFamily = (
+    doc.color_family && typeof doc.color_family === "object"
+      ? doc.color_family
+      : {}
+  ) as Record<string, unknown>;
+
+  const veinPattern =
+    doc.vein_pattern && typeof doc.vein_pattern === "object"
+      ? (doc.vein_pattern as Record<string, unknown>)
+      : undefined;
+
+  const rawGallery = Array.isArray(doc.gallery) ? doc.gallery : [];
+  const gallery: GalleryItemDTO[] = rawGallery.map((g: unknown) => {
+    const item = (g && typeof g === "object" ? g : {}) as Record<
+      string,
+      unknown
+    >;
+    const imgObj =
+      item.image && typeof item.image === "object"
+        ? (item.image as Record<string, unknown>)
+        : undefined;
+
+    return {
+      url: resolveMediaUrl(item.image),
+      alt: imgObj?.alt ? String(imgObj.alt) : "",
+      caption: item.caption ? String(item.caption) : undefined,
+    };
+  });
+
+  const rawThicknesses = Array.isArray(doc.thicknesses) ? doc.thicknesses : [];
+  const thicknesses: string[] = rawThicknesses.map((t: unknown) => {
+    if (t && typeof t === "object") {
+      const obj = t as Record<string, unknown>;
+      return String(obj.title || obj.slug || "");
+    }
+    return String(t ?? "");
+  });
+
+  const rawFinishes = Array.isArray(doc.finishes) ? doc.finishes : [];
+  const finishes: string[] = rawFinishes.map((f: unknown) => {
+    if (f && typeof f === "object") {
+      const obj = f as Record<string, unknown>;
+      return String(obj.title || obj.slug || "");
+    }
+    return String(f ?? "");
+  });
+
+  const rawDimensions = Array.isArray(doc.dimensions) ? doc.dimensions : [];
+  const dimensions: string[] = rawDimensions.map((d: unknown) => {
+    if (d && typeof d === "object") {
+      const obj = d as Record<string, unknown>;
+      return String(obj.title || obj.slug || "");
+    }
+    return String(d ?? "");
+  });
+
   return {
-    id: String(doc.id),
-    title: String(doc.title || ""),
-    slug: String(doc.slug || ""),
-    code: String(doc.code || ""),
+    id: String(doc.id ?? ""),
+    title: String(doc.title ?? ""),
+    slug: String(doc.slug ?? ""),
+    code: String(doc.code ?? ""),
     category: {
-      id: String(doc.category?.id || ""),
-      title: String(doc.category?.title || ""),
-      slug: String(doc.category?.slug || ""),
+      id: String(category.id ?? ""),
+      title: String(category.title ?? ""),
+      slug: String(category.slug ?? ""),
     },
     color_family: {
-      id: String(doc.color_family?.id || ""),
-      title: String(doc.color_family?.title || ""),
-      slug: String(doc.color_family?.slug || ""),
+      id: String(colorFamily.id ?? ""),
+      title: String(colorFamily.title ?? ""),
+      slug: String(colorFamily.slug ?? ""),
     },
-    vein_pattern: doc.vein_pattern
+    vein_pattern: veinPattern
       ? {
-          id: String(doc.vein_pattern.id || ""),
-          title: String(doc.vein_pattern.title || ""),
-          slug: String(doc.vein_pattern.slug || ""),
+          id: String(veinPattern.id ?? ""),
+          title: String(veinPattern.title ?? ""),
+          slug: String(veinPattern.slug ?? ""),
         }
       : undefined,
-    is_in_stock: doc.is_in_stock || "active",
+    is_in_stock: doc.is_in_stock === "discontinued" ? "discontinued" : "active",
     is_featured: Boolean(doc.is_featured),
     thumbnail: resolveMediaUrl(doc.thumbnail),
-    gallery: Array.isArray(doc.gallery)
-      ? doc.gallery.map((g: any) => ({
-          url: resolveMediaUrl(g.image),
-          alt:
-            typeof g.image === "object" && g.image?.alt
-              ? String(g.image.alt)
-              : "",
-          caption: g.caption ? String(g.caption) : undefined,
-        }))
-      : [],
-    thicknesses: Array.isArray(doc.thicknesses)
-      ? doc.thicknesses.map((t: any) =>
-          typeof t === "object" ? String(t.title || t.slug) : String(t),
-        )
-      : [],
-    custom_thickness_available: doc.custom_thickness_available ?? true, // <-- باگ برطرف شد
-    finishes: Array.isArray(doc.finishes)
-      ? doc.finishes.map((f: any) =>
-          typeof f === "object" ? String(f.title || f.slug) : String(f),
-        )
-      : [],
-    dimensions: Array.isArray(doc.dimensions)
-      ? doc.dimensions.map((d: any) =>
-          typeof d === "object" ? String(d.title || d.slug) : String(d),
-        )
-      : [],
+    gallery,
+    thicknesses,
+    custom_thickness_available:
+      typeof doc.custom_thickness_available === "boolean"
+        ? doc.custom_thickness_available
+        : true,
+    finishes,
+    dimensions,
     description: doc.description ? String(doc.description) : undefined,
     meta_title: doc.meta_title ? String(doc.meta_title) : undefined,
     meta_description: doc.meta_description
@@ -190,30 +237,39 @@ async function executeProductsQuery(
   const payload = await getPayload({ config: configPromise });
   const sanitizedSearch = sanitizeSearchTerm(params.search);
 
-  const where: Record<string, any> = {};
+  const andConditions: Where[] = [];
 
   if (params.category && params.category !== "all") {
-    where["category.slug"] = { equals: params.category.trim().toLowerCase() };
+    andConditions.push({
+      "category.slug": { equals: params.category.trim().toLowerCase() },
+    });
   }
 
   if (params.color && params.color !== "all") {
-    where["color_family.slug"] = { equals: params.color.trim().toLowerCase() };
+    andConditions.push({
+      "color_family.slug": { equals: params.color.trim().toLowerCase() },
+    });
   }
 
   if (params.vein_pattern && params.vein_pattern !== "all") {
-    where["vein_pattern.slug"] = {
-      equals: params.vein_pattern.trim().toLowerCase(),
-    };
+    andConditions.push({
+      "vein_pattern.slug": {
+        equals: params.vein_pattern.trim().toLowerCase(),
+      },
+    });
   }
 
   if (sanitizedSearch) {
-    where.or = [
-      { code: { like: sanitizedSearch } },
-      { title: { like: sanitizedSearch } },
-    ];
+    andConditions.push({
+      or: [
+        { code: { like: sanitizedSearch } },
+        { title: { like: sanitizedSearch } },
+      ],
+    });
   }
 
-  // Deterministic sorting map to prevent SQL injection or arbitrary fields
+  const where: Where = andConditions.length > 0 ? { and: andConditions } : {};
+
   let sortField = "-createdAt";
   if (params.sort === "oldest") sortField = "createdAt";
   if (params.sort === "title_asc") sortField = "title";
@@ -233,7 +289,7 @@ async function executeProductsQuery(
       limit,
       where,
       sort: sortField,
-      depth: 1, // Depth 1 resolves immediate Lookup relationships cleanly
+      depth: 1,
       pagination: true,
     });
 
@@ -269,7 +325,7 @@ async function executeProductsQuery(
   }
 }
 
-// --- Cached Service Layer (Singleton Closures) ---
+// --- Cached Service Layer ---
 
 const cachedPaginatedProducts = unstable_cache(
   async (
@@ -303,7 +359,6 @@ export async function getProductsService(
 ): Promise<ProductsResponseDTO> {
   const sanitizedSearch = sanitizeSearchTerm(params.search);
 
-  // Searches must intentionally bypass read caches to avoid unbounded key growth
   if (sanitizedSearch) {
     return executeProductsQuery({ ...params, search: sanitizedSearch });
   }
@@ -348,30 +403,34 @@ export const getProductBySlugService = (slug: string, locale: Locale) =>
 
 // --- Fast Attribute Services ---
 
-export const getCategoriesService = unstable_cache(
-  async (locale: Locale): Promise<LookupItem[]> => {
-    try {
-      const payload = await getPayload({ config: configPromise });
-      const response = await payload.find({
-        collection: "categories",
-        locale,
-        limit: 100,
-        sort: "order",
-        depth: 0,
-      });
+export const getCategoriesService = (locale: Locale) =>
+  unstable_cache(
+    async (): Promise<LookupItem[]> => {
+      try {
+        const payload = await getPayload({ config: configPromise });
+        const response = await payload.find({
+          collection: "categories",
+          locale,
+          limit: 100,
+          sort: "order",
+          depth: 0,
+        });
 
-      return response.docs.map((doc: any) => ({
-        id: String(doc.id),
-        title: String(doc.title),
-        slug: String(doc.slug),
-      }));
-    } catch {
-      return [];
-    }
-  },
-  ["attributes-categories-cache"],
-  { revalidate: TTL.STATIC_SEC, tags: ["categories"] },
-);
+        return response.docs.map((doc) => {
+          const rawDoc = doc as Record<string, unknown>;
+          return {
+            id: String(rawDoc.id ?? ""),
+            title: String(rawDoc.title || rawDoc.slug || ""),
+            slug: String(rawDoc.slug ?? ""),
+          };
+        });
+      } catch {
+        return [];
+      }
+    },
+    ["attributes-categories-cache", locale],
+    { revalidate: TTL.STATIC_SEC, tags: ["categories"] },
+  )();
 
 export async function getColorsService(
   locale: "fa" | "en" | "ar" = "fa",
@@ -387,13 +446,13 @@ export async function getColorsService(
           depth: 0,
         });
 
-        return res.docs.map((doc: any) => ({
-          id: String(doc.id),
-          title: doc.title || "",
-          slug: doc.slug || "",
-          hex_code: doc.hex_code || undefined,
+        return res.docs.map((doc: Record<string, unknown>) => ({
+          id: String(doc.id ?? ""),
+          title: String(doc.title ?? ""),
+          slug: String(doc.slug ?? ""),
+          hex_code: typeof doc.hex_code === "string" ? doc.hex_code : undefined,
         }));
-      } catch (error) {
+      } catch (error: unknown) {
         console.error("Error fetching colors in service:", error);
         return [];
       }
@@ -420,12 +479,12 @@ export async function getVeinPatternsService(
           depth: 0,
         });
 
-        return res.docs.map((doc: any) => ({
-          id: String(doc.id),
-          title: doc.title || "",
-          slug: doc.slug || "",
+        return res.docs.map((doc: Record<string, unknown>) => ({
+          id: String(doc.id ?? ""),
+          title: String(doc.title ?? ""),
+          slug: String(doc.slug ?? ""),
         }));
-      } catch (error) {
+      } catch (error: unknown) {
         console.error("Error fetching vein patterns in service:", error);
         return [];
       }
@@ -447,7 +506,9 @@ export const getAllDimensionsService = unstable_cache(
         limit: 50,
         depth: 0,
       });
-      return response.docs.map((d: any) => String(d.title || ""));
+      return response.docs.map((d: Record<string, unknown>) =>
+        String(d.title ?? ""),
+      );
     } catch {
       return [];
     }
@@ -461,11 +522,13 @@ export const getAllThicknessesService = unstable_cache(
     try {
       const payload = await getPayload({ config: configPromise });
       const response = await payload.find({
-        collection: "thicknesses" as any,
+        collection: "thicknesses",
         limit: 50,
         depth: 0,
       });
-      return response.docs.map((d: any) => String(d.slug || d.title || ""));
+      return response.docs.map((d: Record<string, unknown>) =>
+        String(d.slug || d.title || ""),
+      );
     } catch {
       return [];
     }
@@ -479,14 +542,14 @@ export const getAllFinishesService = unstable_cache(
     try {
       const payload = await getPayload({ config: configPromise });
       const response = await payload.find({
-        collection: "finishes" as any,
+        collection: "finishes",
         locale,
         limit: 50,
         depth: 0,
       });
-      return response.docs.map((d: any) => ({
-        title: String(d.title || ""),
-        slug: String(d.slug || ""),
+      return response.docs.map((d: Record<string, unknown>) => ({
+        title: String(d.title ?? ""),
+        slug: String(d.slug ?? ""),
       }));
     } catch {
       return [];

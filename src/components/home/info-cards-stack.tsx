@@ -103,9 +103,17 @@ export const InfoCardsStack: React.FC<InfoCardsStackProps> = ({ images }) => {
 
     if (Math.abs(diff) > 40) {
       if (diff > 0) {
-        isRtl ? handlePrev() : handleNext();
+        if (isRtl) {
+          handlePrev();
+        } else {
+          handleNext();
+        }
       } else {
-        isRtl ? handleNext() : handlePrev();
+        if (isRtl) {
+          handleNext();
+        } else {
+          handlePrev();
+        }
       }
     }
     touchStartX.current = null;
@@ -145,7 +153,6 @@ export const InfoCardsStack: React.FC<InfoCardsStackProps> = ({ images }) => {
       aria-label="Info Cards Stack"
     >
       <div className="container mx-auto px-4 sm:px-12">
-        {/* هدر بخش و دکمه‌های ناوبری */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-12 gap-4 max-w-5xl mx-auto">
           <div>
             <span className="text-[10px] sm:text-xs uppercase tracking-widest text-primary block mb-1 font-semibold">
@@ -178,7 +185,6 @@ export const InfoCardsStack: React.FC<InfoCardsStackProps> = ({ images }) => {
           </div>
         </div>
 
-        {/* محفظه استک کارت‌ها: ارتفاع تطبیقی برای دسکتاپ و موبایل بدون بیرون‌زدگی */}
         <div
           className="relative w-full max-w-5xl mx-auto h-[540px] sm:h-[480px] md:h-[420px] flex items-center justify-center touch-pan-y"
           onTouchStart={handleTouchStart}
@@ -213,11 +219,10 @@ export const InfoCardsStack: React.FC<InfoCardsStackProps> = ({ images }) => {
                     !isFront ? "pointer-events-none" : ""
                   }`}
                 >
-                  {/* بخش تصویر: ارتفاع فیکس ۴۰٪ در موبایل برای باز گذاشتن فضا برای متن */}
                   <div className="relative w-full h-[40%] md:h-full md:col-span-5 bg-muted/20 shrink-0 overflow-hidden flex items-center justify-center border-b md:border-b-0 md:border-e border-border/40">
                     <Image
                       src={card.imageUrl}
-                      alt={t(card.titleKey)}
+                      alt={t(card.titleKey as Parameters<typeof t>[0])}
                       fill
                       sizes="(max-width: 768px) 100vw, 420px"
                       className={`transition-all duration-300 ${
@@ -228,26 +233,23 @@ export const InfoCardsStack: React.FC<InfoCardsStackProps> = ({ images }) => {
                       loading="lazy"
                     />
 
-                    {/* بج شماره کارت */}
                     <div className="absolute top-2.5 start-2.5 sm:top-3 sm:start-3 bg-background/90 backdrop-blur-md px-2 py-0.5 border border-border/60 text-[9px] sm:text-[10px] tracking-widest uppercase text-foreground z-10">
                       0{card.id} / 0{totalCards}
                     </div>
                   </div>
 
-                  {/* بخش محتوا: ۶۰٪ ارتفاع در موبایل همراه با اسکرول احتیاطی بدون بریدگی */}
                   <div className="h-[60%] md:h-full md:col-span-7 p-4 sm:p-6 lg:p-8 flex flex-col justify-between overflow-y-auto bg-card">
                     {card.type === "features" ? (
                       <div className="space-y-3 my-auto w-full">
                         <div>
                           <span className="text-[10px] sm:text-xs uppercase tracking-widest text-primary font-semibold block mb-0.5">
-                            {t(card.categoryKey)}
+                            {t(card.categoryKey as Parameters<typeof t>[0])}
                           </span>
                           <h4 className="text-base sm:text-xl lg:text-2xl font-light text-foreground leading-snug">
-                            {t(card.titleKey)}
+                            {t(card.titleKey as Parameters<typeof t>[0])}
                           </h4>
                         </div>
 
-                        {/* گرید ویژگی‌ها با فونت و پدینگ متناسب با موبایل */}
                         <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/40">
                           {featuresList.map((item, idx) => (
                             <div
@@ -273,14 +275,14 @@ export const InfoCardsStack: React.FC<InfoCardsStackProps> = ({ images }) => {
                     ) : (
                       <div className="space-y-3 my-auto w-full">
                         <span className="text-[10px] sm:text-xs uppercase tracking-widest text-primary font-semibold block">
-                          {t(card.categoryKey)}
+                          {t(card.categoryKey as Parameters<typeof t>[0])}
                         </span>
                         <h4 className="text-base sm:text-xl lg:text-2xl font-light text-foreground leading-snug">
-                          {t(card.titleKey)}
+                          {t(card.titleKey as Parameters<typeof t>[0])}
                         </h4>
                         {card.descKey && (
                           <p className="text-xs sm:text-sm text-muted-foreground font-light leading-relaxed line-clamp-3 sm:line-clamp-none">
-                            {t(card.descKey)}
+                            {t(card.descKey as Parameters<typeof t>[0])}
                           </p>
                         )}
 
@@ -292,7 +294,9 @@ export const InfoCardsStack: React.FC<InfoCardsStackProps> = ({ images }) => {
                               className="p-0 h-auto text-xs sm:text-sm tracking-wider uppercase text-foreground hover:text-primary gap-1.5"
                             >
                               <Link href={card.link}>
-                                <span>{t(card.ctaKey)}</span>
+                                <span>
+                                  {t(card.ctaKey as Parameters<typeof t>[0])}
+                                </span>
                                 <ArrowUpRight className="h-3.5 w-3.5" />
                               </Link>
                             </Button>

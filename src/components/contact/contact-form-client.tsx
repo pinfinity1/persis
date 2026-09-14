@@ -2,7 +2,7 @@
 
 import React, { useState, useTransition, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, type Path, type FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations, useLocale } from "next-intl";
 import {
@@ -24,6 +24,18 @@ import {
   MessageSquare,
 } from "lucide-react";
 
+type FormType = ContactFormValues["type"];
+
+interface FieldWrapperProps {
+  name: Path<ContactFormValues>;
+  label: string;
+  hint?: string;
+  required?: boolean;
+  type?: string;
+  span?: 1 | 2;
+  isTextarea?: boolean;
+}
+
 export function ContactFormClient() {
   const t = useTranslations("ContactPage");
   const locale = useLocale();
@@ -33,8 +45,11 @@ export function ContactFormClient() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
-  const initialType =
-    (searchParams.get("type") as ContactFormValues["type"]) || "general";
+  const rawType = searchParams.get("type");
+  const initialType: FormType =
+    rawType === "sample" || rawType === "project" || rawType === "dealer"
+      ? rawType
+      : "general";
 
   const {
     register,
@@ -47,23 +62,13 @@ export function ContactFormClient() {
     resolver: zodResolver(contactFormSchema),
     mode: "onBlur",
     defaultValues: {
-      type: ["sample", "project", "dealer", "general"].includes(initialType)
-        ? initialType
-        : "general",
+      type: initialType,
       fullName: "",
       email: "",
       phone: "",
       country: "",
       message: "",
-      city: "",
-      postalCode: "",
-      address: "",
-      company: "",
-      productCodes: "",
-      projectSize: "",
-      thickness: "",
-      finish: "",
-    } as any,
+    } as unknown as ContactFormValues,
   });
 
   const selectedType = watch("type");
@@ -72,8 +77,8 @@ export function ContactFormClient() {
     if (selectedType === "sample" || selectedType === "project") {
       const code = searchParams.get("code");
       const thick = searchParams.get("thickness");
-      if (code) setValue("productCodes" as any, code);
-      if (thick) setValue("thickness" as any, thick);
+      if (code) setValue("productCodes", code);
+      if (thick) setValue("thickness", thick);
     }
   }, [selectedType, searchParams, setValue]);
 
@@ -91,11 +96,11 @@ export function ContactFormClient() {
   };
 
   const typeTabs = [
-    { id: "general", label: t("tabGeneral"), icon: MessageSquare },
-    { id: "sample", label: t("tabSample"), icon: Box },
-    { id: "project", label: t("tabProject"), icon: Building2 },
-    { id: "dealer", label: t("tabDealer"), icon: Users },
-  ] as const;
+    { id: "general" as const, label: t("tabGeneral"), icon: MessageSquare },
+    { id: "sample" as const, label: t("tabSample"), icon: Box },
+    { id: "project" as const, label: t("tabProject"), icon: Building2 },
+    { id: "dealer" as const, label: t("tabDealer"), icon: Users },
+  ];
 
   if (isSuccess) {
     return (
@@ -124,7 +129,17 @@ export function ContactFormClient() {
     );
   }
 
-  const FieldWrapper = ({
+  const getFieldError = (
+    name: string,
+    allErrors: FieldErrors<ContactFormValues>,
+  ) => {
+    const error = (
+      allErrors as Record<string, { message?: string } | undefined>
+    )[name];
+    return error?.message;
+  };
+
+  const FieldWrapper: React.FC<FieldWrapperProps> = ({
     name,
     label,
     hint,
@@ -132,9 +147,8 @@ export function ContactFormClient() {
     type = "text",
     span = 1,
     isTextarea = false,
-  }: any) => {
-    const errorMsg = (errors as any)[name]?.message;
-    // فقط ایمیل و تلفن قطعاً ltr هستند، بقیه فیلدها قطعاً بر اساس زبان صفحه rtl یا ltr هستند
+  }) => {
+    const errorMsg = getFieldError(name, errors);
     const fieldDir =
       type === "tel" || type === "email" ? "ltr" : isRtl ? "rtl" : "ltr";
 
@@ -160,7 +174,7 @@ export function ContactFormClient() {
           <Textarea
             id={name}
             dir={fieldDir}
-            placeholder={t(`${name}Placeholder` as any)}
+            placeholder={label}
             {...register(name)}
             disabled={isPending}
             className={`rounded-none bg-background text-xs resize-none min-h-[110px] placeholder:text-muted-foreground/40 transition-colors ${
@@ -174,7 +188,7 @@ export function ContactFormClient() {
             id={name}
             type={type}
             dir={fieldDir}
-            placeholder={t(`${name}Placeholder` as any)}
+            placeholder={label}
             {...register(name)}
             disabled={isPending}
             className={`rounded-none h-11 bg-background text-xs placeholder:text-muted-foreground/40 transition-colors ${
@@ -190,7 +204,7 @@ export function ContactFormClient() {
         )}
         {errorMsg && (
           <span className="text-[10px] text-destructive block mt-1">
-            {t(errorMsg)}
+            {t(errorMsg as Parameters<typeof t>[0])}
           </span>
         )}
       </div>
@@ -216,7 +230,7 @@ export function ContactFormClient() {
                     phone: "",
                     country: "",
                     message: "",
-                  } as any)
+                  } as unknown as ContactFormValues)
                 }
                 className={`relative flex-1 py-3 px-3 flex items-center justify-center gap-2 transition-all cursor-pointer select-none ${
                   isSelected
@@ -250,7 +264,7 @@ export function ContactFormClient() {
 
       {serverError && (
         <div className="p-3.5 bg-destructive/10 border-s-2 border-destructive text-destructive text-xs">
-          {t(serverError as any)}
+          {t(serverError as Parameters<typeof t>[0])}
         </div>
       )}
 

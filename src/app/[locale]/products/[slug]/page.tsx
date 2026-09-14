@@ -1,7 +1,7 @@
 // src/app/[locale]/products/[slug]/page.tsx
 import React, { cache } from "react";
 import { notFound } from "next/navigation";
-import type { Metadata, ResolvingMetadata } from "next";
+import type { Metadata } from "next";
 import { getPayload } from "payload";
 import configPromise from "@/payload.config";
 import { Link } from "@/i18n/routing";
@@ -13,6 +13,7 @@ import {
   getAllFinishesService,
   type ProductItemDTO,
   type Locale,
+  type GalleryItemDTO,
 } from "@/services/product.service";
 import { ProductGallery } from "@/components/products/product-gallery";
 import { ProductConfigurator } from "@/components/products/product-configurator";
@@ -89,10 +90,9 @@ function normalizeToStringArray(items: unknown): string[] {
     .filter(Boolean);
 }
 
-export async function generateMetadata(
-  { params }: ProductPageProps,
-  _parent: ResolvingMetadata,
-): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: ProductPageProps): Promise<Metadata> {
   const { locale, slug } = await params;
   const currentLocale = (locale as Locale) || "fa";
 
@@ -261,12 +261,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
       {product.gallery && product.gallery.length > 0 && (
         <ProductAppliedGallery
           title={product.title}
-          gallery={
-            product.gallery.filter(
-              (item: any) =>
-                typeof item?.url === "string" && item.url.trim().length > 0,
-            ) as any
-          }
+          gallery={product.gallery as GalleryItemDTO[]}
         />
       )}
 

@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const rawData = XLSX.utils.sheet_to_json<Record<string, any>>(
+    const rawData = XLSX.utils.sheet_to_json<Record<string, unknown>>(
       workbook.Sheets[sheetName],
       { defval: "" },
     );
@@ -95,15 +95,14 @@ export async function POST(req: NextRequest) {
     });
 
     const existingCatMap = new Map<string, string | number>(
-      existingCatsRes.docs.map((doc: any) => [doc.slug, doc.id]),
+      existingCatsRes.docs.map((doc) => [doc.slug, doc.id]),
     );
 
     // 4. Batch Atomic Execution
     for (let i = 0; i < validRows.length; i += BATCH_SIZE) {
       const chunk = validRows.slice(i, i + BATCH_SIZE);
 
-      const chunkPromises = chunk.map(async ({ rowNum, data: item }) => {
-        // Atomic payload with locale: 'all'
+      const chunkPromises = chunk.map(async ({ data: item }) => {
         const atomicPayload = {
           slug: item.slug,
           order: item.order,
@@ -122,7 +121,7 @@ export async function POST(req: NextRequest) {
             id: existingId,
             locale: "all",
             req,
-            data: atomicPayload as any,
+            data: atomicPayload,
           });
           return "updated";
         } else {
@@ -130,7 +129,7 @@ export async function POST(req: NextRequest) {
             collection: "categories",
             locale: "all",
             req,
-            data: atomicPayload as any,
+            data: atomicPayload,
           });
           return "created";
         }
@@ -144,9 +143,11 @@ export async function POST(req: NextRequest) {
           if (res.value === "updated") updatedCount++;
         } else {
           const rowNum = chunk[index].rowNum;
-          errors.push(
-            `ردیف ${rowNum}: ${res.reason?.message || "خطای ثبت در پایگاه‌داده"}`,
-          );
+          const message =
+            res.reason instanceof Error
+              ? res.reason.message
+              : "خطای ثبت در پایگاه‌داده";
+          errors.push(`ردیف ${rowNum}: ${message}`);
         }
       });
 
@@ -162,20 +163,20 @@ export async function POST(req: NextRequest) {
         errors,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error";
     console.error(
       JSON.stringify({
         level: "CRITICAL",
         module: "api.admin.import-categories",
         correlationId,
-        error: error.message,
-        stack: error.stack,
+        error: message,
         timestamp: new Date().toISOString(),
       }),
     );
 
     return NextResponse.json(
-      { error: "خطا در پردازش فایل دسته‌بندی‌ها", details: error.message },
+      { error: "خطا در پردازش فایل دسته‌بندی‌ها", details: message },
       { status: 500 },
     );
   }

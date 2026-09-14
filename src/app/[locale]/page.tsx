@@ -51,10 +51,7 @@ export default async function HomePage({ params }: PageProps) {
 
   const homeGraph = {
     "@context": "https://schema.org",
-    "@graph": [
-      getOrganizationSchema(currentLocale),
-      getWebSiteSchema(currentLocale),
-    ],
+    "@graph": [getOrganizationSchema(), getWebSiteSchema(currentLocale)],
   };
 
   return (

@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const rawData = XLSX.utils.sheet_to_json<Record<string, any>>(
+    const rawData = XLSX.utils.sheet_to_json<Record<string, unknown>>(
       workbook.Sheets[sheetName],
       { defval: "" },
     );
@@ -70,7 +70,6 @@ export async function POST(req: NextRequest) {
       const rowNum = index + 2;
       const row = rawData[index];
 
-      // Skip fully empty trailing rows
       if (!row.province && !row.title_fa && !row.phone) continue;
 
       const parseResult = excelDealerRowSchema.safeParse(row);
@@ -86,9 +85,8 @@ export async function POST(req: NextRequest) {
       phonesToLookup.add(parseResult.data.phone);
     }
 
-    // Bulk resolve existing IDs by unique phone identifier
     const existingDealersRes = await payload.find({
-      collection: "dealers" as any,
+      collection: "dealers",
       where: {
         phone: { in: Array.from(phonesToLookup) },
       },
@@ -98,17 +96,16 @@ export async function POST(req: NextRequest) {
     });
 
     const existingDealerMap = new Map<string, string | number>(
-      existingDealersRes.docs.map((doc: any) => [doc.phone, doc.id]),
+      existingDealersRes.docs.map((doc) => [doc.phone, doc.id]),
     );
 
     // 5. Chunked Atomic Processing
     for (let i = 0; i < validRows.length; i += BATCH_SIZE) {
       const chunk = validRows.slice(i, i + BATCH_SIZE);
 
-      const chunkPromises = chunk.map(async ({ rowNum, data: item }) => {
+      const chunkPromises = chunk.map(async ({ data: item }) => {
         const provinceSlug = normalizeProvinceToSlug(item.province);
 
-        // Atomic multi-locale payload structure
         const atomicPayload = {
           province: provinceSlug,
           phone: item.phone,
@@ -135,19 +132,19 @@ export async function POST(req: NextRequest) {
 
         if (existingId) {
           await payload.update({
-            collection: "dealers" as any,
+            collection: "dealers",
             id: existingId,
             locale: "all",
             req,
-            data: atomicPayload as any,
+            data: atomicPayload,
           });
           return "updated";
         } else {
           await payload.create({
-            collection: "dealers" as any,
+            collection: "dealers",
             locale: "all",
             req,
-            data: atomicPayload as any,
+            data: atomicPayload,
           });
           return "created";
         }
@@ -161,13 +158,14 @@ export async function POST(req: NextRequest) {
           if (res.value === "updated") updatedCount++;
         } else {
           const rowNum = chunk[index].rowNum;
-          errors.push(
-            `ردیف ${rowNum}: ${res.reason?.message || "خطای پایگاه‌داده"}`,
-          );
+          const message =
+            res.reason instanceof Error
+              ? res.reason.message
+              : "خطای پایگاه‌داده";
+          errors.push(`ردیف ${rowNum}: ${message}`);
         }
       });
 
-      // Cooperative yielding to prevent event-loop lockup
       await new Promise((resolve) => setImmediate(resolve));
     }
 
@@ -180,20 +178,20 @@ export async function POST(req: NextRequest) {
         errors,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error";
     console.error(
       JSON.stringify({
         level: "CRITICAL",
         module: "api.admin.import-dealers",
         correlationId,
-        error: error.message,
-        stack: error.stack,
+        error: message,
         timestamp: new Date().toISOString(),
       }),
     );
 
     return NextResponse.json(
-      { error: "پردازش فایل با خطای سیستمی مواجه شد.", details: error.message },
+      { error: "پردازش فایل با خطای سیستمی مواجه شد.", details: message },
       { status: 500 },
     );
   }

@@ -32,38 +32,38 @@ export async function getCarePageDataService(
     async (): Promise<CarePageDataDTO> => {
       try {
         const payload = await getPayload({ config: configPromise });
-        const rawData: any = await payload.findGlobal({
+        const rawData = (await payload.findGlobal({
           slug: "care-page",
           locale,
           depth: 1,
-        });
+        })) as Record<string, unknown>;
 
-        const mediaSrc =
-          typeof rawData?.media === "object" && rawData?.media?.url
-            ? rawData.media.url
-            : null;
+        const mediaObj = rawData?.media as { url?: string } | null;
+        const mediaSrc = mediaObj?.url || null;
 
-        const steps: CareStepDTO[] = Array.isArray(rawData?.steps)
-          ? rawData.steps.map((item: any, idx: number) => ({
-              id: item.id || `step-${idx + 1}`,
-              stepNumber: item.stepNumber || `0${idx + 1}`,
-              title: item.title || "",
-              desc: item.desc || "",
-              iconName: item.iconName || "dot",
-            }))
-          : [];
+        const rawSteps = Array.isArray(rawData?.steps) ? rawData.steps : [];
+        const steps: CareStepDTO[] = rawSteps.map(
+          (item: Record<string, unknown>, idx: number) => ({
+            id: (item.id as string) || `step-${idx + 1}`,
+            stepNumber: (item.stepNumber as string) || `0${idx + 1}`,
+            title: (item.title as string) || "",
+            desc: (item.desc as string) || "",
+            iconName: (item.iconName as string) || "dot",
+          }),
+        );
 
-        const rules: CareRuleDTO[] = Array.isArray(rawData?.rules)
-          ? rawData.rules.map((item: any, idx: number) => ({
-              id: item.id || `rule-${idx + 1}`,
-              title: item.title || "",
-              desc: item.desc || "",
-              iconType: item.iconType || "dot",
-            }))
-          : [];
+        const rawRules = Array.isArray(rawData?.rules) ? rawData.rules : [];
+        const rules: CareRuleDTO[] = rawRules.map(
+          (item: Record<string, unknown>, idx: number) => ({
+            id: (item.id as string) || `rule-${idx + 1}`,
+            title: (item.title as string) || "",
+            desc: (item.desc as string) || "",
+            iconType: (item.iconType as string) || "dot",
+          }),
+        );
 
         return { mediaSrc, steps, rules };
-      } catch (error) {
+      } catch (error: unknown) {
         console.error("Error fetching CarePage data:", error);
         return {
           mediaSrc: null,

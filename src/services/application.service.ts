@@ -42,7 +42,7 @@ function extractUrl(media: unknown): string {
   if (!media) return FALLBACK_IMG;
   if (typeof media === "string" && media.trim().length > 0) return media.trim();
   if (typeof media === "object" && media !== null) {
-    const obj = media as Record<string, any>;
+    const obj = media as Record<string, unknown>;
     if (typeof obj.url === "string" && obj.url.trim().length > 0) {
       return obj.url.trim();
     }
@@ -57,64 +57,66 @@ export async function getApplicationsPageDataService(
     async (): Promise<ApplicationsPageFullDTO> => {
       try {
         const payload = await getPayload({ config: configPromise });
-        const rawData: any = await payload.findGlobal({
+        const rawData = (await payload.findGlobal({
           slug: "applications-page",
           locale,
           depth: 1,
-        });
+        })) as Record<string, unknown>;
 
-        const showcase: ShowcaseSlideDTO[] = Array.isArray(
-          rawData?.showcaseItems,
-        )
-          ? rawData.showcaseItems.map((item: any, idx: number) => {
-              const desktopUrl = extractUrl(item.desktopImage);
-              const mobileUrl = extractUrl(item.mobileImage);
-              return {
-                id: item.id || `slide-${idx + 1}`,
-                tag: item.tag || "",
-                desktopImageUrl: desktopUrl,
-                // فال‌بک هوشمند: اگر عکس موبایل آپلود نشد، از عکس دسکتاپ استفاده کن
-                mobileImageUrl:
-                  mobileUrl !== FALLBACK_IMG ? mobileUrl : desktopUrl,
-              };
-            })
+        const rawShowcase = Array.isArray(rawData?.showcaseItems)
+          ? rawData.showcaseItems
           : [];
+        const showcase: ShowcaseSlideDTO[] = rawShowcase.map(
+          (item: Record<string, unknown>, idx: number) => {
+            const desktopUrl = extractUrl(item.desktopImage);
+            const mobileUrl = extractUrl(item.mobileImage);
+            return {
+              id: (item.id as string) || `slide-${idx + 1}`,
+              tag: (item.tag as string) || "",
+              desktopImageUrl: desktopUrl,
+              mobileImageUrl:
+                mobileUrl !== FALLBACK_IMG ? mobileUrl : desktopUrl,
+            };
+          },
+        );
 
-        const sections: ApplicationSectionDTO[] = Array.isArray(
-          rawData?.sections,
-        )
-          ? rawData.sections.map((sec: any, idx: number) => ({
-              id: sec.id || `sec-${idx + 1}`,
-              num: sec.num || `0${idx + 1}`,
-              enTag: sec.enTag || "",
-              title: sec.title || "",
-              desc: sec.desc || "",
-              specs: Array.isArray(sec.specs)
-                ? sec.specs.map((sp: any) => ({
-                    label: sp.label || "",
-                    val: sp.val || undefined,
-                  }))
-                : [],
-              gallery: Array.isArray(sec.gallery)
-                ? sec.gallery.map((g: any) => extractUrl(g))
-                : [],
-            }))
+        const rawSections = Array.isArray(rawData?.sections)
+          ? rawData.sections
           : [];
+        const sections: ApplicationSectionDTO[] = rawSections.map(
+          (sec: Record<string, unknown>, idx: number) => {
+            const rawSpecs = Array.isArray(sec.specs) ? sec.specs : [];
+            const rawGallery = Array.isArray(sec.gallery) ? sec.gallery : [];
+
+            return {
+              id: (sec.id as string) || `sec-${idx + 1}`,
+              num: (sec.num as string) || `0${idx + 1}`,
+              enTag: (sec.enTag as string) || "",
+              title: (sec.title as string) || "",
+              desc: (sec.desc as string) || "",
+              specs: rawSpecs.map((sp: Record<string, unknown>) => ({
+                label: (sp.label as string) || "",
+                val: (sp.val as string) || undefined,
+              })),
+              gallery: rawGallery.map((g: unknown) => extractUrl(g)),
+            };
+          },
+        );
 
         return {
           header: {
-            tag: rawData?.headerTag || "SPATIAL INTEGRATION",
+            tag: (rawData?.headerTag as string) || "SPATIAL INTEGRATION",
             title:
-              rawData?.headerTitle ||
+              (rawData?.headerTitle as string) ||
               "سطوحی فراتر از یک پوشش؛ خلق هارمونی در معماری معاصر",
             desc:
-              rawData?.headerDesc ||
+              (rawData?.headerDesc as string) ||
               "تلفیق زیبایی بصری با مقاومت ساختاری؛ امکان خلق فضاهایی منحصربه‌فرد و هماهنگ با سبک‌های متنوع، از محیط‌های خانگی تا فضاهای عمومی و بهداشتی.",
           },
           showcase,
           sections,
         };
-      } catch (error) {
+      } catch (error: unknown) {
         console.error("Error in getApplicationsPageDataService:", error);
         return {
           header: {

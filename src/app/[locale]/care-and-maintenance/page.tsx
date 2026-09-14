@@ -181,7 +181,7 @@ export default async function CareAndMaintenancePage({ params }: PageProps) {
       <RoutineAccordion
         sectionTag={t("sectionRoutineTag")}
         sectionTitle={t("routineSectionTitle")}
-        items={finalRoutineSteps as any}
+        items={finalRoutineSteps}
         mediaSrc={careData.mediaSrc}
       />
 

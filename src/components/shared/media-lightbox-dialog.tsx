@@ -74,9 +74,11 @@ export const MediaLightboxDialog: React.FC<MediaLightboxDialogProps> = ({
       Math.abs(diffX) > minSwipeDistance
     ) {
       if (diffX > 0) {
-        isRtl ? handlePrev() : handleNext();
+        if (isRtl) handlePrev();
+        else handleNext();
       } else {
-        isRtl ? handleNext() : handlePrev();
+        if (isRtl) handleNext();
+        else handlePrev();
       }
     }
   };
@@ -87,10 +89,18 @@ export const MediaLightboxDialog: React.FC<MediaLightboxDialogProps> = ({
       if (e.key === "Escape") onClose();
       if (!isGallery) return;
       if (e.key === "ArrowRight") {
-        isRtl ? handlePrev() : handleNext();
+        if (isRtl) {
+          handlePrev();
+        } else {
+          handleNext();
+        }
       }
       if (e.key === "ArrowLeft") {
-        isRtl ? handleNext() : handlePrev();
+        if (isRtl) {
+          handleNext();
+        } else {
+          handlePrev();
+        }
       }
     };
     window.addEventListener("keydown", handleKeyDown);

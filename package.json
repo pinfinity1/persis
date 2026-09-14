@@ -6,7 +6,7 @@
     "dev": "next dev",
     "clean": "rm -rf .next && next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "node .next/standalone/server.js",
     "lint": "eslint",
     "payload": "payload"
   },

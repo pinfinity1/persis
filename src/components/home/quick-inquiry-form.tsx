@@ -82,7 +82,7 @@ export const QuickInquiryForm: React.FC = () => {
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
       {serverError && (
         <div className="p-3 bg-destructive/10 border-s-2 border-destructive text-destructive text-xs">
-          {t(serverError as any)}
+          {t(serverError as Parameters<typeof t>[0])}
         </div>
       )}
 
@@ -107,9 +107,9 @@ export const QuickInquiryForm: React.FC = () => {
                 : "border-border/60"
             }`}
           />
-          {errors.fullName && (
+          {errors.fullName?.message && (
             <span className="text-[10px] text-destructive block">
-              {t(errors.fullName.message as any)}
+              {t(errors.fullName.message as Parameters<typeof t>[0])}
             </span>
           )}
         </div>
@@ -134,15 +134,15 @@ export const QuickInquiryForm: React.FC = () => {
                 : "border-border/60"
             }`}
           />
-          {errors.country && (
+          {errors.country?.message && (
             <span className="text-[10px] text-destructive block">
-              {t(errors.country.message as any)}
+              {t(errors.country.message as Parameters<typeof t>[0])}
             </span>
           )}
         </div>
       </div>
 
-      {/* شماره تماس همراه با Hint و تراز ثابت LTR */}
+      {/* شماره تماس */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
           <label
@@ -162,15 +162,15 @@ export const QuickInquiryForm: React.FC = () => {
           placeholder={t("phonePlaceholder")}
           disabled={isPending}
           {...register("phone")}
-          className={`rounded-none h-10 bg-background text-xs  text-start tracking-wider placeholder:tracking-normal placeholder:text-muted-foreground/40 ${
+          className={`rounded-none h-10 bg-background text-xs text-start tracking-wider placeholder:tracking-normal placeholder:text-muted-foreground/40 ${
             errors.phone
               ? "border-destructive focus-visible:ring-destructive"
               : "border-border/60"
           }`}
         />
-        {errors.phone && (
+        {errors.phone?.message && (
           <span className="text-[10px] text-destructive block">
-            {t(errors.phone.message as any)}
+            {t(errors.phone.message as Parameters<typeof t>[0])}
           </span>
         )}
       </div>
@@ -196,9 +196,9 @@ export const QuickInquiryForm: React.FC = () => {
               : "border-border/60"
           }`}
         />
-        {errors.message && (
+        {errors.message?.message && (
           <span className="text-[10px] text-destructive block">
-            {t(errors.message.message as any)}
+            {t(errors.message.message as Parameters<typeof t>[0])}
           </span>
         )}
       </div>

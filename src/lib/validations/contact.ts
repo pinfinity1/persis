@@ -23,7 +23,7 @@ const optionalSanitizedString = (max: number) =>
     .max(max)
     .optional()
     .transform((val) => {
-      if (!val) return "";
+      if (!val || val.trim().length === 0) return undefined;
       return xss(val, {
         whiteList: {},
         stripIgnoreTag: true,

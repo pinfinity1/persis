@@ -51,7 +51,7 @@ export default async function ContactPage({ params }: PageProps) {
     "@type": "ContactPage",
     name: tMeta("contact.title"),
     description: tMeta("contact.description"),
-    mainEntity: getOrganizationSchema(currentLocale),
+    mainEntity: getOrganizationSchema(),
   };
 
   return (
