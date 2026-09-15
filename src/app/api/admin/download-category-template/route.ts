@@ -5,25 +5,25 @@ import * as XLSX from "xlsx";
 export async function GET() {
   const sampleData = [
     {
-      slug: "monocolor",
+      slug: "mono-color",
       order: 1,
-      title_fa: "سری تک‌رنگ و ساده",
-      title_en: "Monocolor & Solid Series",
-      title_ar: "سلسلة الألوان الأحادية",
+      title_fa: "مونو کالر",
+      title_en: "Mono Color",
+      title_ar: "مونو كولور",
     },
     {
-      slug: "veined-effect",
+      slug: "vein-effect",
       order: 2,
-      title_fa: "سری ابر و بادی",
-      title_en: "Veined & Cloudy Series",
-      title_ar: "سلسلة التموجات السحابية",
+      title_fa: "وین افکت",
+      title_en: "Vein Effect",
+      title_ar: "فين إفكت",
     },
     {
       slug: "calacatta",
       order: 3,
-      title_fa: "سری رگه‌دار",
-      title_en: "Calacatta Veined Series",
-      title_ar: "سلسلة التعريقات (كالاكاتا)",
+      title_fa: "کالاکاتا",
+      title_en: "Calacatta",
+      title_ar: "كلاكاتا",
     },
   ];
 
@@ -33,7 +33,7 @@ export async function GET() {
       وضعیت: "اجباری",
       توضیح:
         "شناسه انگلیسی دسته‌بندی برای URL و فیلتر سایت (فقط حروف کوچک و خط تیره).",
-      "نمونه مقدار مجاز": "monocolor یا calacatta",
+      "نمونه مقدار مجاز": "mono-color یا vein-effect یا calacatta",
     },
     {
       "نام ستون (Header)": "order",
@@ -46,7 +46,7 @@ export async function GET() {
       "نام ستون (Header)": "title_fa / title_en / title_ar",
       وضعیت: "اجباری",
       توضیح: "نام دسته‌بندی به تفکیک زبان‌های فارسی، انگلیسی و عربی.",
-      "نمونه مقدار مجاز": "سری تک‌رنگ / Monocolor / سلسلة الألوان الأحادية",
+      "نمونه مقدار مجاز": "مونو کالر / Mono Color / مونو كولور",
     },
   ];
 
