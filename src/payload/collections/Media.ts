@@ -4,6 +4,7 @@ import { revalidateTag } from "next/cache";
 
 export const Media: CollectionConfig = {
   slug: "media",
+  lockDocuments: false,
   access: {
     read: () => true,
   },
