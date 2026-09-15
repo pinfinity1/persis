@@ -1,16 +1,16 @@
-import React, { cache } from "react";
+// src/app/[locale]/products/[slug]/page.tsx
+import React from "react";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getPayload } from "payload";
 import configPromise from "@/payload.config";
 import { Link } from "@/i18n/routing";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import {
   getProductBySlugService,
   getAllDimensionsService,
   getAllThicknessesService,
   getAllFinishesService,
-  type ProductItemDTO,
   type Locale,
   type GalleryItemDTO,
 } from "@/services/product.service";
@@ -26,6 +26,9 @@ import {
   safeJsonLdReplacer,
 } from "@/lib/seo";
 
+// فعال‌سازی رندرینگ افزایشی بر اساس تقاضا (Incremental Static Regeneration)
+export const dynamicParams = true;
+
 interface ProductPageProps {
   params: Promise<{ locale: string; slug: string }>;
 }
@@ -35,7 +38,7 @@ export async function generateStaticParams() {
     const payload = await getPayload({ config: configPromise });
     const products = await payload.find({
       collection: "products",
-      limit: 500,
+      limit: 100,
       depth: 0,
       pagination: false,
       where: {
@@ -51,14 +54,11 @@ export async function generateStaticParams() {
         slug: doc.slug,
       })),
     );
-  } catch {
+  } catch (error) {
+    console.error("Failed to generate static params for products:", error);
     return [];
   }
 }
-
-const getCachedProduct = cache(async (slug: string, locale: Locale) => {
-  return await getProductBySlugService(slug, locale);
-});
 
 function resolveMediaUrl(
   thumbnailUrl: string | undefined | null,
@@ -93,11 +93,14 @@ export async function generateMetadata({
   const { locale, slug } = await params;
   const currentLocale = (locale as Locale) || "fa";
 
-  let product: ProductItemDTO | null = null;
+  // ثبت زبان درخواست برای جلوگیری از دسترسی داینامیک هدرها در زمان تولید متادیتا
+  setRequestLocale(currentLocale);
+
+  let product = null;
   try {
-    product = await getCachedProduct(slug, currentLocale);
+    product = await getProductBySlugService(slug, currentLocale);
   } catch {
-    // Silent fail for build phase
+    // در صورت خطا در واکشی متادیتا متوقف نشود
   }
 
   if (!product) {
@@ -123,8 +126,11 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   const { locale, slug } = await params;
   const currentLocale = (locale as Locale) || "fa";
 
+  // الزامی برای تولید استاتیک استاندارد در next-intl بدون پرتاب خطای Dynamic Usage
+  setRequestLocale(currentLocale);
+
   const [product, t, tMeta] = await Promise.all([
-    getCachedProduct(slug, currentLocale),
+    getProductBySlugService(slug, currentLocale),
     getTranslations({ locale: currentLocale, namespace: "ProductDetail" }),
     getTranslations({ locale: currentLocale, namespace: "Metadata" }),
   ]);
