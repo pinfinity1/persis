@@ -115,7 +115,7 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
           "fixed top-0 inset-x-0 z-40 w-full transition-all duration-300 select-none",
           isHomePage && !isScrolled
             ? "bg-gradient-to-b from-black/80 via-black/40 to-transparent border-b border-transparent text-white"
-            : "border-b border-border/50 bg-background/95 backdrop-blur-md text-foreground shadow-xs",
+            : "bg-background/95 backdrop-blur-md text-foreground shadow-xs",
         )}
       >
         <div className="container mx-auto flex h-20 items-center justify-between px-4 sm:px-8 xl:px-12">
