@@ -1,4 +1,5 @@
 // src/payload/globals/HomePage.ts
+import { revalidateTag } from "next/cache";
 import type { GlobalConfig } from "payload";
 
 export const HomePage: GlobalConfig = {
@@ -10,6 +11,17 @@ export const HomePage: GlobalConfig = {
   },
   access: {
     read: () => true,
+  },
+  hooks: {
+    afterChange: [
+      () => {
+        try {
+          revalidateTag("home-page");
+        } catch (err) {
+          console.warn("Revalidate error on HomePage:", err);
+        }
+      },
+    ],
   },
   fields: [
     {

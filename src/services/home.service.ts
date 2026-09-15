@@ -50,21 +50,22 @@ export const getHomePageDataService = cache(
         return { hero: null, infoCardsImages: {} };
       }
 
-      const hero: HomePageHeroDTO | null = res.title
-        ? {
-            tagline: (res.tagline as string) || undefined,
-            title: res.title as string,
-            subtitle: (res.subtitle as string) || undefined,
-            desktopPoster:
-              extractUrl(res.desktopPoster) || "/PersisQuartz-Red.png",
-            desktopVideo: extractUrl(res.desktopVideo),
-            mobilePoster:
-              extractUrl(res.mobilePoster) ||
-              extractUrl(res.desktopPoster) ||
-              "/PersisQuartz-Red.png",
-            mobileVideo: extractUrl(res.mobileVideo),
-          }
-        : null;
+      const hero: HomePageHeroDTO | null =
+        res.title || res.desktopPoster || res.desktopVideo
+          ? {
+              tagline: (res.tagline as string) || undefined,
+              title: (res.title as string) || "",
+              subtitle: (res.subtitle as string) || undefined,
+              desktopPoster:
+                extractUrl(res.desktopPoster) || "/PersisQuartz-Red.png",
+              desktopVideo: extractUrl(res.desktopVideo),
+              mobilePoster:
+                extractUrl(res.mobilePoster) ||
+                extractUrl(res.desktopPoster) ||
+                "/PersisQuartz-Red.png",
+              mobileVideo: extractUrl(res.mobileVideo),
+            }
+          : null;
 
       const infoCards = (res.infoCardsImages as Record<string, unknown>) || {};
 
