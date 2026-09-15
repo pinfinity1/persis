@@ -114,7 +114,7 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
         className={cn(
           "fixed top-0 inset-x-0 z-40 w-full transition-all duration-300 select-none",
           isHomePage && !isScrolled
-            ? "bg-gradient-to-b from-black/80 via-black/40 to-transparent border-b border-transparent text-white"
+            ? "bg-gradient-to-b from-black/80 via-black/40 to-transparent text-white"
             : "bg-background/95 backdrop-blur-md text-foreground shadow-xs",
         )}
       >

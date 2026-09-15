@@ -15,6 +15,13 @@ export const excelProductRowSchema = z.object({
         .toLowerCase(),
     z.string().min(2, "اسلاگ محصول الزامی است"),
   ),
+  category_slug: z.preprocess(
+    (val) =>
+      String(val ?? "")
+        .trim()
+        .toLowerCase(),
+    z.string().min(2, "اسلاگ دسته‌بندی الزامی است"),
+  ),
   title_fa: z.preprocess(
     (val) => String(val ?? "").trim(),
     z.string().min(2, "نام فارسی الزامی است"),

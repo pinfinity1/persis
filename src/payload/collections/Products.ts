@@ -75,7 +75,7 @@ export const Products: CollectionConfig = {
       name: "color_family",
       type: "relationship",
       relationTo: "colors",
-      required: true,
+      required: false,
       admin: { description: "طیف رنگی اصلی سنگ" },
     },
     {

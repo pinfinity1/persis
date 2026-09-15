@@ -112,6 +112,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // واکشی دسته‌بندی‌ها برای مپ کردن خودکار
+    const categoriesRes = await payload.find({
+      collection: "categories",
+      limit: 100,
+      depth: 0,
+      pagination: false,
+    });
+
+    const categoryMap = new Map<string, string | number>(
+      categoriesRes.docs.map((cat) => [String(cat.slug).toLowerCase(), cat.id]),
+    );
+
     const existingProductsRes = await payload.find({
       collection: "products",
       where: {
@@ -136,10 +148,18 @@ export async function POST(req: NextRequest) {
     for (let i = 0; i < validRows.length; i += BATCH_SIZE) {
       const chunk = validRows.slice(i, i + BATCH_SIZE);
 
-      const chunkPromises = chunk.map(async ({ data: item }) => {
+      const chunkPromises = chunk.map(async ({ data: item, rowNum }) => {
+        const categoryId = categoryMap.get(item.category_slug);
+        if (!categoryId) {
+          throw new Error(
+            `دسته‌بندی با اسلاگ "${item.category_slug}" یافت نشد. لطفاً ابتدا فایل دسته‌بندی‌ها را ثبت کنید.`,
+          );
+        }
+
         const productData = {
           code: item.code,
           slug: item.slug,
+          category: categoryId,
           is_in_stock: "active" as const,
           custom_thickness_available: true,
           title: {

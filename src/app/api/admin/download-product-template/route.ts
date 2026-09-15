@@ -7,6 +7,7 @@ export async function GET() {
     {
       code: "1100",
       slug: "dover",
+      category_slug: "mono-color",
       title_fa: "داور",
       title_en: "Dover",
       title_ar: "دوفر",
@@ -20,6 +21,7 @@ export async function GET() {
     {
       code: "1600",
       slug: "eclipse",
+      category_slug: "mono-color",
       title_fa: "اکلیپس",
       title_en: "Eclipse",
       title_ar: "إكليبس",
@@ -33,6 +35,7 @@ export async function GET() {
     {
       code: "2106",
       slug: "aland",
+      category_slug: "vein-effect",
       title_fa: "الند",
       title_en: "Aland",
       title_ar: "ألاند",
@@ -46,6 +49,7 @@ export async function GET() {
     {
       code: "2601",
       slug: "caspian",
+      category_slug: "vein-effect",
       title_fa: "کاسپین",
       title_en: "Caspian",
       title_ar: "كاسبيان",
@@ -59,6 +63,7 @@ export async function GET() {
     {
       code: "3103",
       slug: "arctic",
+      category_slug: "calacatta",
       title_fa: "آرکتیک",
       title_en: "Arctic",
       title_ar: "آركتيك",
@@ -72,6 +77,7 @@ export async function GET() {
     {
       code: "3108",
       slug: "zarshouran",
+      category_slug: "calacatta",
       title_fa: "زرشوران",
       title_en: "Zarshouran",
       title_ar: "زرشوران",
@@ -85,6 +91,7 @@ export async function GET() {
     {
       code: "3301",
       slug: "zagos-strom",
+      category_slug: "calacatta",
       title_fa: "زاگرس استروم",
       title_en: "Zagos Strom",
       title_ar: "زاغروس ستروم",
@@ -98,6 +105,7 @@ export async function GET() {
     {
       code: "3601",
       slug: "baikal",
+      category_slug: "calacatta",
       title_fa: "بایکال",
       title_en: "Baikal",
       title_ar: "بايكال",
@@ -122,8 +130,14 @@ export async function GET() {
       "نام ستون (Header)": "slug",
       وضعیت: "اجباری",
       توضیح:
-        "شناسه انگلیسی سنگ در آدرس وب‌سایت (تنها حروف کوچک انگلیسی و بدون فاصله).",
+        "شناسه انگلیسی سنگ در آدرس وب‌سایت (تنها حروف کوچک انگلیسی و خط تیره).",
       "نمونه مقدار مجاز": "dover یا aland",
+    },
+    {
+      "نام ستون (Header)": "category_slug",
+      وضعیت: "اجباری",
+      توضیح: "اسلاگ دسته‌بندی که این سنگ به آن تعلق دارد جهت انتساب خودکار.",
+      "نمونه مقدار مجاز": "mono-color یا vein-effect یا calacatta",
     },
     {
       "نام ستون (Header)": "title_fa / title_en / title_ar",
@@ -136,13 +150,6 @@ export async function GET() {
       وضعیت: "اختیاری",
       توضیح: "متن کانسپت، روایت بصری و ویژگی‌های معماری سنگ به ۳ زبان.",
       "نمونه مقدار مجاز": "الهام‌گرفته از صخره‌های...",
-    },
-    {
-      "نام ستون (Header)": "دسته‌بندی، رنگ و الگو",
-      وضعیت: "در پنل ادمین",
-      توضیح:
-        "پس از بارگذاری اکسل، وارد ویرایش هر محصول شده و دسته‌بندی، طیف رنگ و الگوی رگه را از منوی کشویی متصل انتخاب فرمایید.",
-      "نمونه مقدار مجاز": "داشبورد ادمین",
     },
     {
       "نام ستون (Header)": "ابعاد، ضخامت و فینیش",
