@@ -319,7 +319,7 @@ export interface Product {
   /**
    * طیف رنگی اصلی سنگ
    */
-  color_family: number | Color;
+  color_family?: (number | null) | Color;
   /**
    * الگوی رگه (مثلاً رگه نازک، رگه ضخیم، ابر و بادی)
    */
