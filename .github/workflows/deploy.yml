@@ -29,10 +29,6 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/persisquartz:latest
-          # در صورتی که دیتابیس در زمان بیلد نیاز است:
-          build-args: |
-            DATABASE_URI=${{ secrets.DATABASE_URI }}
-            PAYLOAD_SECRET=${{ secrets.PAYLOAD_SECRET }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -46,6 +42,6 @@ jobs:
           script: |
             cd /var/www/persisquartz
             export DOCKER_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/persisquartz:latest
-            docker compose -f docker-compose.prod.yml pull
-            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            docker compose -f docker-compose.prod.yml pull app
+            docker compose -f docker-compose.prod.yml up -d --force-recreate --remove-orphans app
             docker image prune -f

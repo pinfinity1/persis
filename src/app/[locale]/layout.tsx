@@ -2,7 +2,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { NextIntlClientProvider } from "next-intl";
-import { getMessages } from "next-intl/server";
+import { getMessages, setRequestLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import { notFound } from "next/navigation";
 import { Header } from "@/components/shared/header";
@@ -38,6 +38,10 @@ export const metadata: Metadata = {
     "تولیدکننده سطوح کوارتز مهندسی‌شده با استانداردهای جهانی؛ تلفیقی از استحکام بی‌نظیر و زیبایی معماری.",
 };
 
+export function generateStaticParams() {
+  return routing.locales.map((locale) => ({ locale }));
+}
+
 export default async function RootLayout({
   children,
   params,
@@ -51,8 +55,13 @@ export default async function RootLayout({
     notFound();
   }
 
-  const messages = await getMessages();
-  const categories = await getCategoriesService(locale as Locale);
+  // جلوگیری قطعی از رفتار داینامیک هدرها
+  setRequestLocale(locale);
+
+  const [messages, categories] = await Promise.all([
+    getMessages({ locale }),
+    getCategoriesService(locale as Locale),
+  ]);
 
   return (
     <html
