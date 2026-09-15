@@ -116,18 +116,13 @@ export const Products: CollectionConfig = {
     },
     {
       name: "gallery",
-      type: "array",
+      type: "upload",
+      relationTo: "media",
+      hasMany: true,
       admin: {
-        description: "گالری اسلایدر تصاویر (بافت نزدیک و اجرا در محیط)",
+        description:
+          "انتخاب یا آپلود همزمان چند تصویر برای گالری اسلایدر (قابلیت درگ اند دراپ گروهی)",
       },
-      fields: [
-        {
-          name: "image",
-          type: "upload",
-          relationTo: "media",
-          required: true,
-        },
-      ],
     },
     {
       name: "thicknesses",

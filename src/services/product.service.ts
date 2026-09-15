@@ -151,23 +151,33 @@ function mapProductDocToDTO(raw: unknown): ProductItemDTO {
   const colorFamily = resolveLookupItem(doc.color_family);
   const veinPattern = resolveLookupItem(doc.vein_pattern);
 
+  // استخراج تصاویر از ساختار جدید hasMany Upload
   const rawGallery = Array.isArray(doc.gallery) ? doc.gallery : [];
-  const gallery: GalleryItemDTO[] = rawGallery.map((g: unknown) => {
-    const item = (g && typeof g === "object" ? g : {}) as Record<
-      string,
-      unknown
-    >;
-    const imgObj =
-      item.image && typeof item.image === "object"
-        ? (item.image as Record<string, unknown>)
-        : undefined;
+  const gallery: GalleryItemDTO[] = rawGallery
+    .map((item: unknown) => {
+      if (!item) return null;
 
-    return {
-      url: resolveMediaUrl(item.image),
-      alt: imgObj?.alt ? String(imgObj.alt) : "",
-      caption: item.caption ? String(item.caption) : undefined,
-    };
-  });
+      // اگر آیتم یک آبجکت کامل مدیا باشد
+      if (typeof item === "object" && item !== null) {
+        const imgObj = item as Record<string, unknown>;
+        const url = resolveMediaUrl(imgObj);
+
+        // اگر تصویر معتبری یافت نشد عبور کن
+        if (!url || url === "/PersisQuartz-Red.png") return null;
+
+        return {
+          url,
+          alt: imgObj.alt
+            ? String(imgObj.alt)
+            : doc.title
+              ? String(doc.title)
+              : "",
+        };
+      }
+
+      return null;
+    })
+    .filter((g): g is GalleryItemDTO => g !== null);
 
   const rawThicknesses = Array.isArray(doc.thicknesses) ? doc.thicknesses : [];
   const thicknesses: string[] = rawThicknesses.map((t: unknown) => {

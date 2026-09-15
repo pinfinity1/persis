@@ -337,18 +337,9 @@ export interface Product {
    */
   thumbnail?: (number | null) | Media;
   /**
-   * گالری اسلایدر تصاویر (بافت نزدیک و اجرا در محیط)
+   * انتخاب یا آپلود همزمان چند تصویر برای گالری اسلایدر (قابلیت درگ اند دراپ گروهی)
    */
-  gallery?:
-    | {
-        image: number | Media;
-        /**
-         * توضیح تصویر (مثلاً: اجرا در کانتر آشپزخانه)
-         */
-        caption?: string | null;
-        id?: string | null;
-      }[]
-    | null;
+  gallery?: (number | Media)[] | null;
   /**
    * انتخاب ضخامت‌های استاندارد خط تولید برای این اسلب از کالکشن ضخامت‌ها
    */
@@ -747,13 +738,7 @@ export interface ProductsSelect<T extends boolean = true> {
   is_in_stock?: T;
   is_featured?: T;
   thumbnail?: T;
-  gallery?:
-    | T
-    | {
-        image?: T;
-        caption?: T;
-        id?: T;
-      };
+  gallery?: T;
   thicknesses?: T;
   custom_thickness_available?: T;
   finishes?: T;
