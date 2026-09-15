@@ -127,12 +127,6 @@ export const Products: CollectionConfig = {
           relationTo: "media",
           required: true,
         },
-        {
-          name: "caption",
-          type: "text",
-          localized: true,
-          admin: { description: "توضیح تصویر (مثلاً: اجرا در کانتر آشپزخانه)" },
-        },
       ],
     },
     {
