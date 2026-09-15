@@ -30,7 +30,6 @@ export interface LookupItem {
   id: string;
   title: string;
   slug: string;
-  hex_code?: string;
 }
 
 export interface GalleryItemDTO {
@@ -64,8 +63,8 @@ export interface ProductItemDTO {
   title: string;
   slug: string;
   code: string;
-  category: LookupItem;
-  color_family: LookupItem;
+  category?: LookupItem;
+  color_family?: LookupItem;
   vein_pattern?: LookupItem;
   is_in_stock: "active" | "discontinued";
   is_featured: boolean;
@@ -122,26 +121,35 @@ function resolveMediaUrl(
   return fallback;
 }
 
+function resolveLookupItem(raw: unknown): LookupItem | undefined {
+  if (!raw) return undefined;
+  if (typeof raw === "object" && raw !== null) {
+    const obj = raw as Record<string, unknown>;
+    return {
+      id: String(obj.id ?? ""),
+      title: String(obj.title || obj.slug || ""),
+      slug: String(obj.slug ?? ""),
+    };
+  }
+  if (typeof raw === "string" || typeof raw === "number") {
+    return {
+      id: String(raw),
+      title: "",
+      slug: "",
+    };
+  }
+  return undefined;
+}
+
 function mapProductDocToDTO(raw: unknown): ProductItemDTO {
   const doc = (raw && typeof raw === "object" ? raw : {}) as Record<
     string,
     unknown
   >;
 
-  const category = (
-    doc.category && typeof doc.category === "object" ? doc.category : {}
-  ) as Record<string, unknown>;
-
-  const colorFamily = (
-    doc.color_family && typeof doc.color_family === "object"
-      ? doc.color_family
-      : {}
-  ) as Record<string, unknown>;
-
-  const veinPattern =
-    doc.vein_pattern && typeof doc.vein_pattern === "object"
-      ? (doc.vein_pattern as Record<string, unknown>)
-      : undefined;
+  const category = resolveLookupItem(doc.category);
+  const colorFamily = resolveLookupItem(doc.color_family);
+  const veinPattern = resolveLookupItem(doc.vein_pattern);
 
   const rawGallery = Array.isArray(doc.gallery) ? doc.gallery : [];
   const gallery: GalleryItemDTO[] = rawGallery.map((g: unknown) => {
@@ -193,23 +201,9 @@ function mapProductDocToDTO(raw: unknown): ProductItemDTO {
     title: String(doc.title ?? ""),
     slug: String(doc.slug ?? ""),
     code: String(doc.code ?? ""),
-    category: {
-      id: String(category.id ?? ""),
-      title: String(category.title ?? ""),
-      slug: String(category.slug ?? ""),
-    },
-    color_family: {
-      id: String(colorFamily.id ?? ""),
-      title: String(colorFamily.title ?? ""),
-      slug: String(colorFamily.slug ?? ""),
-    },
-    vein_pattern: veinPattern
-      ? {
-          id: String(veinPattern.id ?? ""),
-          title: String(veinPattern.title ?? ""),
-          slug: String(veinPattern.slug ?? ""),
-        }
-      : undefined,
+    category: category || { id: "", title: "", slug: "" },
+    color_family: colorFamily,
+    vein_pattern: veinPattern,
     is_in_stock: doc.is_in_stock === "discontinued" ? "discontinued" : "active",
     is_featured: Boolean(doc.is_featured),
     thumbnail: resolveMediaUrl(doc.thumbnail),
@@ -450,7 +444,6 @@ export async function getColorsService(
           id: String(doc.id ?? ""),
           title: String(doc.title ?? ""),
           slug: String(doc.slug ?? ""),
-          hex_code: undefined,
         }));
       } catch (error: unknown) {
         console.error("Error fetching colors in service:", error);
