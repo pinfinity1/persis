@@ -38,10 +38,6 @@ export const metadata: Metadata = {
     "تولیدکننده سطوح کوارتز مهندسی‌شده با استانداردهای جهانی؛ تلفیقی از استحکام بی‌نظیر و زیبایی معماری.",
 };
 
-export function generateStaticParams() {
-  return routing.locales.map((locale) => ({ locale }));
-}
-
 export default async function RootLayout({
   children,
   params,
@@ -55,7 +51,7 @@ export default async function RootLayout({
     notFound();
   }
 
-  // جلوگیری قطعی از رفتار داینامیک هدرها
+  // ثبت کانتکست زبان
   setRequestLocale(locale);
 
   const [messages, categories] = await Promise.all([
