@@ -26,11 +26,17 @@ ENV HOSTNAME="0.0.0.0"
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# کپی اسکلت استاتیک و سورس‌های مایگریشن برای هماهنگی ران‌تایم
-COPY --from=builder /app/public ./public
+# ۱. ساخت پوشه کش برای Next.js با دسترسی کاربر غیر روت
+RUN mkdir -p .next/cache && chown -R nextjs:nodejs .next
+
+# ۲. کپی خروجی استاندارد Standalone
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+
+# ۳. کپی فایل‌های استاتیک دقیقاً درون .next/static
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-COPY --from=builder --chown=nextjs:nodejs /app/src/migrations ./src/migrations
+
+# ۴. کپی پوشه public همراه با دسترسی کاربر nextjs برای لود بدون خطای تصاویر
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
 USER nextjs
 
