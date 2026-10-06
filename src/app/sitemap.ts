@@ -14,6 +14,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes = [
     "",
     "/products",
+    "/blog",
     "/applications",
     "/care-and-maintenance",
     "/catalogs",
@@ -24,6 +25,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const entries: MetadataRoute.Sitemap = [];
 
+  // ۱. روت‌های استاتیک پایه
   for (const route of staticRoutes) {
     for (const locale of LOCALES) {
       const pathSuffix = route ? route : "";
@@ -47,15 +49,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const payload = await getPayload({ config: configPromise });
 
-    let page = 1;
-    let hasNextPage = true;
-    const batchLimit = 300;
-
-    while (hasNextPage) {
+    // ۲. صفحات داینامیک محصولات (Products)
+    let productPage = 1;
+    let hasNextProductPage = true;
+    while (hasNextProductPage) {
       const productsBatch = await payload.find({
         collection: "products",
-        limit: batchLimit,
-        page,
+        limit: 300,
+        page: productPage,
         depth: 0,
         pagination: true,
         where: {
@@ -93,11 +94,59 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         }
       }
 
-      hasNextPage = productsBatch.hasNextPage;
-      page += 1;
+      hasNextProductPage = productsBatch.hasNextPage;
+      productPage += 1;
+    }
+
+    // ۳. صفحات داینامیک مقالات وبلاگ (Posts)
+    let postPage = 1;
+    let hasNextPostPage = true;
+    while (hasNextPostPage) {
+      const postsBatch = await payload.find({
+        collection: "posts",
+        limit: 100,
+        page: postPage,
+        depth: 0,
+        pagination: true,
+        where: {
+          status: { equals: "published" },
+        },
+      });
+
+      for (const post of postsBatch.docs) {
+        const slug = typeof post.slug === "string" ? post.slug.trim() : "";
+        if (!slug) continue;
+
+        const rawDate = post.updatedAt ? String(post.updatedAt) : "";
+        const parsedDate = rawDate ? new Date(rawDate) : new Date();
+        const lastModified = isNaN(parsedDate.getTime())
+          ? new Date()
+          : parsedDate;
+
+        for (const locale of LOCALES) {
+          const route = `/blog/${slug}`;
+          entries.push({
+            url: `${BASE_URL}/${locale}${route}`,
+            lastModified,
+            changeFrequency: "weekly",
+            priority: 0.85,
+            alternates: {
+              languages: {
+                fa: `${BASE_URL}/fa${route}`,
+                en: `${BASE_URL}/en${route}`,
+                ar: `${BASE_URL}/ar${route}`,
+                "x-default": `${BASE_URL}/fa${route}`,
+              },
+            },
+          });
+        }
+      }
+
+      hasNextPostPage = postsBatch.hasNextPage;
+      postPage += 1;
     }
   } catch {
-    // Silent catch for build time without live DB
+    // Silent catch
   }
 
   return entries;

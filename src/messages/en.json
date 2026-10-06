@@ -31,6 +31,10 @@
     "care": {
       "title": "Care & Maintenance Instructions",
       "description": "Official maintenance protocol for daily cleaning, stain removal techniques, and preventive care for quartz surfaces."
+    },
+    "blog": {
+      "title": "Architectural Journal & Insights",
+      "description": "Latest architectural insights, engineered quartz comparison guides, and modern interior design standards."
     }
   },
   "Index": {
@@ -45,6 +49,7 @@
     "dealers": "Dealers",
     "careAndMaintenance": "Care & Maintenance",
     "about": "About Us",
+    "blog": "Journal",
     "contactUs": "Contact Us"
   },
   "Footer": {
@@ -321,5 +326,14 @@
     "postalCodeError": "Postal code is required",
     "addressError": "Full address is required",
     "companyError": "Company name is required"
+  },
+  "Blog": {
+    "watermark": "JOURNAL",
+    "title": "Architectural Journal & Insights",
+    "metaDescription": "Latest insights in architectural surfaces, engineered quartz selection guides, and interior design standards.",
+    "readMore": "Read Article",
+    "empty": "No articles published yet.",
+    "backToList": "Back to Journal",
+    "publishedOn": "Published on"
   }
 }

@@ -1,4 +1,3 @@
-// src/components/products/product-applied-gallery.tsx
 "use client";
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
@@ -35,10 +34,13 @@ export const ProductAppliedGallery: React.FC<ProductAppliedGalleryProps> = ({
 
   const onSelect = useCallback(() => {
     if (!emblaApi) return;
+
     const newIdx = emblaApi.selectedScrollSnap();
+
     setSelectedIndex(newIdx);
 
     const activeThumb = thumbRefs.current[newIdx];
+
     if (activeThumb) {
       activeThumb.scrollIntoView({
         behavior: "smooth",
@@ -50,8 +52,10 @@ export const ProductAppliedGallery: React.FC<ProductAppliedGalleryProps> = ({
 
   useEffect(() => {
     if (!emblaApi) return;
+
     emblaApi.on("select", onSelect);
     emblaApi.on("reInit", onSelect);
+
     return () => {
       emblaApi.off("select", onSelect);
     };
@@ -59,17 +63,23 @@ export const ProductAppliedGallery: React.FC<ProductAppliedGalleryProps> = ({
 
   const scrollTo = useCallback(
     (index: number) => {
-      if (emblaApi) emblaApi.scrollTo(index);
+      if (emblaApi) {
+        emblaApi.scrollTo(index);
+      }
     },
     [emblaApi],
   );
 
   const scrollPrev = useCallback(() => {
-    if (emblaApi) emblaApi.scrollPrev();
+    if (emblaApi) {
+      emblaApi.scrollPrev();
+    }
   }, [emblaApi]);
 
   const scrollNext = useCallback(() => {
-    if (emblaApi) emblaApi.scrollNext();
+    if (emblaApi) {
+      emblaApi.scrollNext();
+    }
   }, [emblaApi]);
 
   if (!gallery || gallery.length === 0) return null;
@@ -81,6 +91,7 @@ export const ProductAppliedGallery: React.FC<ProductAppliedGalleryProps> = ({
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <span className="h-px w-5 bg-primary" />
+
             <span className="text-[10px] sm:text-xs uppercase tracking-[0.25em] text-primary font-bold">
               SPATIAL APPLICATION
             </span>
@@ -91,7 +102,9 @@ export const ProductAppliedGallery: React.FC<ProductAppliedGalleryProps> = ({
               <span className="text-foreground font-bold text-sm">
                 {String(selectedIndex + 1).padStart(2, "0")}
               </span>
+
               <span className="opacity-30">/</span>
+
               <span>{String(gallery.length).padStart(2, "0")}</span>
             </div>
 
@@ -105,6 +118,7 @@ export const ProductAppliedGallery: React.FC<ProductAppliedGalleryProps> = ({
               >
                 <ChevronRight className="h-4 w-4 rtl:rotate-0 ltr:rotate-180" />
               </Button>
+
               <Button
                 variant="outline"
                 size="icon"
@@ -118,11 +132,15 @@ export const ProductAppliedGallery: React.FC<ProductAppliedGalleryProps> = ({
           </div>
         </div>
 
-        {/* گرید استیج و تامب‌نیل‌ها */}
+        {/* گرید اصلی */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 lg:gap-6 items-stretch">
-          {/* ستون تامب‌نیل‌ها: محدودیت max-h حذف شد و به ستون اصلی متصل شد */}
-          <div className="order-2 lg:order-1 lg:col-span-2 relative min-h-0">
-            <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-y-auto h-full scrollbar-none pb-1 lg:pb-0 scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0">
+          {/* =========================================================
+          THUMBNAILS
+          در دسکتاپ دقیقاً به ارتفاع استیج کشیده می‌شود.
+          در صورت زیاد بودن تصاویر، خود ستون اسکرول می‌شود.
+      ========================================================== */}
+          <div className="order-2 lg:order-1 lg:col-span-2 min-h-0">
+            <div className="flex lg:flex-col gap-2 h-full min-h-0 overflow-x-auto lg:overflow-y-auto lg:overflow-x-hidden scrollbar-none pb-1 lg:pb-0 scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0">
               {gallery.map((item, idx) => (
                 <button
                   key={idx}
@@ -131,7 +149,7 @@ export const ProductAppliedGallery: React.FC<ProductAppliedGalleryProps> = ({
                   }}
                   type="button"
                   onClick={() => scrollTo(idx)}
-                  className={`relative flex-[0_0_84px] sm:flex-[0_0_104px] lg:flex-none aspect-[16/11] overflow-hidden transition-all duration-300 cursor-pointer touch-manipulation shrink-0 ${
+                  className={`relative flex-[0_0_84px] sm:flex-[0_0_104px] lg:flex-none lg:w-full aspect-[16/11] overflow-hidden transition-all duration-300 cursor-pointer touch-manipulation shrink-0 ${
                     selectedIndex === idx
                       ? "opacity-100 ring-1 ring-primary"
                       : "opacity-35 hover:opacity-75"
@@ -141,7 +159,7 @@ export const ProductAppliedGallery: React.FC<ProductAppliedGalleryProps> = ({
                     src={item.url}
                     alt={`Thumb ${idx + 1}`}
                     fill
-                    sizes="(max-width: 640px) 90px, (max-width: 1024px) 110px, 200px"
+                    sizes="(max-width: 640px) 90px, (max-width: 1024px) 110px, 160px"
                     className="object-cover"
                   />
                 </button>
@@ -149,7 +167,9 @@ export const ProductAppliedGallery: React.FC<ProductAppliedGalleryProps> = ({
             </div>
           </div>
 
-          {/* استیج اصلی کروسل */}
+          {/* =========================================================
+          MAIN CAROUSEL STAGE
+      ========================================================== */}
           <div className="order-1 lg:order-2 lg:col-span-10 relative bg-neutral-950 border border-border/60 overflow-hidden group">
             <div
               ref={emblaRef}
@@ -175,7 +195,7 @@ export const ProductAppliedGallery: React.FC<ProductAppliedGalleryProps> = ({
               </div>
             </div>
 
-            {/* دکمه تمام‌صفحه */}
+            {/* دکمه تمام صفحه */}
             <button
               type="button"
               onClick={() => setIsLightboxOpen(true)}
@@ -209,11 +229,16 @@ export const ProductAppliedGallery: React.FC<ProductAppliedGalleryProps> = ({
         </div>
       </section>
 
-      {/* دیالوگ لایت‌باکس */}
+      {/* =========================================================
+      LIGHTBOX
+  ========================================================== */}
       <MediaLightboxDialog
         isOpen={isLightboxOpen}
         onClose={() => setIsLightboxOpen(false)}
-        images={gallery.map((g) => ({ url: g.url, alt: title }))}
+        images={gallery.map((g) => ({
+          url: g.url,
+          alt: title,
+        }))}
         currentIndex={selectedIndex}
         onIndexChange={(idx) => {
           setSelectedIndex(idx);

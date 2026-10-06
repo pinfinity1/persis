@@ -202,9 +202,6 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
                               {cat.title}
                             </span>
                           </div>
-                          <span className="text-[10px] font-mono text-muted-foreground/40 group-hover/item:text-primary transition-colors">
-                            {(idx + 1).toString().padStart(2, "0")}
-                          </span>
                         </Link>
                       ))}
                     </div>
@@ -242,6 +239,13 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
               )}
             >
               {t("careAndMaintenance")}
+            </Link>
+
+            <Link
+              href="/blog"
+              className={navLinkStyle(pathname.startsWith("/blog"))}
+            >
+              {t("blog")}
             </Link>
 
             <Link
@@ -447,6 +451,18 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
                       )}
                     >
                       {t("careAndMaintenance")}
+                    </Link>
+
+                    <Link
+                      href="/blog"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={cn(
+                        "block py-2.5 text-sm text-foreground/90 hover:text-primary transition-colors",
+                        pathname.startsWith("/blog") &&
+                          "text-primary font-semibold",
+                      )}
+                    >
+                      {t("blog")}
                     </Link>
 
                     <Link

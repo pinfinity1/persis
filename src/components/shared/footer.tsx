@@ -1,3 +1,4 @@
+// src/components/shared/footer.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -113,10 +114,18 @@ export const Footer: React.FC<FooterProps> = ({ categories = [] }) => {
             </FooterSection>
           </div>
 
-          {/* ستون ۲: منابع و کاتالوگ */}
+          {/* ستون ۲: منابع و مقالات تخصصی */}
           <div className="lg:col-span-2">
             <FooterSection title={t("resourcesTitle")}>
               <ul className="space-y-3">
+                <li>
+                  <Link
+                    href="/blog"
+                    className="hover:text-white transition-colors block text-primary font-normal"
+                  >
+                    {t("blog")}
+                  </Link>
+                </li>
                 <li>
                   <Link
                     href="/catalogs"
@@ -186,7 +195,6 @@ export const Footer: React.FC<FooterProps> = ({ categories = [] }) => {
           </p>
 
           <div className="flex items-center gap-4">
-            {/* Instagram */}
             <a
               href="https://instagram.com"
               target="_blank"
@@ -209,7 +217,6 @@ export const Footer: React.FC<FooterProps> = ({ categories = [] }) => {
               </svg>
             </a>
 
-            {/* LinkedIn */}
             <a
               href="https://linkedin.com"
               target="_blank"
@@ -222,7 +229,6 @@ export const Footer: React.FC<FooterProps> = ({ categories = [] }) => {
               </svg>
             </a>
 
-            {/* Telegram */}
             <a
               href="https://t.me"
               target="_blank"
