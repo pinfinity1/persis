@@ -49,10 +49,17 @@ export async function generateMetadata({
   const siteUrl =
     process.env.NEXT_PUBLIC_SERVER_URL || "https://persisquartz.com";
   const postUrl = `${siteUrl}/${locale}/blog/${slug}`;
-  const coverUrl =
-    post.coverImage && typeof post.coverImage === "object"
+
+  const rawCoverUrl =
+    post.coverImage &&
+    typeof post.coverImage === "object" &&
+    "url" in post.coverImage
       ? post.coverImage.url
-      : `${siteUrl}/PersisQuartz-Red.png`;
+      : typeof post.coverImage === "string"
+        ? post.coverImage
+        : null;
+
+  const coverUrl: string = rawCoverUrl || `${siteUrl}/PersisQuartz-Red.png`;
 
   return {
     title: `${post.title} | Persis Quartz`,

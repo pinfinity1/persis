@@ -4,6 +4,7 @@ import { getPayload } from "payload";
 import configPromise from "@/payload.config";
 import { unstable_cache } from "next/cache";
 import type { Locale } from "./product.service";
+import type { Post } from "@/payload-types";
 
 export interface PostItemDTO {
   id: string;
@@ -27,17 +28,24 @@ export const getPublishedPostsService = (locale: Locale) =>
           depth: 1,
         });
 
-        return res.docs.map((doc: any) => ({
-          id: String(doc.id),
-          title: doc.title || "",
-          slug: doc.slug || "",
-          excerpt: doc.excerpt || "",
-          coverImage:
-            typeof doc.coverImage === "object"
-              ? doc.coverImage?.url
-              : undefined,
-          publishedAt: doc.publishedAt || doc.createdAt,
-        }));
+        // 👈 به جای any از Post استفاده می‌شود
+        return res.docs.map((doc: Post) => {
+          const coverUrl =
+            doc.coverImage &&
+            typeof doc.coverImage === "object" &&
+            "url" in doc.coverImage
+              ? (doc.coverImage.url ?? undefined)
+              : undefined;
+
+          return {
+            id: String(doc.id),
+            title: doc.title || "",
+            slug: doc.slug || "",
+            excerpt: doc.excerpt || "",
+            coverImage: coverUrl,
+            publishedAt: doc.publishedAt || doc.createdAt,
+          };
+        });
       } catch (err) {
         console.error("Error fetching posts:", err);
         return [];
