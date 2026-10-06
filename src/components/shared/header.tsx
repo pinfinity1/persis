@@ -51,6 +51,10 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileProductsOpen, setIsMobileProductsOpen] = useState(false);
 
+  // استیت و تایمر برای کنترل هاور منوی دسکتاپ محصولات
+  const [isProductsHovered, setIsProductsHovered] = useState(false);
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   const isHomePage = pathname === "/" || pathname === `/${locale}`;
@@ -76,6 +80,24 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
     observer.observe(sentinelEl);
     return () => observer.disconnect();
   }, [isHomePage]);
+
+  // بستن منو با تغییر روت
+  useEffect(() => {
+    setIsProductsHovered(false);
+  }, [pathname]);
+
+  const handleMouseEnter = () => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+    }
+    setIsProductsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    closeTimeoutRef.current = setTimeout(() => {
+      setIsProductsHovered(false);
+    }, 120);
+  };
 
   const handleLanguageChange = (newLocale: "fa" | "en" | "ar") => {
     router.replace(pathname, { locale: newLocale });
@@ -124,64 +146,72 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
 
           {/* ۲. منوی دسکتاپ */}
           <nav className="hidden lg:flex items-center gap-0.5 xl:gap-1.5">
-            {/* مگامنو محصولات */}
-            <DropdownMenu dir={isRtl ? "rtl" : "ltr"}>
-              <DropdownMenuTrigger
+            {/* دراپ‌داون هاور محصولات */}
+            <div
+              className="relative"
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
+            >
+              <Link
+                href="/products"
                 className={cn(
                   navLinkStyle(pathname.startsWith("/products")),
                   "flex items-center gap-1.5 outline-none cursor-pointer group",
                 )}
               >
                 <span>{t("products")}</span>
-                <ChevronDown className="h-3 w-3 opacity-60 transition-transform duration-300 group-data-[state=open]:rotate-180" />
-              </DropdownMenuTrigger>
+                <ChevronDown
+                  className={cn(
+                    "h-3 w-3 opacity-60 transition-transform duration-300",
+                    isProductsHovered && "rotate-180 opacity-100 text-primary",
+                  )}
+                />
+              </Link>
 
-              <DropdownMenuContent
-                align="start"
-                sideOffset={8}
-                className="w-[660px] p-6 border border-border/60 bg-popover/98 backdrop-blur-md rounded-none shadow-2xl space-y-5 animate-in fade-in-50 zoom-in-95 duration-200"
-              >
-                {/* هدر مگامنو */}
-                <div className="flex items-center justify-between pb-3.5 border-b border-border/40">
-                  <div className="flex items-center gap-2.5">
-                    <span className="h-2 w-2 rounded-full bg-primary" />
-                    <span className="text-xs uppercase tracking-widest text-foreground font-semibold">
-                      {t("collections")}
-                    </span>
-                  </div>
-                  <Link
-                    href="/products"
-                    className="text-[11px] uppercase tracking-wider text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
-                  >
-                    <span>{t("viewAllProducts")}</span>
-                    <ArrowUpRight className="h-3.5 w-3.5 text-primary" />
-                  </Link>
-                </div>
-
-                {/* کارت‌های کالکشن */}
-                <div className="grid grid-cols-3 gap-3">
-                  {categories.map((cat, idx) => (
-                    <Link
-                      key={cat.id || idx}
-                      href={`/products?category=${cat.slug}`}
-                      className="group/card p-4 border border-border/50 hover:border-primary/80 bg-card/40 hover:bg-card transition-all duration-300 flex flex-col justify-between min-h-[115px]"
-                    >
-                      <div>
-                        <span className="text-[10px] text-primary block mb-2 font-bold">
-                          0{idx + 1}
+              {/* پاپ‌آپ دراپ‌‌داون لوکس */}
+              {isProductsHovered && (
+                <div className="absolute top-full start-0 pt-2 z-50 animate-in fade-in-0 slide-in-from-top-1 duration-200">
+                  <div className="w-64 bg-background/95 backdrop-blur-xl border border-border/70 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-none overflow-hidden">
+                    {/* لینک مستقیم مشاهده تمام محصولات */}
+                    <div className="p-1.5 border-b border-border/40 bg-muted/20">
+                      <Link
+                        href="/products"
+                        onClick={() => setIsProductsHovered(false)}
+                        className="group/all flex items-center justify-between px-3.5 py-2.5 text-xs font-medium text-foreground hover:text-primary transition-colors"
+                      >
+                        <span className="tracking-wide">
+                          {t("viewAllProducts")}
                         </span>
-                        <h5 className="text-xs font-medium text-foreground group-hover/card:text-primary transition-colors leading-snug">
-                          {cat.title}
-                        </h5>
-                      </div>
-                      <span className="text-[10px] uppercase tracking-widest text-muted-foreground/50 group-hover/card:text-foreground transition-colors pt-3 block">
-                        Explore &rarr;
-                      </span>
-                    </Link>
-                  ))}
+                        <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground group-hover/all:text-primary group-hover/all:translate-x-0.5 group-hover/all:-translate-y-0.5 transition-all" />
+                      </Link>
+                    </div>
+
+                    {/* لیست دسته‌بندی‌ها */}
+                    <div className="py-2">
+                      {categories.map((cat, idx) => (
+                        <Link
+                          key={cat.id || cat.slug}
+                          href={`/products?category=${cat.slug}`}
+                          onClick={() => setIsProductsHovered(false)}
+                          className="group/item relative flex items-center justify-between px-4 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-all duration-200"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            {/* نشانگر خط قرمز پرسیس در هاور */}
+                            <span className="w-1 h-3.5 bg-primary rounded-none opacity-0 group-hover/item:opacity-100 transition-opacity" />
+                            <span className="font-light tracking-wide">
+                              {cat.title}
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-mono text-muted-foreground/40 group-hover/item:text-primary transition-colors">
+                            {(idx + 1).toString().padStart(2, "0")}
+                          </span>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
+              )}
+            </div>
 
             {/* لینک‌های تکی مستقیم */}
             <Link
@@ -304,12 +334,12 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
 
               <SheetContent
                 side={isRtl ? "right" : "left"}
-                showCloseButton={false} // بستن دکمه دیفالت جهت کنترل دقیق پوزیشن و استایل
+                showCloseButton={false}
                 className="w-[88%] sm:max-w-md p-0 flex flex-col justify-between bg-background border-border/50 rounded-none h-full"
               >
                 <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
 
-                {/* بخش اول: هدر دراور موبایل (کاملاً ثابت) */}
+                {/* بخش اول: هدر دراور موبایل */}
                 <div className="h-20 shrink-0 px-6 flex items-center justify-between border-b border-border/40">
                   <Logo variant="full" className="w-32" />
                   <SheetClose asChild>
@@ -322,7 +352,7 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
                   </SheetClose>
                 </div>
 
-                {/* بخش دوم: بدنه منوها (تنها بخش اسکرول‌خورده) */}
+                {/* بخش دوم: بدنه منوها */}
                 <div className="flex-1 overflow-y-auto px-6 py-4 space-y-2 divide-y divide-border/20 scrollbar-none">
                   {/* محصولات موبایل */}
                   <div className="pt-2 pb-3">
@@ -441,7 +471,7 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
                   </div>
                 </div>
 
-                {/* بخش سوم: فوتر دراور موبایل (کاملاً ثابت) */}
+                {/* بخش سوم: فوتر دراور موبایل */}
                 <div className="shrink-0 p-6 border-t border-border/40 bg-muted/15 space-y-3">
                   <div className="flex items-center gap-2">
                     <Globe className="h-3.5 w-3.5 text-primary" />

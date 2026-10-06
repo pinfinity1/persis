@@ -1,3 +1,4 @@
+// src/components/products/product-applied-gallery.tsx
 "use client";
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
@@ -76,7 +77,7 @@ export const ProductAppliedGallery: React.FC<ProductAppliedGalleryProps> = ({
   return (
     <>
       <section className="space-y-4 pt-12 sm:pt-16 border-t border-border/40 select-none">
-        {/* هدر مینیمال: فقط تگ بالایی و نویگیشن با شمارنده واحد */}
+        {/* هدر مینیمال */}
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <span className="h-px w-5 bg-primary" />
@@ -119,31 +120,33 @@ export const ProductAppliedGallery: React.FC<ProductAppliedGalleryProps> = ({
 
         {/* گرید استیج و تامب‌نیل‌ها */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 lg:gap-6 items-stretch">
-          {/* ستون تامب‌نیل‌ها (بدون بوردر سنگین و بدون شماره‌های اضافه) */}
-          <div className="order-2 lg:order-1 lg:col-span-2 flex lg:flex-col gap-2 overflow-x-auto lg:overflow-y-auto max-h-none lg:max-h-[520px] scrollbar-none pb-1 lg:pb-0 scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0">
-            {gallery.map((item, idx) => (
-              <button
-                key={idx}
-                ref={(el) => {
-                  thumbRefs.current[idx] = el;
-                }}
-                type="button"
-                onClick={() => scrollTo(idx)}
-                className={`relative flex-[0_0_84px] sm:flex-[0_0_104px] lg:flex-none aspect-[16/11] overflow-hidden transition-all duration-300 cursor-pointer touch-manipulation shrink-0 ${
-                  selectedIndex === idx
-                    ? "opacity-100 ring-1 ring-primary"
-                    : "opacity-35 hover:opacity-75"
-                }`}
-              >
-                <Image
-                  src={item.url}
-                  alt={`Thumb ${idx + 1}`}
-                  fill
-                  sizes="(max-width: 640px) 90px, (max-width: 1024px) 110px, 160px"
-                  className="object-cover"
-                />
-              </button>
-            ))}
+          {/* ستون تامب‌نیل‌ها: محدودیت max-h حذف شد و به ستون اصلی متصل شد */}
+          <div className="order-2 lg:order-1 lg:col-span-2 relative min-h-0">
+            <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-y-auto h-full scrollbar-none pb-1 lg:pb-0 scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0">
+              {gallery.map((item, idx) => (
+                <button
+                  key={idx}
+                  ref={(el) => {
+                    thumbRefs.current[idx] = el;
+                  }}
+                  type="button"
+                  onClick={() => scrollTo(idx)}
+                  className={`relative flex-[0_0_84px] sm:flex-[0_0_104px] lg:flex-none aspect-[16/11] overflow-hidden transition-all duration-300 cursor-pointer touch-manipulation shrink-0 ${
+                    selectedIndex === idx
+                      ? "opacity-100 ring-1 ring-primary"
+                      : "opacity-35 hover:opacity-75"
+                  }`}
+                >
+                  <Image
+                    src={item.url}
+                    alt={`Thumb ${idx + 1}`}
+                    fill
+                    sizes="(max-width: 640px) 90px, (max-width: 1024px) 110px, 200px"
+                    className="object-cover"
+                  />
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* استیج اصلی کروسل */}
@@ -172,7 +175,7 @@ export const ProductAppliedGallery: React.FC<ProductAppliedGalleryProps> = ({
               </div>
             </div>
 
-            {/* دکمه تمام‌صفحه ثابت روی کل استیج (دیگر همراه با اسلاید حرکت نمی‌کند) */}
+            {/* دکمه تمام‌صفحه */}
             <button
               type="button"
               onClick={() => setIsLightboxOpen(true)}
@@ -182,7 +185,7 @@ export const ProductAppliedGallery: React.FC<ProductAppliedGalleryProps> = ({
               <Maximize2 className="h-4 w-4" />
             </button>
 
-            {/* پجینیشن خطی عمودی متصل به لبه با پس‌زمینه بلور */}
+            {/* پجینیشن عمودی */}
             {gallery.length > 1 && (
               <div className="absolute end-0 top-1/2 -translate-y-1/2 z-20 pointer-events-auto">
                 <div className="flex flex-col gap-2 sm:gap-2.5 py-3 sm:py-4 px-1.5 sm:px-2 bg-black/55 backdrop-blur-md border-s border-y border-white/15 shadow-xl">
@@ -206,7 +209,7 @@ export const ProductAppliedGallery: React.FC<ProductAppliedGalleryProps> = ({
         </div>
       </section>
 
-      {/* دیالوگ لایت‌باکس با تاچ نیتیو موبایل */}
+      {/* دیالوگ لایت‌باکس */}
       <MediaLightboxDialog
         isOpen={isLightboxOpen}
         onClose={() => setIsLightboxOpen(false)}
