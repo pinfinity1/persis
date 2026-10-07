@@ -23,6 +23,7 @@ import { CarePage } from "./payload/globals/CarePage";
 import { ApplicationsPage } from "./payload/globals/ApplicationsPage";
 import { migrations } from "./migrations";
 import { Posts } from "./payload/collections/Posts";
+import { Inspirations } from "./payload/collections/Inspirations";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -52,6 +53,7 @@ export default buildConfig({
     Dealers,
     Inquiries,
     Posts,
+    Inspirations,
   ],
   globals: [AboutPage, HomePage, CarePage, ApplicationsPage],
 

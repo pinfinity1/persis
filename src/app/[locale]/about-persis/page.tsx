@@ -2,7 +2,7 @@
 import React from "react";
 import Image from "next/image";
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getAboutPageDataService } from "@/services/about.service";
 import {
   generateSeoMetadata,
@@ -83,12 +83,10 @@ const SmartMediaBox = ({
 export default async function AboutPersisPage({ params }: PageProps) {
   const { locale } = await params;
   const currentLocale = (locale as Locale) || "fa";
-  const t = await getTranslations({
-    locale: currentLocale,
-    namespace: "Metadata",
-  });
+  setRequestLocale(currentLocale);
 
-  const [data, tMeta] = await Promise.all([
+  // واکشی صحیح متغیرها: tAbout برای متون داخل صفحه و tMeta برای اسکیما سئو
+  const [data, tAbout, tMeta] = await Promise.all([
     getAboutPageDataService(currentLocale),
     getTranslations({ locale: currentLocale, namespace: "About" }),
     getTranslations({ locale: currentLocale, namespace: "Metadata" }),
@@ -116,7 +114,7 @@ export default async function AboutPersisPage({ params }: PageProps) {
         dangerouslySetInnerHTML={{ __html: safeJsonLdReplacer(aboutSchema) }}
       />
 
-      {/* 1. Header Hero with Watermark */}
+      {/* 1. Header Hero with Watermark (حفظ کامل دیزاین شما) */}
       <section className="relative w-full pt-28 pb-14 sm:pt-36 sm:pb-20 bg-muted/20 border-b border-border/40 overflow-hidden select-none">
         <div
           aria-hidden="true"
@@ -128,13 +126,13 @@ export default async function AboutPersisPage({ params }: PageProps) {
           </span>
         </div>
 
-        {/* نشانگر مرکزی با خطوط تراز */}
+        {/* نشانگر مرکزی با خطوط تراز و متن ترجمه‌شده brandLabel */}
         <div className="container mx-auto px-6 relative z-10 text-center max-w-4xl pt-4 sm:pt-6">
           <div className="flex items-center justify-center gap-3">
             <span className="h-px w-6 sm:w-8 bg-primary shrink-0" />
-            <span className="text-[11px] sm:text-xs uppercase tracking-[0.25em] text-primary font-medium">
-              {t("brandLabel")}
-            </span>
+            <h1 className="text-[11px] sm:text-xs uppercase tracking-[0.25em] text-primary font-medium m-0 leading-none">
+              {tAbout("brandLabel")}
+            </h1>
             <span className="h-px w-6 sm:w-8 bg-primary shrink-0" />
           </div>
         </div>
@@ -146,18 +144,18 @@ export default async function AboutPersisPage({ params }: PageProps) {
           <div className="w-full lg:w-1/2 space-y-6 lg:space-y-8 order-2 lg:order-1">
             <div className="space-y-1.5 lg:space-y-2">
               <span className="text-[10px] sm:text-xs uppercase tracking-widest text-primary block">
-                {data.vision.tag || t("visionTag")}
+                {data.vision.tag || tAbout("visionTag")}
               </span>
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-light text-foreground leading-snug">
-                {data.vision.title || t("visionTitle")}
+                {data.vision.title || tAbout("visionTitle")}
               </h2>
             </div>
             <div className="space-y-4 lg:space-y-6">
               <p className="text-xs sm:text-sm lg:text-base font-light text-muted-foreground leading-relaxed text-justify">
-                {data.vision.desc1 || t("visionDesc1")}
+                {data.vision.desc1 || tAbout("visionDesc1")}
               </p>
               <p className="text-xs sm:text-sm lg:text-base font-light text-muted-foreground leading-relaxed text-justify">
-                {data.vision.desc2 || t("visionDesc2")}
+                {data.vision.desc2 || tAbout("visionDesc2")}
               </p>
             </div>
           </div>
@@ -177,15 +175,14 @@ export default async function AboutPersisPage({ params }: PageProps) {
       <section className="py-14 sm:py-20 lg:py-24 bg-muted/20 border-y border-border/40 overflow-hidden select-none">
         <div className="container mx-auto px-6 sm:px-12 mb-10 text-center sm:text-start">
           <span className="text-[10px] sm:text-xs uppercase tracking-widest text-primary block mb-2">
-            {data.gallery.tag || t("galleryTag")}
+            {data.gallery.tag || tAbout("galleryTag")}
           </span>
           <h2 className="text-2xl sm:text-3xl font-light text-foreground">
-            {data.gallery.title || t("galleryTitle")}
+            {data.gallery.title || tAbout("galleryTitle")}
           </h2>
         </div>
 
         <div dir="ltr" className="flex flex-col gap-5 sm:gap-7 overflow-hidden">
-          {/* ردیف اول: حرکت پیوسته به سمت چپ */}
           <div className="flex overflow-hidden w-full group">
             <div className="animate-marquee-left group-hover:[animation-play-state:paused] flex shrink-0">
               {galleryRow1.map((imgUrl, idx) => (
@@ -204,7 +201,6 @@ export default async function AboutPersisPage({ params }: PageProps) {
               ))}
             </div>
 
-            {/* کپی دوم جهت تکمیل بی‌نقص چرخه بدون فلش */}
             <div
               aria-hidden="true"
               className="animate-marquee-left group-hover:[animation-play-state:paused] flex shrink-0"
@@ -226,7 +222,6 @@ export default async function AboutPersisPage({ params }: PageProps) {
             </div>
           </div>
 
-          {/* ردیف دوم: حرکت پیوسته به سمت راست */}
           <div className="flex overflow-hidden w-full group">
             <div className="animate-marquee-right group-hover:[animation-play-state:paused] flex shrink-0">
               {galleryRow2.map((imgUrl, idx) => (
@@ -245,7 +240,6 @@ export default async function AboutPersisPage({ params }: PageProps) {
               ))}
             </div>
 
-            {/* کپی دوم جهت تکمیل بی‌نقص چرخه بدون فلش */}
             <div
               aria-hidden="true"
               className="animate-marquee-right group-hover:[animation-play-state:paused] flex shrink-0"
@@ -283,14 +277,14 @@ export default async function AboutPersisPage({ params }: PageProps) {
           <div className="w-full lg:w-1/2 space-y-4 lg:space-y-6">
             <div className="space-y-1.5 lg:space-y-2">
               <span className="text-[10px] sm:text-xs uppercase tracking-widest text-primary block">
-                {data.craftsmanship.tag || t("craftsmanshipTag")}
+                {data.craftsmanship.tag || tAbout("craftsmanshipTag")}
               </span>
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-light text-foreground leading-snug">
-                {data.craftsmanship.title || t("craftsmanshipTitle")}
+                {data.craftsmanship.title || tAbout("craftsmanshipTitle")}
               </h2>
             </div>
             <p className="text-xs sm:text-sm lg:text-base font-light text-muted-foreground leading-relaxed text-justify">
-              {data.craftsmanship.desc || t("craftsmanshipDesc")}
+              {data.craftsmanship.desc || tAbout("craftsmanshipDesc")}
             </p>
           </div>
         </div>

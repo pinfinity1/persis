@@ -48,6 +48,7 @@
     "useDotIgnore": true,
     "useDefaultPatterns": true,
     "customPatterns": [
+      "**/migrations/**",
       "**/*.svg",
       "**/*.png",
       "**/*.jpg",

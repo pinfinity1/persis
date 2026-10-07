@@ -80,6 +80,7 @@ export interface Config {
     dealers: Dealer;
     inquiries: Inquiry;
     posts: Post;
+    inspirations: Inspiration;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -100,6 +101,7 @@ export interface Config {
     dealers: DealersSelect<false> | DealersSelect<true>;
     inquiries: InquiriesSelect<false> | InquiriesSelect<true>;
     posts: PostsSelect<false> | PostsSelect<true>;
+    inspirations: InspirationsSelect<false> | InspirationsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -522,6 +524,36 @@ export interface Post {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "inspirations".
+ */
+export interface Inspiration {
+  id: number;
+  title: string;
+  image: number | Media;
+  space_type: 'kitchen' | 'bathroom' | 'commercial' | 'furniture';
+  style: 'minimal' | 'modern' | 'classic' | 'industrial';
+  description?: string | null;
+  hotspots?:
+    | {
+        product: number | Product;
+        x_percent: number;
+        y_percent: number;
+        application_label?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  pairings?:
+    | {
+        title: string;
+        color_hex?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -587,10 +619,6 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'inquiries';
         value: number | Inquiry;
-      } | null)
-    | ({
-        relationTo: 'posts';
-        value: number | Post;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -864,6 +892,35 @@ export interface PostsSelect<T extends boolean = true> {
   content?: T;
   status?: T;
   publishedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "inspirations_select".
+ */
+export interface InspirationsSelect<T extends boolean = true> {
+  title?: T;
+  image?: T;
+  space_type?: T;
+  style?: T;
+  description?: T;
+  hotspots?:
+    | T
+    | {
+        product?: T;
+        x_percent?: T;
+        y_percent?: T;
+        application_label?: T;
+        id?: T;
+      };
+  pairings?:
+    | T
+    | {
+        title?: T;
+        color_hex?: T;
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
 }

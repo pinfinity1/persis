@@ -148,7 +148,7 @@ export async function POST(req: NextRequest) {
     for (let i = 0; i < validRows.length; i += BATCH_SIZE) {
       const chunk = validRows.slice(i, i + BATCH_SIZE);
 
-      const chunkPromises = chunk.map(async ({ data: item, rowNum }) => {
+      const chunkPromises = chunk.map(async ({ data: item }) => {
         const categoryId = categoryMap.get(item.category_slug);
         if (!categoryId) {
           throw new Error(

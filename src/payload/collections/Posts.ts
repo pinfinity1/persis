@@ -4,18 +4,17 @@ import { revalidateTag } from "next/cache";
 
 export const Posts: CollectionConfig = {
   slug: "posts",
-  labels: {
-    singular: "مقاله",
-    plural: "مقالات و وبلاگ",
-  },
   admin: {
     useAsTitle: "title",
-    defaultColumns: ["title", "slug", "status", "publishedAt"],
+    defaultColumns: ["title", "slug", "status", "publishedAt", "updatedAt"],
     group: "Content",
+    description:
+      "مدیریت مقالات تخصصی معماری، مقایسه متریال‌ها و یادداشت‌های فنی",
   },
   access: {
-    read: () => true, // خواندن برای عموم آزاد
+    read: () => true,
   },
+  lockDocuments: false,
   hooks: {
     afterChange: [
       () => {
@@ -26,6 +25,15 @@ export const Posts: CollectionConfig = {
         }
       },
     ],
+    afterDelete: [
+      () => {
+        try {
+          revalidateTag("posts");
+        } catch (err) {
+          console.warn("Revalidate error on Posts delete:", err);
+        }
+      },
+    ],
   },
   fields: [
     {
@@ -33,7 +41,9 @@ export const Posts: CollectionConfig = {
       type: "text",
       required: true,
       localized: true,
-      admin: { description: "عنوان مقاله" },
+      admin: {
+        description: "عنوان کامل مقاله (در تگ H1 و متادیتای سئو قرار می‌گیرد)",
+      },
     },
     {
       name: "slug",
@@ -41,37 +51,51 @@ export const Posts: CollectionConfig = {
       required: true,
       unique: true,
       index: true,
-      admin: { description: "شناسه انگلیسی برای آدرس URL" },
+      admin: {
+        description:
+          "شناسه انگلیسی یکتا برای آدرس URL (فقط حروف کوچک انگلیسی و خط تیره؛ مانند: quartz-slab-guide)",
+      },
     },
     {
       name: "coverImage",
       type: "upload",
       relationTo: "media",
       required: false,
-      admin: { description: "تصویر شاخص بالای مقاله" },
+      admin: {
+        description: "تصویر شاخص بالای مقاله و کارت وبلاگ (نسبت ۱۶:۹ یا ۴:۳)",
+      },
     },
     {
       name: "excerpt",
       type: "textarea",
       localized: true,
-      admin: { description: "چکیده کوتاه برای نمایش در کارت وبلاگ" },
+      admin: {
+        description:
+          "چکیده کوتاه (۱ الی ۲ خط) جهت نمایش در کارت وبلاگ و توضیحات سئو در گوگل",
+      },
     },
     {
       name: "content",
-      type: "richText", // استفاده از همان lexicalEditor کانفیگ اصلی
+      type: "richText",
       localized: true,
       required: true,
-      admin: { description: "متن کامل مقاله" },
+      admin: {
+        description: "متن کامل مقاله همراه با تیترها، تصاویر و پاراگراف‌ها",
+      },
     },
     {
       name: "status",
       type: "select",
       defaultValue: "published",
       options: [
-        { label: "منتشر شده", value: "published" },
-        { label: "پیش‌نویس", value: "draft" },
+        { label: "Published (منتشر شده)", value: "published" },
+        { label: "Draft (پیش‌نویس)", value: "draft" },
       ],
-      admin: { position: "sidebar" },
+      admin: {
+        position: "sidebar",
+        description:
+          "تنها مقالات در وضعیت Published در سایت و سایت‌مپ نمایش داده می‌شوند.",
+      },
     },
     {
       name: "publishedAt",
@@ -79,6 +103,7 @@ export const Posts: CollectionConfig = {
       admin: {
         position: "sidebar",
         date: { pickerAppearance: "dayAndTime" },
+        description: "تاریخ نمایش داده شده روی کارت مقاله و مبنای سورت زمانی",
       },
       defaultValue: () => new Date(),
     },

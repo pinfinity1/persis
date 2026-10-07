@@ -33,8 +33,12 @@
       "description": "Official maintenance protocol for daily cleaning, stain removal techniques, and preventive care for quartz surfaces."
     },
     "blog": {
-      "title": "Architectural Journal & Insights",
-      "description": "Latest architectural insights, engineered quartz comparison guides, and modern interior design standards."
+      "title": "Architecture & Engineering Journal",
+      "description": "In-depth insights into engineered stone technology, material comparisons, and contemporary interior design trends."
+    },
+    "inspirations": {
+      "title": "Design Inspirations & Space Gallery",
+      "description": "Curated interior concepts and spatial installations featuring Persis Quartz engineered surfaces."
     }
   },
   "Index": {
@@ -50,6 +54,7 @@
     "careAndMaintenance": "Care & Maintenance",
     "about": "About Us",
     "blog": "Journal",
+    "inspirations": "Inspirations",
     "contactUs": "Contact Us"
   },
   "Footer": {
@@ -61,6 +66,8 @@
     "resourcesTitle": "RESOURCES",
     "companyTitle": "COMPANY",
     "allProducts": "All Products",
+    "blog": "Articles & Journal",
+    "inspirations": "Design Inspirations",
     "downloadCatalog": "Download Catalogs",
     "careAndMaintenance": "Care & Maintenance",
     "findDealers": "Find a Dealer",
@@ -251,9 +258,7 @@
     "ctaContactBtn": "Contact Technical Support"
   },
   "About": {
-    "metaTitle": "Our Story | Persis Quartz Architectural Surfaces",
-    "metaDescription": "Discover Persis Quartz; manufacturers of premium engineered quartz surfaces. Unrivaled durability and nature-inspired elegance for modern architecture.",
-    "brandLabel": "ABOUT PERSIS QUARTZ",
+    "brandLabel": "PERSIS QUARTZ",
     "heroTitle": "Engineered Precision for Lasting Beauty",
     "heroSubtitle": "Surfaces beyond mere covering; crafting harmony and authenticity in modern spaces",
     "visionTag": "Vision & Heritage",
@@ -267,8 +272,6 @@
     "craftsmanshipDesc": "Every Persis Quartz slab reflects natural majesty, precision-engineered for modern living. From dramatic Calacatta veining to minimal solid tones, our collections elevate residential and commercial environments. We perceive stone not as a material, but as an architectural canvas."
   },
   "Dealers": {
-    "metaTitle": "Dealers & Showrooms | Persis Quartz",
-    "metaDescription": "Find official authorized distributors and exclusive showrooms of Persis Quartz.",
     "filterTag": "Select Province / State",
     "allProvinces": "All Regions",
     "searchProvince": "Search region...",
@@ -277,8 +280,6 @@
     "noDealersFound": "No active dealers found in this region."
   },
   "ContactPage": {
-    "metaTitle": "Contact Us | Persis Quartz",
-    "metaDescription": "Contact Persis Quartz for project inquiries, dealership requests, or to order premium quartz sample boxes.",
     "infoTitle": "Headquarters & Factory",
     "infoDesc": "Reach out to us to schedule showroom visits, technical consultations, or to learn more about our architectural surfaces.",
     "factoryTitle": "Factory Address",
@@ -329,11 +330,18 @@
   },
   "Blog": {
     "watermark": "JOURNAL",
-    "title": "Architectural Journal & Insights",
-    "metaDescription": "Latest insights in architectural surfaces, engineered quartz selection guides, and interior design standards.",
+    "title": "Architecture Journal & Insights",
+    "metaDescription": "Latest articles on stone engineering, interior trends, and surface technologies.",
     "readMore": "Read Article",
-    "empty": "No articles published yet.",
+    "empty": "No articles published at this moment.",
     "backToList": "Back to Journal",
-    "publishedOn": "Published on"
+    "publishedOn": "Published On"
+  },
+  "Inspirations": {
+    "watermark": "INSPIRATIONS",
+    "title": "Design Inspirations",
+    "empty": "No design inspirations found at this moment.",
+    "viewSlab": "View Slab",
+    "materialPalette": "Material & Color Palette"
   }
 }

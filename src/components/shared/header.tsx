@@ -51,7 +51,6 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileProductsOpen, setIsMobileProductsOpen] = useState(false);
 
-  // استیت و تایمر برای کنترل هاور منوی دسکتاپ محصولات
   const [isProductsHovered, setIsProductsHovered] = useState(false);
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -81,7 +80,6 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
     return () => observer.disconnect();
   }, [isHomePage]);
 
-  // بستن منو با تغییر روت
   useEffect(() => {
     setIsProductsHovered(false);
   }, [pathname]);
@@ -111,7 +109,7 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
 
   const navLinkStyle = (isActive: boolean) =>
     cn(
-      "text-xs uppercase tracking-wider font-normal whitespace-nowrap transition-all duration-200 py-2 px-2.5 xl:px-3.5 border border-transparent rounded-none",
+      "text-[10px] uppercase tracking-wider font-normal whitespace-nowrap transition-all duration-200 py-1.5 px-2 2xl:px-3 border border-transparent rounded-none",
       isActive && "border-b-primary font-medium text-primary",
       isHomePage && !isScrolled
         ? isActive
@@ -142,11 +140,11 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
       >
         <div className="container mx-auto flex h-20 items-center justify-between px-4 sm:px-8 xl:px-12">
           {/* ۱. لوگو */}
-          <Logo variant="full" className="w-32 sm:w-40 xl:w-44 shrink-0" />
+          <Logo variant="full" className="w-32 sm:w-36 xl:w-40 shrink-0" />
 
-          {/* ۲. منوی دسکتاپ */}
-          <nav className="hidden lg:flex items-center gap-0.5 xl:gap-1.5">
-            {/* دراپ‌داون هاور محصولات */}
+          {/* ۲. منوی دسکتاپ (از xl به بالا تا در 1000 تا 1200 پیکسل به هم نریزد) */}
+          <nav className="hidden xl:flex items-center gap-1 2xl:gap-2 min-w-0">
+            {/* دراپ‌داون محصولات */}
             <div
               className="relative"
               onMouseEnter={handleMouseEnter}
@@ -156,7 +154,7 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
                 href="/products"
                 className={cn(
                   navLinkStyle(pathname.startsWith("/products")),
-                  "flex items-center gap-1.5 outline-none cursor-pointer group",
+                  "flex items-center gap-1 outline-none cursor-pointer group",
                 )}
               >
                 <span>{t("products")}</span>
@@ -168,11 +166,9 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
                 />
               </Link>
 
-              {/* پاپ‌آپ دراپ‌‌داون لوکس */}
               {isProductsHovered && (
                 <div className="absolute top-full start-0 pt-2 z-50 animate-in fade-in-0 slide-in-from-top-1 duration-200">
                   <div className="w-64 bg-background/95 backdrop-blur-xl border border-border/70 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-none overflow-hidden">
-                    {/* لینک مستقیم مشاهده تمام محصولات */}
                     <div className="p-1.5 border-b border-border/40 bg-muted/20">
                       <Link
                         href="/products"
@@ -186,9 +182,8 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
                       </Link>
                     </div>
 
-                    {/* لیست دسته‌بندی‌ها */}
                     <div className="py-2">
-                      {categories.map((cat, idx) => (
+                      {categories.map((cat) => (
                         <Link
                           key={cat.id || cat.slug}
                           href={`/products?category=${cat.slug}`}
@@ -196,7 +191,6 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
                           className="group/item relative flex items-center justify-between px-4 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-all duration-200"
                         >
                           <div className="flex items-center gap-2.5">
-                            {/* نشانگر خط قرمز پرسیس در هاور */}
                             <span className="w-1 h-3.5 bg-primary rounded-none opacity-0 group-hover/item:opacity-100 transition-opacity" />
                             <span className="font-light tracking-wide">
                               {cat.title}
@@ -210,12 +204,18 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
               )}
             </div>
 
-            {/* لینک‌های تکی مستقیم */}
             <Link
               href="/applications"
               className={navLinkStyle(pathname.startsWith("/applications"))}
             >
               {t("applications")}
+            </Link>
+
+            <Link
+              href="/inspirations"
+              className={navLinkStyle(pathname.startsWith("/inspirations"))}
+            >
+              {t("inspirations")}
             </Link>
 
             <Link
@@ -256,7 +256,7 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
             </Link>
           </nav>
 
-          {/* ۳. دکمه‌های اکشن دسکتاپ */}
+          {/* ۳. دکمه‌های تماس و زبان */}
           <div className="flex items-center gap-2 shrink-0">
             <Button
               asChild
@@ -275,7 +275,6 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
               </Link>
             </Button>
 
-            {/* تغییر زبان */}
             <DropdownMenu dir={isRtl ? "rtl" : "ltr"}>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -320,12 +319,12 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* ۴. منوی ریسپانسیو موبایل */}
+            {/* دکمه منوی موبایل (تا رزولوشن xl نمایش داده می‌شود تا تداخلی نباشد) */}
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
                 <button
                   className={cn(
-                    "lg:hidden p-2 rounded-none transition-colors focus:outline-none",
+                    "xl:hidden p-2 rounded-none transition-colors focus:outline-none",
                     isHomePage && !isScrolled
                       ? "text-white hover:bg-white/10"
                       : "text-foreground hover:bg-muted",
@@ -343,7 +342,6 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
               >
                 <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
 
-                {/* بخش اول: هدر دراور موبایل */}
                 <div className="h-20 shrink-0 px-6 flex items-center justify-between border-b border-border/40">
                   <Logo variant="full" className="w-32" />
                   <SheetClose asChild>
@@ -356,9 +354,7 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
                   </SheetClose>
                 </div>
 
-                {/* بخش دوم: بدنه منوها */}
                 <div className="flex-1 overflow-y-auto px-6 py-4 space-y-2 divide-y divide-border/20 scrollbar-none">
-                  {/* محصولات موبایل */}
                   <div className="pt-2 pb-3">
                     <button
                       onClick={() =>
@@ -403,7 +399,6 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
                     )}
                   </div>
 
-                  {/* سایر لینک‌های ناوبری موبایل */}
                   <div className="space-y-1 pt-3">
                     <Link
                       href="/applications"
@@ -415,6 +410,18 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
                       )}
                     >
                       {t("applications")}
+                    </Link>
+
+                    <Link
+                      href="/inspirations"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={cn(
+                        "block py-2.5 text-sm text-foreground/90 hover:text-primary transition-colors",
+                        pathname.startsWith("/inspirations") &&
+                          "text-primary font-semibold",
+                      )}
+                    >
+                      {t("inspirations")}
                     </Link>
 
                     <Link
@@ -487,7 +494,6 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
                   </div>
                 </div>
 
-                {/* بخش سوم: فوتر دراور موبایل */}
                 <div className="shrink-0 p-6 border-t border-border/40 bg-muted/15 space-y-3">
                   <div className="flex items-center gap-2">
                     <Globe className="h-3.5 w-3.5 text-primary" />
