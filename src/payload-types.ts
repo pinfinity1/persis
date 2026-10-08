@@ -478,29 +478,31 @@ export interface Inquiry {
   createdAt: string;
 }
 /**
+ * مدیریت مقالات تخصصی معماری، مقایسه متریال‌ها و یادداشت‌های فنی
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "posts".
  */
 export interface Post {
   id: number;
   /**
-   * عنوان مقاله
+   * عنوان کامل مقاله (در تگ H1 و متادیتای سئو قرار می‌گیرد)
    */
   title: string;
   /**
-   * شناسه انگلیسی برای آدرس URL
+   * شناسه انگلیسی یکتا برای آدرس URL (فقط حروف کوچک انگلیسی و خط تیره؛ مانند: quartz-slab-guide)
    */
   slug: string;
   /**
-   * تصویر شاخص بالای مقاله
+   * تصویر شاخص بالای مقاله و کارت وبلاگ (نسبت ۱۶:۹ یا ۴:۳)
    */
   coverImage?: (number | null) | Media;
   /**
-   * چکیده کوتاه برای نمایش در کارت وبلاگ
+   * چکیده کوتاه (۱ الی ۲ خط) جهت نمایش در کارت وبلاگ و توضیحات سئو در گوگل
    */
   excerpt?: string | null;
   /**
-   * متن کامل مقاله
+   * متن کامل مقاله همراه با تیترها، تصاویر و پاراگراف‌ها
    */
   content: {
     root: {
@@ -517,34 +519,81 @@ export interface Post {
     };
     [k: string]: unknown;
   };
+  /**
+   * تنها مقالات در وضعیت Published در سایت و سایت‌مپ نمایش داده می‌شوند.
+   */
   status?: ('published' | 'draft') | null;
+  /**
+   * تاریخ نمایش داده شده روی کارت مقاله و مبنای سورت زمانی
+   */
   publishedAt?: string | null;
   updatedAt: string;
   createdAt: string;
 }
 /**
+ * گالری ایده‌ها و فضاهای طراحی معمارانه (همراه با هات‌اسپات و پالت هماهنگی متریال)
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "inspirations".
  */
 export interface Inspiration {
   id: number;
+  /**
+   * عنوان شاخص فضا یا پروژه (مثال: کانتر جزیره در آشپزخانه مدرن)
+   */
   title: string;
+  /**
+   * تصویر اصلی فضا (برای آشپزخانه نسبت افقی ۱۶:۹ و برای کانتر/روشویی عمودی ۴:۵ پیشنهاد می‌شود)
+   */
   image: number | Media;
+  /**
+   * نوع کاربری و موقعیت قرارگیری سنگ در محیط
+   */
   space_type: 'kitchen' | 'bathroom' | 'commercial' | 'furniture';
+  /**
+   * سبک طراحی که در هاور تصویر به کاربر نمایش داده می‌شود
+   */
   style: 'minimal' | 'modern' | 'classic' | 'industrial';
+  /**
+   * توضیح کوتاه درباره ایده طراحی، نورپردازی و ترکیب سنگ با محیط
+   */
   description?: string | null;
+  /**
+   * نقاط تعاملی روی عکس (کدام سنگ کجاست؟)؛ با هاور کاربر نام و کد اسلب باز شده و به صفحه محصول لینک می‌شود.
+   */
   hotspots?:
     | {
+        /**
+         * اسلب استفاده‌شده در این نقطه از تصویر
+         */
         product: number | Product;
+        /**
+         * موقعیت افقی نقطه از چپ تصویر (۰ تا ۱۰۰ درصد - مثلاً ۵۰ یعنی وسط)
+         */
         x_percent: number;
+        /**
+         * موقعیت عمودی نقطه از بالای تصویر (۰ تا ۱۰۰ درصد - مثلاً ۷۰ یعنی پایین)
+         */
         y_percent: number;
+        /**
+         * عنوان بخش کاربرد در پاپ‌آپ (مثال: کانترتاپ اصلی یا دیواره بین‌کابینتی)
+         */
         application_label?: string | null;
         id?: string | null;
       }[]
     | null;
+  /**
+   * هارمونی متریال و رنگ؛ مشخص کنید این سنگ با چه چوب، فلز یا رنگی بهترین ترکیب را می‌سازد.
+   */
   pairings?:
     | {
+        /**
+         * نام متریال مکمل (مثال: کابینت چوب گردو / یراق‌آلات برنج مات)
+         */
         title: string;
+        /**
+         * کد رنگی هگز برای دایره نمونه رنگ (اختیاری؛ مثال: #5c4033 یا #c5a059)
+         */
         color_hex?: string | null;
         id?: string | null;
       }[]
@@ -1032,24 +1081,58 @@ export interface HomePage {
    * ویدیوی عمودی موبایل جهت بهینه‌سازی بارگذاری (اختیاری)
    */
   mobileVideo?: (number | null) | Media;
-  infoCardsImages?: {
-    /**
-     * پیشنهاد: کلوزآپ بافت کوارتز یا تست‌های آزمایشگاهی
-     */
-    featuresImage?: (number | null) | Media;
-    /**
-     * پیشنهاد: فضای آشپزخانه تمیز و کانترتاپ لوکس
-     */
-    maintenanceImage?: (number | null) | Media;
-    /**
-     * پیشنهاد: ژورنال معماری یا کاتالوگ بازشده
-     */
-    catalogsImage?: (number | null) | Media;
-    /**
-     * پیشنهاد: پالت یا جعبه نمونه‌سنگ‌های لوکس
-     */
-    sampleImage?: (number | null) | Media;
-  };
+  /**
+   * تیتر بزرگ بالای توضیحات برند
+   */
+  introTitle?: string | null;
+  /**
+   * متن ۱ الی ۲ خطی برای توصیف ارزش‌های برند زیر تیتر اصلی
+   */
+  introDescription?: string | null;
+  feat1Tag?: string | null;
+  feat1Title?: string | null;
+  feat1Desc?: string | null;
+  feat2Tag?: string | null;
+  feat2Title?: string | null;
+  feat2Desc?: string | null;
+  feat3Tag?: string | null;
+  feat3Title?: string | null;
+  feat3Desc?: string | null;
+  infoCardsTagline?: string | null;
+  infoCardsTitle?: string | null;
+  /**
+   * می‌توانید به تعداد دلخواه کارت اضافه، حذف یا جابجا کنید. کارت اول به‌صورت پیش‌فرض کارت مشخصات فنی با آیکون است.
+   */
+  infoCardsList?:
+    | {
+        cardType: 'standard' | 'features';
+        image?: (number | null) | Media;
+        category: string;
+        title: string;
+        /**
+         * متن ۱ الی ۳ خطی معرفی و توضیحات کارت
+         */
+        description?: string | null;
+        ctaLabel?: string | null;
+        linkType?:
+          | (
+              | '/care-and-maintenance'
+              | '/catalogs'
+              | '/contact?type=sample'
+              | '/contact?type=project'
+              | '/dealers'
+              | '/products'
+              | '/inspirations'
+              | 'custom'
+            )
+          | null;
+        /**
+         * مثال: /about-persis یا https://instagram.com
+         */
+        customLink?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -1250,13 +1333,31 @@ export interface HomePageSelect<T extends boolean = true> {
   desktopVideo?: T;
   mobilePoster?: T;
   mobileVideo?: T;
-  infoCardsImages?:
+  introTitle?: T;
+  introDescription?: T;
+  feat1Tag?: T;
+  feat1Title?: T;
+  feat1Desc?: T;
+  feat2Tag?: T;
+  feat2Title?: T;
+  feat2Desc?: T;
+  feat3Tag?: T;
+  feat3Title?: T;
+  feat3Desc?: T;
+  infoCardsTagline?: T;
+  infoCardsTitle?: T;
+  infoCardsList?:
     | T
     | {
-        featuresImage?: T;
-        maintenanceImage?: T;
-        catalogsImage?: T;
-        sampleImage?: T;
+        cardType?: T;
+        image?: T;
+        category?: T;
+        title?: T;
+        description?: T;
+        ctaLabel?: T;
+        linkType?: T;
+        customLink?: T;
+        id?: T;
       };
   updatedAt?: T;
   createdAt?: T;

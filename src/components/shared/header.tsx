@@ -109,7 +109,7 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
 
   const navLinkStyle = (isActive: boolean) =>
     cn(
-      "text-[10px] uppercase tracking-wider font-normal whitespace-nowrap transition-all duration-200 py-1.5 px-2 2xl:px-3 border border-transparent rounded-none",
+      "text-[10px] xl:text-xs uppercase tracking-wider font-normal whitespace-nowrap transition-all duration-200 py-1.5 px-2 2xl:px-3 border border-transparent rounded-none",
       isActive && "border-b-primary font-medium text-primary",
       isHomePage && !isScrolled
         ? isActive

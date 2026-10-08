@@ -1,6 +1,6 @@
 import React from "react";
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getHomePageDataService } from "@/services/home.service";
 import { getFeaturedProductsService } from "@/services/product.service";
 import { HeroBanner } from "@/components/home/hero-banner";
@@ -42,6 +42,7 @@ export async function generateMetadata({
 export default async function HomePage({ params }: PageProps) {
   const { locale } = await params;
   const currentLocale = (locale as "fa" | "en" | "ar") || "fa";
+  setRequestLocale(currentLocale);
 
   // دو واکشی موازی سروری
   const [homeData, featuredProducts] = await Promise.all([
@@ -61,11 +62,11 @@ export default async function HomePage({ params }: PageProps) {
         dangerouslySetInnerHTML={{ __html: safeJsonLdReplacer(homeGraph) }}
       />
       <HeroBanner heroData={homeData.hero} />
-      <BrandIntro />
+      <BrandIntro data={homeData.brandIntro} />
       {featuredProducts && featuredProducts.length > 0 && (
         <ProductShowcase products={featuredProducts} />
       )}
-      <InfoCardsStack images={homeData.infoCardsImages} />
+      <InfoCardsStack data={homeData.infoCardsSection} />
       <InteractiveTools />
     </main>
   );

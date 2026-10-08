@@ -56,7 +56,7 @@ const ICON_OPTIONS = [
 
 export const CarePage: GlobalConfig = {
   slug: "care-page",
-  label: "صفحه نگهداری و مراقبت (Care & Maintenance)",
+  label: "Care & Maintenance Page",
   admin: {
     group: "Pages",
     description: "مدیریت تصویر، مراحل آکاردئون و هشدارهای مراقبتی",

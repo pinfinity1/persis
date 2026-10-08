@@ -4,7 +4,7 @@ import { revalidateTag } from "next/cache";
 
 export const ApplicationsPage: GlobalConfig = {
   slug: "applications-page",
-  label: "صفحه کاربردها (Applications)",
+  label: "Applications Page",
   admin: {
     group: "Pages",
     description: "مدیریت شوکیس، مانیفست و بخش‌های کاربردی معماری",

@@ -4,7 +4,7 @@ import type { GlobalConfig } from "payload";
 
 export const AboutPage: GlobalConfig = {
   slug: "about-page",
-  label: "صفحه درباره ما (About Us)",
+  label: "About Us Page",
   admin: {
     group: "Pages",
     description: "مدیریت جامع رسانه‌ها، بیانیه‌ها و محتوای صفحه درباره پرسیس",
