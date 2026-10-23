@@ -17,18 +17,29 @@ export const Posts: CollectionConfig = {
   lockDocuments: false,
   hooks: {
     afterChange: [
-      () => {
+      ({ doc, previousDoc }) => {
         try {
           revalidateTag("posts");
+
+          if (doc?.slug) {
+            revalidateTag(`post-${doc.slug}`);
+          }
+
+          if (previousDoc?.slug && previousDoc.slug !== doc?.slug) {
+            revalidateTag(`post-${previousDoc.slug}`);
+          }
         } catch (err) {
-          console.warn("Revalidate error on Posts:", err);
+          console.warn("Revalidate error on Posts change:", err);
         }
       },
     ],
     afterDelete: [
-      () => {
+      ({ doc }) => {
         try {
           revalidateTag("posts");
+          if (doc?.slug) {
+            revalidateTag(`post-${doc.slug}`);
+          }
         } catch (err) {
           console.warn("Revalidate error on Posts delete:", err);
         }

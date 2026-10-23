@@ -8,6 +8,7 @@ import {
   type ExcelDealerRow,
 } from "@/lib/validations/excel-dealer-import";
 import { normalizeProvinceToSlug } from "@/lib/constants/provinces";
+import { revalidateTag } from "next/cache";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB Limit
 const BATCH_SIZE = 50;
@@ -175,6 +176,13 @@ export async function POST(req: NextRequest) {
       });
 
       await new Promise((resolve) => setImmediate(resolve));
+    }
+
+    // ابطال آنی کش نمایندگی‌ها و نقشه استان‌ها
+    try {
+      revalidateTag("dealers");
+    } catch (e) {
+      console.warn("Failed to revalidate dealers tag after Excel import:", e);
     }
 
     return NextResponse.json({

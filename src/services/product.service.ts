@@ -3,6 +3,8 @@ import "server-only";
 import { getPayload, type Where } from "payload";
 import configPromise from "@/payload.config";
 import { unstable_cache } from "next/cache";
+import type { DefaultNodeTypes } from "@payloadcms/richtext-lexical";
+import type { SerializedEditorState } from "lexical";
 
 // --- Domain & DTO Contracts ---
 
@@ -74,7 +76,7 @@ export interface ProductItemDTO {
   custom_thickness_available?: boolean;
   finishes: string[];
   dimensions: string[];
-  description?: string;
+  description?: SerializedEditorState<DefaultNodeTypes> | string | null;
   meta_title?: string;
   meta_description?: string;
 }
@@ -87,8 +89,8 @@ export interface ProductsResponseDTO {
 // --- Constants & Security Boundaries ---
 
 const TTL = {
-  STATIC_SEC: 86400, // 24 Hours
-  DYNAMIC_SEC: 1800, // 30 Minutes
+  STATIC_SEC: 86400,
+  DYNAMIC_SEC: 1800,
 } as const;
 
 const MAX_SEARCH_LENGTH = 50;
@@ -151,18 +153,15 @@ function mapProductDocToDTO(raw: unknown): ProductItemDTO {
   const colorFamily = resolveLookupItem(doc.color_family);
   const veinPattern = resolveLookupItem(doc.vein_pattern);
 
-  // استخراج تصاویر از ساختار جدید hasMany Upload
   const rawGallery = Array.isArray(doc.gallery) ? doc.gallery : [];
   const gallery: GalleryItemDTO[] = rawGallery
     .map((item: unknown) => {
       if (!item) return null;
 
-      // اگر آیتم یک آبجکت کامل مدیا باشد
       if (typeof item === "object" && item !== null) {
         const imgObj = item as Record<string, unknown>;
         const url = resolveMediaUrl(imgObj);
 
-        // اگر تصویر معتبری یافت نشد عبور کن
         if (!url || url === "/PersisQuartz-Red.png") return null;
 
         return {
@@ -225,7 +224,9 @@ function mapProductDocToDTO(raw: unknown): ProductItemDTO {
         : true,
     finishes,
     dimensions,
-    description: doc.description ? String(doc.description) : undefined,
+    description:
+      (doc.description as SerializedEditorState<DefaultNodeTypes> | string) ||
+      null,
     meta_title: doc.meta_title ? String(doc.meta_title) : undefined,
     meta_description: doc.meta_description
       ? String(doc.meta_description)
@@ -331,32 +332,42 @@ async function executeProductsQuery(
 
 // --- Cached Service Layer ---
 
-const cachedPaginatedProducts = unstable_cache(
-  async (
-    locale: Locale,
-    page: number,
-    limit: number,
-    category: string,
-    color: string,
-    vein_pattern: string,
-    sort: string,
-  ) => {
-    return executeProductsQuery({
+const getCachedPaginatedProducts = (
+  locale: Locale,
+  page: number,
+  limit: number,
+  category: string,
+  color: string,
+  vein_pattern: string,
+  sort: string,
+) =>
+  unstable_cache(
+    async () => {
+      return executeProductsQuery({
+        locale,
+        page,
+        limit,
+        category: category === "all" ? undefined : category,
+        color: color === "all" ? undefined : color,
+        vein_pattern: vein_pattern === "all" ? undefined : vein_pattern,
+        sort: sort as GetProductsParams["sort"],
+      });
+    },
+    [
+      "products-catalog-cache",
       locale,
-      page,
-      limit,
-      category: category === "all" ? undefined : category,
-      color: color === "all" ? undefined : color,
-      vein_pattern: vein_pattern === "all" ? undefined : vein_pattern,
-      sort: sort as GetProductsParams["sort"],
-    });
-  },
-  ["products-catalog-cache"],
-  {
-    revalidate: TTL.DYNAMIC_SEC,
-    tags: ["products"],
-  },
-);
+      String(page),
+      String(limit),
+      category,
+      color,
+      vein_pattern,
+      sort,
+    ],
+    {
+      revalidate: TTL.DYNAMIC_SEC,
+      tags: ["products"],
+    },
+  )();
 
 export async function getProductsService(
   params: GetProductsParams,
@@ -367,7 +378,7 @@ export async function getProductsService(
     return executeProductsQuery({ ...params, search: sanitizedSearch });
   }
 
-  return cachedPaginatedProducts(
+  return getCachedPaginatedProducts(
     params.locale,
     Math.max(params.page ?? 1, 1),
     Math.min(Math.max(params.limit ?? DEFAULT_PAGE_LIMIT, 1), MAX_PAGE_LIMIT),
@@ -400,7 +411,7 @@ export const getProductBySlugService = (slug: string, locale: Locale) =>
     },
     ["product-detail-by-slug", slug, locale],
     {
-      revalidate: TTL.STATIC_SEC,
+      revalidate: 86400,
       tags: ["products", `product-${slug}`],
     },
   )();
@@ -559,24 +570,28 @@ export const getAllFinishesService = unstable_cache(
   { revalidate: TTL.STATIC_SEC, tags: ["finishes"] },
 );
 
-export const getFeaturedProductsService = unstable_cache(
-  async (locale: Locale): Promise<ProductItemDTO[]> => {
-    try {
-      const payload = await getPayload({ config: configPromise });
-      const response = await payload.find({
-        collection: "products",
-        locale,
-        limit: 6,
-        where: { is_featured: { equals: true } },
-        sort: "-updatedAt",
-        depth: 1,
-      });
+export const getFeaturedProductsService = (locale: Locale) =>
+  unstable_cache(
+    async (): Promise<ProductItemDTO[]> => {
+      try {
+        const payload = await getPayload({ config: configPromise });
+        const response = await payload.find({
+          collection: "products",
+          locale,
+          limit: 6,
+          where: { is_featured: { equals: true } },
+          sort: "-updatedAt",
+          depth: 1,
+        });
 
-      return response.docs.map(mapProductDocToDTO);
-    } catch {
-      return [];
-    }
-  },
-  ["featured-products-cache"],
-  { revalidate: TTL.DYNAMIC_SEC, tags: ["products", "featured-products"] },
-);
+        return response.docs.map(mapProductDocToDTO);
+      } catch {
+        return [];
+      }
+    },
+    ["featured-products-cache", locale],
+    {
+      revalidate: TTL.DYNAMIC_SEC,
+      tags: ["products", "featured-products", "home-page"],
+    },
+  )();

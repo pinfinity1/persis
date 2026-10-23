@@ -49,9 +49,9 @@ export function ProductGallery({
   }, []);
 
   return (
-    <div className="select-none w-full">
+    <div className="w-full max-w-[540px] mx-auto select-none">
       <div
-        className={`relative aspect-[3/4] max-h-[640px] w-full border border-border/60 overflow-hidden shadow-xs group ${
+        className={`relative aspect-[3/4] w-full border border-border/60 overflow-hidden shadow-xs group ${
           isPlaceholder
             ? "bg-muted/15 flex items-center justify-center cursor-default"
             : "bg-card lg:cursor-crosshair"
@@ -79,17 +79,23 @@ export function ProductGallery({
           alt={`${title} (${code})`}
           fill
           priority
-          sizes="(max-width: 1024px) 100vw, 50vw"
+          sizes="(max-width: 1024px) 100vw, 540px"
           className={`will-change-transform ${
             isPlaceholder
               ? "object-contain p-12 sm:p-16 pointer-events-none"
               : "object-cover"
           } ${
             isZoomed
-              ? "scale-[2.2] transition-transform duration-75 ease-out"
+              ? "scale-[2.4] transition-transform duration-75 ease-out"
               : "scale-100 transition-transform duration-300 ease-out"
           }`}
         />
+
+        {!isPlaceholder && (
+          <div className="absolute bottom-4 start-4 bg-background/90 backdrop-blur-md px-2.5 py-1 border border-border/50 text-[10px] tracking-wider text-muted-foreground uppercase pointer-events-none">
+            Real Texture Scale
+          </div>
+        )}
 
         {!isPlaceholder && (
           <div className="hidden lg:flex absolute bottom-4 end-4 bg-background/90 backdrop-blur-md px-2.5 py-1.5 border border-border/50 text-xs text-foreground items-center gap-1.5 shadow-sm pointer-events-none transition-opacity duration-300 group-hover:opacity-0">

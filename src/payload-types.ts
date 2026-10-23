@@ -361,9 +361,27 @@ export interface Product {
    */
   dimensions?: (number | Dimension)[] | null;
   /**
-   * توضیحات معمارانه و سئومحور سنگ
+   * چکیده کوتاه متنی سنگ
    */
   description?: string | null;
+  /**
+   * توضیحات جامع و معمارانه با امکان بولد و لینک‌دهی آزاد
+   */
+  content?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
   /**
    * عنوان متای سئو گوگل
    */
@@ -868,6 +886,7 @@ export interface ProductsSelect<T extends boolean = true> {
   finishes?: T;
   dimensions?: T;
   description?: T;
+  content?: T;
   meta_title?: T;
   meta_description?: T;
   updatedAt?: T;

@@ -34,14 +34,36 @@ export const Media: CollectionConfig = {
           revalidateTag("about-page");
           revalidateTag("catalogs");
           revalidateTag("products");
+          revalidateTag("home-page");
+          revalidateTag("applications-page");
+          revalidateTag("inspirations");
+          revalidateTag("posts");
         } catch (err) {
           console.warn("Media revalidation hook error:", err);
+        }
+      },
+    ],
+    afterDelete: [
+      () => {
+        try {
+          revalidateTag("care-page");
+          revalidateTag("about-page");
+          revalidateTag("catalogs");
+          revalidateTag("products");
+          revalidateTag("home-page");
+          revalidateTag("applications-page");
+          revalidateTag("inspirations");
+          revalidateTag("posts");
+        } catch (err) {
+          console.warn("Media delete revalidation hook error:", err);
         }
       },
     ],
   },
   upload: {
     adminThumbnail: "thumbnail",
+    focalPoint: true,
+    crop: true,
     imageSizes: [
       {
         name: "thumbnail",
@@ -53,6 +75,7 @@ export const Media: CollectionConfig = {
         name: "card",
         width: 768,
         height: 1024,
+        fit: "cover",
         formatOptions: { format: "webp", options: { quality: 85 } },
       },
       {

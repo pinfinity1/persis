@@ -18,6 +18,35 @@ const SITE_URL = (
 ).replace(/\/$/, "");
 const DEFAULT_OG_IMAGE = "/PersisQuartz-Red.png";
 
+// استخراج متن ساده از ساختار درختی Lexical برای متادیتای سئو و اسکیما
+export function extractPlainTextFromLexical(node: unknown): string {
+  if (!node) return "";
+  if (typeof node === "string") return node.trim();
+  if (typeof node !== "object" || node === null) return "";
+
+  const obj = node as Record<string, unknown>;
+
+  if (obj.root && typeof obj.root === "object") {
+    return extractPlainTextFromLexical(obj.root);
+  }
+
+  let text = "";
+  if (typeof obj.text === "string") {
+    text += obj.text;
+  }
+
+  if (Array.isArray(obj.children)) {
+    for (const child of obj.children) {
+      const childText = extractPlainTextFromLexical(child);
+      if (childText) {
+        text += (text ? " " : "") + childText;
+      }
+    }
+  }
+
+  return text.trim();
+}
+
 // ۱. تولیدکننده متادیتای سئو و OpenGraph برای کلیه صفحات با جلوگیری از تکرار نام برند
 export function generateSeoMetadata({
   title,
@@ -29,7 +58,6 @@ export function generateSeoMetadata({
 }: GenerateSeoOptions): Metadata {
   const cleanTitle = title.trim();
 
-  // حذف هرگونه تکرار قبلی نام برند از انتهای عنوان ورودی (مانند ترجمه‌های fa.json)
   const brandRegex = new RegExp(`(\\s*[-|–—:]\\s*)?${BRAND_NAME}\\s*$`, "i");
   const baseTitle = cleanTitle.replace(brandRegex, "").trim();
   const fullTitle = baseTitle ? `${baseTitle} | ${BRAND_NAME}` : BRAND_NAME;
@@ -103,12 +131,12 @@ export function generateSeoMetadata({
   };
 }
 
-// ۲. متادیتای اختصاصی صفحه محصولات (slug)
+// ۲. متادیتای اختصاصی صفحه محصولات (slug) با پشتیبانی از ریچ‌تکست
 interface ProductMetadataParams {
   product: {
     title: string;
     code: string;
-    description?: string | null;
+    description?: unknown;
     thumbnail?: string | null;
     slug: string;
   };
@@ -125,21 +153,17 @@ export function generateProductSeoMetadata({
     ar: `${product.title} (${product.code})`,
   };
 
-  const descriptions: Record<Locale, string> = {
-    fa:
-      product.description ||
-      `بررسی مشخصات فنی، ابعاد استاندارد و کاربردهای اسلب مهندسی‌شده ${product.title} با کد اختصاصی ${product.code} از Persis Quartz.`,
-    en:
-      product.description ||
-      `Technical specifications, standard dimensions, and architectural applications for ${product.title} (${product.code}) engineered quartz slab by Persis Quartz.`,
-    ar:
-      product.description ||
-      `المواصفات الفنية والأبعاد والتطبيقات المعمارية للوح الكوارتز ${product.title} كود ${product.code} من Persis Quartz.`,
+  const plainDesc = extractPlainTextFromLexical(product.description);
+
+  const defaultDescriptions: Record<Locale, string> = {
+    fa: `بررسی مشخصات فنی، ابعاد استاندارد و کاربردهای اسلب مهندسی‌شده ${product.title} با کد اختصاصی ${product.code} از Persis Quartz.`,
+    en: `Technical specifications, standard dimensions, and architectural applications for ${product.title} (${product.code}) engineered quartz slab by Persis Quartz.`,
+    ar: `المواصفات الفنية والأبعاد والتطبيقات المعمارية للوح الكوارتز ${product.title} كود ${product.code} من Persis Quartz.`,
   };
 
   return generateSeoMetadata({
     title: titles[locale],
-    description: descriptions[locale],
+    description: plainDesc || defaultDescriptions[locale],
     locale,
     image: product.thumbnail || undefined,
     path: `/products/${product.slug}`,
@@ -237,7 +261,7 @@ export function getProductSchema({
     title: string;
     code: string;
     slug: string;
-    description?: string | null;
+    description?: unknown;
     thumbnail?: string | null;
     is_in_stock?: string;
   };
@@ -253,6 +277,8 @@ export function getProductSchema({
       : `${SITE_URL}${product.thumbnail.startsWith("/") ? "" : "/"}${product.thumbnail}`
     : `${SITE_URL}/PersisQuartz-Red.png`;
 
+  const plainDesc = extractPlainTextFromLexical(product.description);
+
   return {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -260,8 +286,7 @@ export function getProductSchema({
     name: `${product.title} (${product.code})`,
     image: [imageUrl],
     description:
-      product.description ||
-      `Persis Quartz engineered slab model ${product.title}`,
+      plainDesc || `Persis Quartz engineered slab model ${product.title}`,
     sku: product.code,
     mpn: product.code,
     brand: {

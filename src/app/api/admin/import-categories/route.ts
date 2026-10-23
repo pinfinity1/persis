@@ -7,6 +7,7 @@ import {
   excelCategoryRowSchema,
   type ExcelCategoryRow,
 } from "@/lib/validations/excel-category-import";
+import { revalidateTag } from "next/cache";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB Limit
 const BATCH_SIZE = 50;
@@ -160,6 +161,17 @@ export async function POST(req: NextRequest) {
       });
 
       await new Promise((resolve) => setImmediate(resolve));
+    }
+
+    // ابطال آنی کش دسته‌بندی‌ها و لیست فیلتر محصولات
+    try {
+      revalidateTag("categories");
+      revalidateTag("products");
+    } catch (e) {
+      console.warn(
+        "Failed to revalidate categories tag after Excel import:",
+        e,
+      );
     }
 
     return NextResponse.json({

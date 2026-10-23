@@ -6,6 +6,7 @@ import * as migration_20261006_131025_create_posts_collection from './20261006_1
 import * as migration_20261007_091910_create_inspirations_collection from './20261007_091910_create_inspirations_collection';
 import * as migration_20261008_133519_add_brand_features_to_home from './20261008_133519_add_brand_features_to_home';
 import * as migration_20261008_140305_add_info_cards_list_to_home from './20261008_140305_add_info_cards_list_to_home';
+import * as migration_20261023_120441_add_content_to_products from './20261023_120441_add_content_to_products';
 
 export const migrations = [
   {
@@ -46,6 +47,11 @@ export const migrations = [
   {
     up: migration_20261008_140305_add_info_cards_list_to_home.up,
     down: migration_20261008_140305_add_info_cards_list_to_home.down,
-    name: '20261008_140305_add_info_cards_list_to_home'
+    name: '20261008_140305_add_info_cards_list_to_home',
+  },
+  {
+    up: migration_20261023_120441_add_content_to_products.up,
+    down: migration_20261023_120441_add_content_to_products.down,
+    name: '20261023_120441_add_content_to_products'
   },
 ];

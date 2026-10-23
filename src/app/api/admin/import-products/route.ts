@@ -7,6 +7,7 @@ import {
   excelProductRowSchema,
   type ExcelProductRow,
 } from "@/lib/validations/excel-product-import";
+import { revalidateTag } from "next/cache";
 
 export const maxDuration = 120;
 const MAX_FILE_SIZE = 8 * 1024 * 1024; // 8MB
@@ -112,7 +113,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // واکشی دسته‌بندی‌ها برای مپ کردن خودکار
     const categoriesRes = await payload.find({
       collection: "categories",
       limit: 100,
@@ -134,16 +134,23 @@ export async function POST(req: NextRequest) {
       pagination: false,
     });
 
-    const existingProductMap = new Map<string, string | number>(
+    const existingProductMap = new Map<
+      string,
+      { id: string | number; slug?: string }
+    >(
       existingProductsRes.docs.map((doc) => [
         doc.code as string,
-        doc.id as string | number,
+        {
+          id: doc.id as string | number,
+          slug: (doc.slug as string) || undefined,
+        },
       ]),
     );
 
     let createdCount = 0;
     let updatedCount = 0;
     const executionErrors: string[] = [];
+    const modifiedSlugs = new Set<string>();
 
     for (let i = 0; i < validRows.length; i += BATCH_SIZE) {
       const chunk = validRows.slice(i, i + BATCH_SIZE);
@@ -174,20 +181,24 @@ export async function POST(req: NextRequest) {
           },
         };
 
-        const existingId = existingProductMap.get(item.code);
+        const existingItem = existingProductMap.get(item.code);
 
-        if (existingId) {
+        if (existingItem) {
           await (
             payload.update as unknown as (
               args: Record<string, unknown>,
             ) => Promise<unknown>
           )({
             collection: "products",
-            id: existingId,
+            id: existingItem.id,
             locale: "all",
             req,
             data: productData,
           });
+
+          if (existingItem.slug) modifiedSlugs.add(existingItem.slug);
+          modifiedSlugs.add(item.slug);
+
           return "updated";
         } else {
           await (
@@ -200,6 +211,9 @@ export async function POST(req: NextRequest) {
             req,
             data: productData,
           });
+
+          modifiedSlugs.add(item.slug);
+
           return "created";
         }
       });
@@ -221,6 +235,20 @@ export async function POST(req: NextRequest) {
       });
 
       await new Promise((resolve) => setImmediate(resolve));
+    }
+
+    try {
+      revalidateTag("products");
+      revalidateTag("home-page");
+      revalidateTag("featured-products");
+
+      modifiedSlugs.forEach((slug) => {
+        if (slug) {
+          revalidateTag(`product-${slug}`);
+        }
+      });
+    } catch (e) {
+      console.warn("Failed to revalidate tags after Excel import:", e);
     }
 
     return NextResponse.json({

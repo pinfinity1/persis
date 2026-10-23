@@ -114,7 +114,7 @@ export async function generateMetadata({
     product: {
       title: product.title,
       code: product.code,
-      description: product.description,
+      description: product.description, // اکنون با تایپ unknown یا string هماهنگ است
       thumbnail: resolveMediaUrl(product.thumbnail),
       slug: product.slug,
     },

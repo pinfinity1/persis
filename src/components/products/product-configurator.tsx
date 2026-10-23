@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Box, MapPin, FileText, Share2, Check } from "lucide-react";
 import type { ProductItemDTO } from "@/services/product.service";
+import { RichText } from "@payloadcms/richtext-lexical/react";
 
 interface ProductConfiguratorProps {
   product: ProductItemDTO;
@@ -93,9 +94,19 @@ export function ProductConfigurator({
 
           {/* ۴. متن کانسپت و معرفی محصول */}
           {product.description && (
-            <p className="text-xs sm:text-sm font-light text-muted-foreground leading-loose text-justify pt-1 max-w-xl">
-              {product.description}
-            </p>
+            <div className="pt-2 text-xs sm:text-sm font-light text-muted-foreground leading-relaxed prose prose-sm dark:prose-invert prose-p:leading-relaxed prose-strong:text-foreground prose-strong:font-semibold prose-a:text-primary prose-a:underline hover:prose-a:text-primary/80">
+              {typeof product.description === "string" ? (
+                <p>{product.description}</p>
+              ) : (
+                <RichText
+                  data={
+                    product.description as React.ComponentProps<
+                      typeof RichText
+                    >["data"]
+                  }
+                />
+              )}
+            </div>
           )}
         </div>
       </div>

@@ -44,7 +44,6 @@ export default async function HomePage({ params }: PageProps) {
   const currentLocale = (locale as "fa" | "en" | "ar") || "fa";
   setRequestLocale(currentLocale);
 
-  // دو واکشی موازی سروری
   const [homeData, featuredProducts] = await Promise.all([
     getHomePageDataService(currentLocale),
     getFeaturedProductsService(currentLocale),

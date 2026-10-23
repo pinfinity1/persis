@@ -1,6 +1,13 @@
 // src/payload/collections/Products.ts
 import { revalidateTag } from "next/cache";
-import { CollectionConfig } from "payload";
+import type { CollectionConfig } from "payload";
+import {
+  lexicalEditor,
+  ParagraphFeature,
+  BoldFeature,
+  ItalicFeature,
+  LinkFeature,
+} from "@payloadcms/richtext-lexical";
 
 export const Products: CollectionConfig = {
   slug: "products",
@@ -17,18 +24,36 @@ export const Products: CollectionConfig = {
   access: { read: () => true },
   hooks: {
     afterChange: [
-      () => {
+      ({ doc, previousDoc }) => {
         try {
           revalidateTag("products");
+          revalidateTag("home-page");
+          revalidateTag("featured-products");
+          revalidateTag("inspirations");
+
+          if (doc?.slug) {
+            revalidateTag(`product-${doc.slug}`);
+          }
+
+          if (previousDoc?.slug && previousDoc.slug !== doc?.slug) {
+            revalidateTag(`product-${previousDoc.slug}`);
+          }
         } catch (err) {
-          console.warn("Revalidate error on Products:", err);
+          console.warn("Revalidate error on Products change:", err);
         }
       },
     ],
     afterDelete: [
-      () => {
+      ({ doc }) => {
         try {
           revalidateTag("products");
+          revalidateTag("home-page");
+          revalidateTag("featured-products");
+          revalidateTag("inspirations");
+
+          if (doc?.slug) {
+            revalidateTag(`product-${doc.slug}`);
+          }
         } catch (err) {
           console.warn("Revalidate error on Products delete:", err);
         }
@@ -104,7 +129,7 @@ export const Products: CollectionConfig = {
       defaultValue: false,
       admin: {
         description: "نمایش این محصول در بخش محصولات منتخب (صفحه اصلی)",
-        position: "sidebar", // این گزینه چک‌باکس را در ستون کناری ادمین قرار می‌دهد تا در دسترس‌تر باشد
+        position: "sidebar",
       },
     },
     {
@@ -165,7 +190,25 @@ export const Products: CollectionConfig = {
       name: "description",
       type: "textarea",
       localized: true,
-      admin: { description: "توضیحات معمارانه و سئومحور سنگ" },
+      admin: { description: "چکیده کوتاه متنی سنگ" },
+    },
+    {
+      name: "content",
+      type: "richText",
+      localized: true,
+      editor: lexicalEditor({
+        features: () => [
+          ParagraphFeature(),
+          BoldFeature(),
+          ItalicFeature(),
+          LinkFeature({
+            enabledCollections: ["products", "posts", "catalogs"],
+          }),
+        ],
+      }),
+      admin: {
+        description: "توضیحات جامع و معمارانه با امکان بولد و لینک‌دهی آزاد",
+      },
     },
     {
       name: "meta_title",
