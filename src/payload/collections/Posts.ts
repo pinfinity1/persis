@@ -1,6 +1,20 @@
 // src/payload/collections/Posts.ts
 import { CollectionConfig } from "payload";
 import { revalidateTag } from "next/cache";
+import {
+  lexicalEditor,
+  HeadingFeature,
+  ParagraphFeature,
+  BoldFeature,
+  ItalicFeature,
+  UnderlineFeature,
+  OrderedListFeature,
+  UnorderedListFeature,
+  LinkFeature,
+  BlockquoteFeature,
+  HorizontalRuleFeature,
+  UploadFeature,
+} from "@payloadcms/richtext-lexical";
 
 export const Posts: CollectionConfig = {
   slug: "posts",
@@ -20,11 +34,7 @@ export const Posts: CollectionConfig = {
       ({ doc, previousDoc }) => {
         try {
           revalidateTag("posts");
-
-          if (doc?.slug) {
-            revalidateTag(`post-${doc.slug}`);
-          }
-
+          if (doc?.slug) revalidateTag(`post-${doc.slug}`);
           if (previousDoc?.slug && previousDoc.slug !== doc?.slug) {
             revalidateTag(`post-${previousDoc.slug}`);
           }
@@ -37,9 +47,7 @@ export const Posts: CollectionConfig = {
       ({ doc }) => {
         try {
           revalidateTag("posts");
-          if (doc?.slug) {
-            revalidateTag(`post-${doc.slug}`);
-          }
+          if (doc?.slug) revalidateTag(`post-${doc.slug}`);
         } catch (err) {
           console.warn("Revalidate error on Posts delete:", err);
         }
@@ -53,7 +61,7 @@ export const Posts: CollectionConfig = {
       required: true,
       localized: true,
       admin: {
-        description: "عنوان کامل مقاله (در تگ H1 و متادیتای سئو قرار می‌گیرد)",
+        description: "عنوان کامل مقاله",
       },
     },
     {
@@ -63,8 +71,7 @@ export const Posts: CollectionConfig = {
       unique: true,
       index: true,
       admin: {
-        description:
-          "شناسه انگلیسی یکتا برای آدرس URL (فقط حروف کوچک انگلیسی و خط تیره؛ مانند: quartz-slab-guide)",
+        description: "شناسه انگلیسی یکتا برای آدرس URL",
       },
     },
     {
@@ -73,7 +80,7 @@ export const Posts: CollectionConfig = {
       relationTo: "media",
       required: false,
       admin: {
-        description: "تصویر شاخص بالای مقاله و کارت وبلاگ (نسبت ۱۶:۹ یا ۴:۳)",
+        description: "تصویر شاخص بالای مقاله و کارت وبلاگ",
       },
     },
     {
@@ -81,8 +88,7 @@ export const Posts: CollectionConfig = {
       type: "textarea",
       localized: true,
       admin: {
-        description:
-          "چکیده کوتاه (۱ الی ۲ خط) جهت نمایش در کارت وبلاگ و توضیحات سئو در گوگل",
+        description: "چکیده کوتاه (۱ الی ۲ خط) جهت سئو و کارت‌ها",
       },
     },
     {
@@ -90,8 +96,38 @@ export const Posts: CollectionConfig = {
       type: "richText",
       localized: true,
       required: true,
+      editor: lexicalEditor({
+        features: () => [
+          ParagraphFeature(),
+          HeadingFeature({ enabledHeadingSizes: ["h2", "h3", "h4"] }),
+          BoldFeature(),
+          ItalicFeature(),
+          UnderlineFeature(),
+          OrderedListFeature(),
+          UnorderedListFeature(),
+          BlockquoteFeature(),
+          HorizontalRuleFeature(),
+          UploadFeature({
+            collections: {
+              media: {
+                fields: [
+                  {
+                    name: "caption",
+                    type: "text",
+                    label: "توضیح زیر تصویر (کپشن)",
+                  },
+                ],
+              },
+            },
+          }),
+          LinkFeature({
+            enabledCollections: ["products", "posts", "catalogs"],
+          }),
+        ],
+      }),
       admin: {
-        description: "متن کامل مقاله همراه با تیترها، تصاویر و پاراگراف‌ها",
+        description:
+          "متن کامل مقاله با امکان درج هدینگ‌های H2/H3، لیست‌های عددی و بالت، نقل‌قول و تصاویر بین‌متنی",
       },
     },
     {
@@ -104,8 +140,6 @@ export const Posts: CollectionConfig = {
       ],
       admin: {
         position: "sidebar",
-        description:
-          "تنها مقالات در وضعیت Published در سایت و سایت‌مپ نمایش داده می‌شوند.",
       },
     },
     {
@@ -114,7 +148,6 @@ export const Posts: CollectionConfig = {
       admin: {
         position: "sidebar",
         date: { pickerAppearance: "dayAndTime" },
-        description: "تاریخ نمایش داده شده روی کارت مقاله و مبنای سورت زمانی",
       },
       defaultValue: () => new Date(),
     },

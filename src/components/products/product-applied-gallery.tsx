@@ -29,7 +29,8 @@ export const ProductAppliedGallery: React.FC<ProductAppliedGalleryProps> = ({
   const [emblaRef, emblaApi] = useEmblaCarousel({
     loop: true,
     direction: isRtl ? "rtl" : "ltr",
-    duration: 30,
+    duration: 25,
+    skipSnaps: false,
   });
 
   const onSelect = useCallback(() => {
@@ -86,7 +87,7 @@ export const ProductAppliedGallery: React.FC<ProductAppliedGalleryProps> = ({
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="text-xs text-muted-foreground flex items-center gap-1">
+            <div className="text-xs text-muted-foreground flex items-center gap-1 font-mono">
               <span className="text-foreground font-bold text-sm">
                 {String(selectedIndex + 1).padStart(2, "0")}
               </span>
@@ -99,7 +100,7 @@ export const ProductAppliedGallery: React.FC<ProductAppliedGalleryProps> = ({
                 variant="outline"
                 size="icon"
                 onClick={scrollPrev}
-                className="h-8 w-8 rounded-none border-border/60 hover:border-primary hover:bg-transparent transition-colors touch-manipulation"
+                className="h-8 w-8 rounded-none border-border/60 hover:border-primary hover:bg-transparent transition-colors touch-manipulation cursor-pointer"
                 aria-label="Previous slide"
               >
                 <ChevronRight className="h-4 w-4 rtl:rotate-0 ltr:rotate-180" />
@@ -108,7 +109,7 @@ export const ProductAppliedGallery: React.FC<ProductAppliedGalleryProps> = ({
                 variant="outline"
                 size="icon"
                 onClick={scrollNext}
-                className="h-8 w-8 rounded-none border-border/60 hover:border-primary hover:bg-transparent transition-colors touch-manipulation"
+                className="h-8 w-8 rounded-none border-border/60 hover:border-primary hover:bg-transparent transition-colors touch-manipulation cursor-pointer"
                 aria-label="Next slide"
               >
                 <ChevronLeft className="h-4 w-4 rtl:rotate-0 ltr:rotate-180" />
@@ -119,7 +120,7 @@ export const ProductAppliedGallery: React.FC<ProductAppliedGalleryProps> = ({
 
         {/* گرید استیج و تامب‌نیل‌ها */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 lg:gap-6 items-stretch">
-          {/* ستون تامب‌نیل‌ها همگام با ارتفاع استیج */}
+          {/* ستون تامب‌نیل‌ها */}
           <div className="order-2 lg:order-1 lg:col-span-2 relative min-h-0">
             <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-y-auto lg:absolute lg:inset-0 scrollbar-none pb-1 lg:pb-0 scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0">
               {gallery.map((item, idx) => (
@@ -130,17 +131,19 @@ export const ProductAppliedGallery: React.FC<ProductAppliedGalleryProps> = ({
                   }}
                   type="button"
                   onClick={() => scrollTo(idx)}
-                  className={`relative flex-[0_0_84px] sm:flex-[0_0_104px] lg:flex-none aspect-[16/11] overflow-hidden transition-all duration-300 cursor-pointer touch-manipulation shrink-0 ${
+                  className={`relative flex-[0_0_84px] sm:flex-[0_0_104px] lg:flex-none aspect-[16/11] overflow-hidden transition-all duration-300 cursor-pointer touch-manipulation shrink-0 bg-muted/20 ${
                     selectedIndex === idx
                       ? "opacity-100 ring-1 ring-primary"
-                      : "opacity-35 hover:opacity-75"
+                      : "opacity-40 hover:opacity-80"
                   }`}
                 >
                   <Image
                     src={item.url}
                     alt={`Thumb ${idx + 1}`}
                     fill
-                    sizes="(max-width: 640px) 90px, (max-width: 1024px) 110px, 160px"
+                    loading={idx < 4 ? "eager" : "lazy"}
+                    quality={60}
+                    sizes="120px"
                     className="object-cover"
                   />
                 </button>
@@ -155,22 +158,31 @@ export const ProductAppliedGallery: React.FC<ProductAppliedGalleryProps> = ({
               className="overflow-hidden h-full cursor-grab active:cursor-grabbing"
             >
               <div className="flex h-full">
-                {gallery.map((item, idx) => (
-                  <div
-                    key={idx}
-                    className="relative flex-[0_0_100%] min-w-0 aspect-[4/3] sm:aspect-[16/9] lg:aspect-[21/10] w-full cursor-pointer touch-pan-y"
-                    onClick={() => setIsLightboxOpen(true)}
-                  >
-                    <Image
-                      src={item.url}
-                      alt={`${title} space ${idx + 1}`}
-                      fill
-                      priority={idx === 0}
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 95vw, 85vw"
-                      className="object-cover pointer-events-none"
-                    />
-                  </div>
-                ))}
+                {gallery.map((item, idx) => {
+                  const isNearCurrent =
+                    Math.abs(selectedIndex - idx) <= 1 ||
+                    (selectedIndex === 0 && idx === gallery.length - 1) ||
+                    (selectedIndex === gallery.length - 1 && idx === 0);
+
+                  return (
+                    <div
+                      key={idx}
+                      className="relative flex-[0_0_100%] min-w-0 aspect-[4/3] sm:aspect-[16/9] lg:aspect-[21/10] w-full cursor-pointer touch-pan-y bg-neutral-900/40"
+                      onClick={() => setIsLightboxOpen(true)}
+                    >
+                      <Image
+                        src={item.url}
+                        alt={`${title} space ${idx + 1}`}
+                        fill
+                        priority={idx === 0}
+                        loading={isNearCurrent ? "eager" : "lazy"}
+                        quality={85}
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 1200px"
+                        className="object-cover pointer-events-none transition-opacity duration-300"
+                      />
+                    </div>
+                  );
+                })}
               </div>
             </div>
 

@@ -1,10 +1,10 @@
 // src/components/shared/media-lightbox-dialog.tsx
 "use client";
 
-import React, { useEffect, useCallback, useRef } from "react";
+import React, { useEffect, useCallback, useRef, useState } from "react";
 import Image from "next/image";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Loader2 } from "lucide-react";
 import { useLocale } from "next-intl";
 
 export interface LightboxImage {
@@ -32,6 +32,7 @@ export const MediaLightboxDialog: React.FC<MediaLightboxDialogProps> = ({
 }) => {
   const locale = useLocale();
   const isRtl = locale === "fa" || locale === "ar";
+  const [isImageLoading, setIsImageLoading] = useState(true);
 
   const formattedImages: LightboxImage[] = images.map((img) =>
     typeof img === "string" ? { url: img, alt: title } : img,
@@ -41,15 +42,23 @@ export const MediaLightboxDialog: React.FC<MediaLightboxDialogProps> = ({
   const isGallery = total > 1;
   const currentImage = formattedImages[currentIndex] || formattedImages[0];
 
+  // محاسبه ایندکس‌های بعدی و قبلی جهت پیش‌بارگذاری
+  const nextIdx = (currentIndex + 1) % total;
+  const prevIdx = (currentIndex - 1 + total) % total;
+  const nextImage = formattedImages[nextIdx];
+  const prevImage = formattedImages[prevIdx];
+
   const handleNext = useCallback(() => {
     if (!isGallery || !onIndexChange) return;
-    onIndexChange((currentIndex + 1) % total);
-  }, [currentIndex, total, isGallery, onIndexChange]);
+    setIsImageLoading(true);
+    onIndexChange(nextIdx);
+  }, [nextIdx, isGallery, onIndexChange]);
 
   const handlePrev = useCallback(() => {
     if (!isGallery || !onIndexChange) return;
-    onIndexChange((currentIndex - 1 + total) % total);
-  }, [currentIndex, total, isGallery, onIndexChange]);
+    setIsImageLoading(true);
+    onIndexChange(prevIdx);
+  }, [prevIdx, isGallery, onIndexChange]);
 
   const touchStartX = useRef<number>(0);
   const touchStartY = useRef<number>(0);
@@ -89,18 +98,12 @@ export const MediaLightboxDialog: React.FC<MediaLightboxDialogProps> = ({
       if (e.key === "Escape") onClose();
       if (!isGallery) return;
       if (e.key === "ArrowRight") {
-        if (isRtl) {
-          handlePrev();
-        } else {
-          handleNext();
-        }
+        if (isRtl) handlePrev();
+        else handleNext();
       }
       if (e.key === "ArrowLeft") {
-        if (isRtl) {
-          handleNext();
-        } else {
-          handlePrev();
-        }
+        if (isRtl) handleNext();
+        else handlePrev();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -127,7 +130,7 @@ export const MediaLightboxDialog: React.FC<MediaLightboxDialogProps> = ({
             {title || "Image Viewer"}
           </DialogPrimitive.Title>
 
-          {/* هدر */}
+          {/* هدر لایت‌باکس */}
           <div className="flex items-center justify-between pb-3 border-b border-white/10 shrink-0 z-30">
             <div className="flex items-center gap-3 text-white">
               {title && (
@@ -164,16 +167,52 @@ export const MediaLightboxDialog: React.FC<MediaLightboxDialogProps> = ({
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
           >
+            {/* لودر حین بارگذاری اولیه تصویر */}
+            {isImageLoading && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                <Loader2 className="size-7 text-primary animate-spin" />
+              </div>
+            )}
+
             <div className="relative w-full h-full max-h-[85vh] flex items-center justify-center">
               <Image
+                key={currentImage.url}
                 src={currentImage.url || "/PersisQuartz-Red.png"}
                 alt={currentImage.alt || title || "View"}
                 fill
                 priority
+                quality={85}
                 sizes="100vw"
-                className="object-contain pointer-events-none select-none"
+                onLoad={() => setIsImageLoading(false)}
+                className={`object-contain pointer-events-none select-none transition-opacity duration-300 ${
+                  isImageLoading ? "opacity-0" : "opacity-100"
+                }`}
               />
             </div>
+
+            {/* پیش‌بارگذاری نامحسوس تصویر بعدی و قبلی جهت لود آنی */}
+            {isGallery && (
+              <div className="hidden pointer-events-none">
+                {nextImage && (
+                  <Image
+                    src={nextImage.url || "/PersisQuartz-Red.png"}
+                    alt="Preload next"
+                    width={10}
+                    height={10}
+                    priority
+                  />
+                )}
+                {prevImage && (
+                  <Image
+                    src={prevImage.url || "/PersisQuartz-Red.png"}
+                    alt="Preload prev"
+                    width={10}
+                    height={10}
+                    priority
+                  />
+                )}
+              </div>
+            )}
 
             {/* فلش‌های ناوبری */}
             {isGallery && (
@@ -214,8 +253,13 @@ export const MediaLightboxDialog: React.FC<MediaLightboxDialogProps> = ({
                 <button
                   key={idx}
                   type="button"
-                  onClick={() => onIndexChange && onIndexChange(idx)}
-                  className={`relative size-12 sm:size-14 shrink-0 overflow-hidden transition-all cursor-pointer focus:outline-none ${
+                  onClick={() => {
+                    if (onIndexChange) {
+                      setIsImageLoading(true);
+                      onIndexChange(idx);
+                    }
+                  }}
+                  className={`relative size-12 sm:size-14 shrink-0 overflow-hidden transition-all cursor-pointer focus:outline-none bg-neutral-900 ${
                     currentIndex === idx
                       ? "ring-2 ring-primary opacity-100 scale-105"
                       : "opacity-35 hover:opacity-85"
@@ -225,7 +269,9 @@ export const MediaLightboxDialog: React.FC<MediaLightboxDialogProps> = ({
                     src={img.url || "/PersisQuartz-Red.png"}
                     alt={`Thumbnail ${idx + 1}`}
                     fill
-                    sizes="60px"
+                    loading="eager"
+                    quality={60}
+                    sizes="70px"
                     className="object-cover"
                   />
                 </button>
