@@ -14,6 +14,7 @@ import {
   BlockquoteFeature,
   HorizontalRuleFeature,
   UploadFeature,
+  InlineToolbarFeature,
 } from "@payloadcms/richtext-lexical";
 
 export const Posts: CollectionConfig = {
@@ -103,6 +104,7 @@ export const Posts: CollectionConfig = {
           BoldFeature(),
           ItalicFeature(),
           UnderlineFeature(),
+          InlineToolbarFeature(),
           OrderedListFeature(),
           UnorderedListFeature(),
           BlockquoteFeature(),

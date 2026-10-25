@@ -7,6 +7,7 @@ import {
   BoldFeature,
   ItalicFeature,
   LinkFeature,
+  InlineToolbarFeature,
 } from "@payloadcms/richtext-lexical";
 
 export const Products: CollectionConfig = {
@@ -198,6 +199,7 @@ export const Products: CollectionConfig = {
       localized: true,
       editor: lexicalEditor({
         features: () => [
+          InlineToolbarFeature(),
           ParagraphFeature(),
           BoldFeature(),
           ItalicFeature(),

@@ -100,10 +100,9 @@ export default async function InspirationsPage({
             </span>
           </div>
         ) : (
-          /* سیستم چیدمان Masonry با پرفورمنس بالا (بدون جاوااسکریپت) */
-          <div className="columns-1 md:columns-2 gap-8 lg:gap-12 w-full">
+          <div className="columns-1 md:columns-2 gap-6 lg:gap-8 w-full">
             {inspirations.map((item) => (
-              <div key={item.id} className="break-inside-avoid mb-8 lg:mb-12">
+              <div key={item.id} className="break-inside-avoid mb-6 lg:mb-8">
                 <InspirationCard item={item} />
               </div>
             ))}

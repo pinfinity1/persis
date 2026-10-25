@@ -1,6 +1,17 @@
 // src/payload/collections/Inspirations.ts
 import { CollectionConfig } from "payload";
 import { revalidateTag } from "next/cache";
+import {
+  lexicalEditor,
+  ParagraphFeature,
+  BoldFeature,
+  ItalicFeature,
+  UnderlineFeature,
+  InlineToolbarFeature,
+  UnorderedListFeature,
+  OrderedListFeature,
+  LinkFeature,
+} from "@payloadcms/richtext-lexical";
 
 export const Inspirations: CollectionConfig = {
   slug: "inspirations",
@@ -43,7 +54,7 @@ export const Inspirations: CollectionConfig = {
       localized: true,
       admin: {
         description:
-          "عنوان شاخص فضا یا پروژه (مثال: کانتر جزیره در آشپزخانه مدرن)",
+          "عنوان شاخص فضا یا ایده (مثال: برای کابینت طوسی چه سنگ کوارتزی انتخاب کنیم؟)",
       },
     },
     {
@@ -53,7 +64,7 @@ export const Inspirations: CollectionConfig = {
       required: true,
       admin: {
         description:
-          "تصویر اصلی فضا (برای آشپزخانه نسبت افقی ۱۶:۹ و برای کانتر/روشویی عمودی ۴:۵ پیشنهاد می‌شود)",
+          "تصویر اصلی فضا (نسبت افقی ۱۶:۹ برای آشپزخانه و ۴:۳ برای فضاها)",
       },
     },
     {
@@ -65,7 +76,7 @@ export const Inspirations: CollectionConfig = {
           required: true,
           admin: {
             width: "50%",
-            description: "نوع کاربری و موقعیت قرارگیری سنگ در محیط",
+            description: "نوع کاربری سنگ در محیط",
           },
           options: [
             {
@@ -92,8 +103,7 @@ export const Inspirations: CollectionConfig = {
           required: true,
           admin: {
             width: "50%",
-            description:
-              "سبک طراحی که در هاور تصویر به کاربر نمایش داده می‌شود",
+            description: "سبک طراحی معمارانه فضا",
           },
           options: [
             { label: "مینیمال (Minimalist)", value: "minimal" },
@@ -109,11 +119,25 @@ export const Inspirations: CollectionConfig = {
     },
     {
       name: "description",
-      type: "textarea",
+      type: "richText",
       localized: true,
+      editor: lexicalEditor({
+        features: () => [
+          ParagraphFeature(),
+          BoldFeature(),
+          ItalicFeature(),
+          UnderlineFeature(),
+          InlineToolbarFeature(),
+          UnorderedListFeature(),
+          OrderedListFeature(),
+          LinkFeature({
+            enabledCollections: ["products", "posts", "catalogs"],
+          }),
+        ],
+      }),
       admin: {
         description:
-          "توضیح کوتاه درباره ایده طراحی، نورپردازی و ترکیب سنگ با محیط",
+          "شرح معمارانه ایده، ترکیب رنگ‌ها و متریال‌ها با امکان بولد کردن و لیست‌گذاری",
       },
     },
     {
@@ -124,8 +148,7 @@ export const Inspirations: CollectionConfig = {
         plural: "نقاط کلیک (Hotspots)",
       },
       admin: {
-        description:
-          "نقاط تعاملی روی عکس (کدام سنگ کجاست؟)؛ با هاور کاربر نام و کد اسلب باز شده و به صفحه محصول لینک می‌شود.",
+        description: "نقاط تعاملی اسلب‌ها بر روی عکس",
       },
       fields: [
         {
@@ -134,7 +157,7 @@ export const Inspirations: CollectionConfig = {
           relationTo: "products",
           required: true,
           admin: {
-            description: "اسلب استفاده‌شده در این نقطه از تصویر",
+            description: "اسلب استفاده‌شده در این نقطه",
           },
         },
         {
@@ -149,8 +172,7 @@ export const Inspirations: CollectionConfig = {
               defaultValue: 50,
               admin: {
                 width: "50%",
-                description:
-                  "موقعیت افقی نقطه از چپ تصویر (۰ تا ۱۰۰ درصد - مثلاً ۵۰ یعنی وسط)",
+                description: "موقعیت افقی نقطه از چپ (۰ تا ۱۰۰)",
               },
             },
             {
@@ -162,8 +184,7 @@ export const Inspirations: CollectionConfig = {
               defaultValue: 50,
               admin: {
                 width: "50%",
-                description:
-                  "موقعیت عمودی نقطه از بالای تصویر (۰ تا ۱۰۰ درصد - مثلاً ۷۰ یعنی پایین)",
+                description: "موقعیت عمودی نقطه از بالا (۰ تا ۱۰۰)",
               },
             },
           ],
@@ -173,8 +194,7 @@ export const Inspirations: CollectionConfig = {
           type: "text",
           localized: true,
           admin: {
-            description:
-              "عنوان بخش کاربرد در پاپ‌آپ (مثال: کانترتاپ اصلی یا دیواره بین‌کابینتی)",
+            description: "عنوان کاربرد سنگ (مثال: رویه جزیره و بین‌کابینتی)",
           },
         },
       ],
@@ -187,8 +207,7 @@ export const Inspirations: CollectionConfig = {
         plural: "پالت هماهنگی متریال",
       },
       admin: {
-        description:
-          "هارمونی متریال و رنگ؛ مشخص کنید این سنگ با چه چوب، فلز یا رنگی بهترین ترکیب را می‌سازد.",
+        description: "پالت ترکیب متریال و رنگ مکمل",
       },
       fields: [
         {
@@ -197,16 +216,18 @@ export const Inspirations: CollectionConfig = {
           required: true,
           localized: true,
           admin: {
-            description:
-              "نام متریال مکمل (مثال: کابینت چوب گردو / یراق‌آلات برنج مات)",
+            description: "نام متریال (مثال: صندلی چوب گردو)",
           },
         },
         {
           name: "color_hex",
           type: "text",
+          label: "کد رنگی",
+          defaultValue: "#c5a059",
           admin: {
-            description:
-              "کد رنگی هگز برای دایره نمونه رنگ (اختیاری؛ مثال: #5c4033 یا #c5a059)",
+            components: {
+              Field: "@/components/admin/ColorPickerField#ColorPickerField",
+            },
           },
         },
       ],

@@ -27,7 +27,7 @@ export interface InspirationItemDTO {
   title: string;
   spaceType: string;
   style: string;
-  description: string;
+  description: unknown;
   image: string;
   hotspots: HotspotDTO[];
   pairings: PairingMaterialDTO[];
