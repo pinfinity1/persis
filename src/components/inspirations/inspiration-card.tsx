@@ -39,7 +39,7 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
           alt={item.title}
           fill
           sizes="(max-width: 768px) 100vw, 50vw"
-          className="object-cover transition-transform duration-1000 ease-out group-hover:scale-[1.03]"
+          className="object-cover transition-transform duration-1000 ease-out group-hover:scale-[1.02]"
         />
 
         {/* برچسب سبک فضا */}
@@ -49,88 +49,78 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
           </span>
         </div>
 
-        {/* ۲. هات‌اسپات‌های متصل به پین (Anchor-Linked Tooltips) */}
+        {/* ۲. هات‌اسپات‌های متصل به پین */}
         {item.hotspots.map((spot) => {
           const isActive = activeSpot === spot.id;
 
-          // بررسی هوشمند لبه‌ها بر اساس درصد
-          const openToBottom = spot.yPercent < 45;
-          const alignEnd = spot.xPercent > 70;
-          const alignStart = spot.xPercent < 30;
+          // تعیین قرارگیری بالا یا پایین پین بر اساس موقعیت عمودی
+          const placeBelow = spot.yPercent < 35;
 
           return (
             <div
               key={spot.id}
               style={{ left: `${spot.xPercent}%`, top: `${spot.yPercent}%` }}
-              className="absolute -translate-x-1/2 -translate-y-1/2 z-20"
+              className="absolute -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-auto"
               onMouseEnter={() => setActiveSpot(spot.id)}
               onMouseLeave={() => setActiveSpot(null)}
               onClick={(e) => e.stopPropagation()}
             >
-              {/* دکمه پالس و پین مرکزی لوکس */}
+              {/* دکمه پین مرکزی با انیمیشن پالس */}
               <button
                 type="button"
                 onClick={() =>
                   setActiveSpot((prev) => (prev === spot.id ? null : spot.id))
                 }
-                className="relative flex items-center justify-center size-9 cursor-pointer focus:outline-none touch-manipulation group/pin"
+                className="relative flex items-center justify-center size-8 cursor-pointer focus:outline-none touch-manipulation group/pin"
                 aria-label={spot.label || "Slab Hotspot"}
               >
                 <span className="animate-ping absolute inline-flex h-6 w-6 rounded-full bg-primary/40 opacity-75" />
-                <span className="relative flex items-center justify-center size-5 rounded-full bg-black/50 backdrop-blur-xs border border-white/50 shadow-lg transition-transform duration-300 group-hover/pin:scale-110">
+                <span className="relative flex items-center justify-center size-5 rounded-full bg-black/60 backdrop-blur-xs border border-white/60 shadow-lg transition-transform duration-300 group-hover/pin:scale-110">
                   <span className="size-2 rounded-full bg-primary ring-2 ring-white" />
                 </span>
               </button>
 
-              {/* پاپ‌آپ شیشه‌ای دقیقاً در امتداد پین */}
+              {/* پاپ‌آپ چسبیده و هم‌محور دقیقاً روی نقطه */}
               {isActive && spot.productSlug && (
                 <div
                   className={cn(
-                    "absolute z-30 w-52 p-3.5 bg-neutral-950/85 backdrop-blur-xl border border-white/15 shadow-2xl text-white pointer-events-auto transition-all animate-in fade-in zoom-in-95 duration-200",
-                    openToBottom ? "top-full mt-2" : "bottom-full mb-2",
-                    alignStart
-                      ? "start-0 translate-x-0"
-                      : alignEnd
-                        ? "end-0 translate-x-0"
-                        : "start-1/2 -translate-x-1/2",
+                    "absolute left-1/2 -translate-x-1/2 z-30 w-44 sm:w-48 p-2.5 bg-neutral-950/90 backdrop-blur-xl border border-white/15 shadow-2xl text-white pointer-events-auto animate-in fade-in zoom-in-95 duration-150",
+                    placeBelow ? "top-full mt-2" : "bottom-full mb-2",
                   )}
                 >
-                  {/* اشاره‌گر زاویه‌دار شیشه‌ای (Arrow) */}
+                  {/* فلش اشاره‌گر کوچک رو به پین */}
                   <div
                     className={cn(
-                      "absolute size-2 bg-neutral-950/90 border-white/15 rotate-45",
-                      openToBottom
+                      "absolute left-1/2 -translate-x-1/2 size-2 bg-neutral-950/90 border-white/15 rotate-45",
+                      placeBelow
                         ? "-top-1 border-t border-s"
                         : "-bottom-1 border-b border-e",
-                      alignStart
-                        ? "start-3"
-                        : alignEnd
-                          ? "end-3"
-                          : "start-1/2 -translate-x-1/2",
                     )}
                   />
 
                   {spot.label && (
-                    <span className="text-[10px] uppercase tracking-wider text-neutral-400 block mb-1 font-light truncate">
+                    <span className="text-[10px] text-neutral-400 block mb-1 font-light truncate text-start">
                       {spot.label}
                     </span>
                   )}
-                  <div className="flex items-center justify-between gap-2 pb-2 border-b border-white/10">
-                    <h4 className="text-xs sm:text-sm font-medium text-white truncate">
+
+                  <div className="flex items-center justify-between gap-1.5 pb-1.5 border-b border-white/10">
+                    <h4 className="text-xs font-medium text-white truncate">
                       {spot.productTitle}
                     </h4>
                     {spot.productCode && (
-                      <span className="text-[10px] text-primary font-mono tracking-wider bg-primary/10 px-1.5 py-0.5 border border-primary/30 shrink-0">
+                      <span className="text-[10px] text-primary font-mono tracking-wider bg-primary/10 px-1 py-0.5 border border-primary/30 shrink-0">
                         {spot.productCode}
                       </span>
                     )}
                   </div>
+
                   <Link
                     href={`/products/${spot.productSlug}`}
-                    className="mt-2 pt-0.5 flex items-center justify-between text-[11px] font-medium tracking-wider text-neutral-300 hover:text-primary transition-colors group/link"
+                    className="mt-1.5 pt-0.5 flex items-center justify-between text-[10px] font-medium tracking-wider text-neutral-300 hover:text-primary transition-colors group/link"
                   >
                     <span>{t("viewSlab")}</span>
-                    <ArrowUpRight className="size-3.5 transition-transform duration-300 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 text-primary" />
+                    <ArrowUpRight className="size-3 transition-transform duration-200 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 text-primary" />
                   </Link>
                 </div>
               )}
@@ -139,7 +129,7 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
         })}
       </div>
 
-      {/* ۳. بدنه محتوا و تایپوگرافی */}
+      {/* ۳. بدنه محتوا و متون با استایل کلاس persis-prose */}
       <div className="p-6 sm:p-8 flex flex-col flex-1 justify-between gap-6">
         <div className="space-y-4">
           <h3 className="text-lg sm:text-xl font-light text-foreground leading-snug tracking-tight">
