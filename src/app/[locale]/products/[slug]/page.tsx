@@ -38,24 +38,23 @@ export async function generateStaticParams() {
     const payload = await getPayload({ config: configPromise });
     const products = await payload.find({
       collection: "products",
-      limit: 100,
+      limit: 200,
       depth: 0,
       pagination: false,
-      where: {
-        is_in_stock: { equals: "active" },
-      },
+      where: { is_in_stock: { equals: "active" } },
     });
 
-    const locales: Locale[] = ["fa", "en", "ar"];
+    const locales = ["fa", "en", "ar"];
+    const params: { locale: string; slug: string }[] = [];
 
-    return products.docs.flatMap((doc) =>
-      locales.map((locale) => ({
-        locale,
-        slug: doc.slug,
-      })),
-    );
-  } catch (error) {
-    console.error("Failed to generate static params for products:", error);
+    for (const prod of products.docs) {
+      if (!prod.slug) continue;
+      for (const locale of locales) {
+        params.push({ locale, slug: prod.slug });
+      }
+    }
+    return params;
+  } catch {
     return [];
   }
 }

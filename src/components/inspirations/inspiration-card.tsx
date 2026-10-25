@@ -1,7 +1,7 @@
 // src/components/inspirations/inspiration-card.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import Image from "next/image";
 import { Link } from "@/i18n/routing";
 import { ArrowUpRight } from "lucide-react";
@@ -15,6 +15,7 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
 }) => {
   const t = useTranslations("Inspirations");
   const [activeSpot, setActiveSpot] = useState<string | null>(null);
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const isWide =
     item.spaceType === "kitchen" || item.spaceType === "commercial";
@@ -23,6 +24,21 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
     : "aspect-[4/3] sm:aspect-[3/4]";
 
   const hasDescription = Boolean(item.description);
+
+  // مدیریت باز ماندن پاپ‌اور هنگام حرکت موس بین پین و کارت
+  const handleMouseEnter = (id: string) => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+    setActiveSpot(id);
+  };
+
+  const handleMouseLeave = () => {
+    closeTimeoutRef.current = setTimeout(() => {
+      setActiveSpot(null);
+    }, 180); // مهلت ۱۸۰ میلی‌ثانیه‌ای برای حرکت نرم موس به سمت دکمه اسلب
+  };
 
   return (
     <div className="group relative flex flex-col bg-card border border-border/40 hover:border-primary/50 transition-all duration-500 select-none shadow-xs">
@@ -52,76 +68,78 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
         {/* ۲. هات‌اسپات‌های متصل به پین */}
         {item.hotspots.map((spot) => {
           const isActive = activeSpot === spot.id;
-
-          // تعیین قرارگیری بالا یا پایین پین بر اساس موقعیت عمودی
-          const placeBelow = spot.yPercent < 35;
+          const placeBelow = spot.yPercent < 45;
 
           return (
             <div
               key={spot.id}
               style={{ left: `${spot.xPercent}%`, top: `${spot.yPercent}%` }}
               className="absolute -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-auto"
-              onMouseEnter={() => setActiveSpot(spot.id)}
-              onMouseLeave={() => setActiveSpot(null)}
+              onMouseEnter={() => handleMouseEnter(spot.id)}
+              onMouseLeave={handleMouseLeave}
               onClick={(e) => e.stopPropagation()}
             >
-              {/* دکمه پین مرکزی با انیمیشن پالس */}
+              {/* دکمه پین مرکزی */}
               <button
                 type="button"
                 onClick={() =>
                   setActiveSpot((prev) => (prev === spot.id ? null : spot.id))
                 }
-                className="relative flex items-center justify-center size-8 cursor-pointer focus:outline-none touch-manipulation group/pin"
+                className="relative flex items-center justify-center size-9 cursor-pointer focus:outline-none touch-manipulation group/pin"
                 aria-label={spot.label || "Slab Hotspot"}
               >
                 <span className="animate-ping absolute inline-flex h-6 w-6 rounded-full bg-primary/40 opacity-75" />
-                <span className="relative flex items-center justify-center size-5 rounded-full bg-black/60 backdrop-blur-xs border border-white/60 shadow-lg transition-transform duration-300 group-hover/pin:scale-110">
+                <span className="relative flex items-center justify-center size-5 rounded-full bg-black/70 backdrop-blur-xs border border-white/70 shadow-lg transition-transform duration-300 group-hover/pin:scale-110">
                   <span className="size-2 rounded-full bg-primary ring-2 ring-white" />
                 </span>
               </button>
 
-              {/* پاپ‌آپ چسبیده و هم‌محور دقیقاً روی نقطه */}
+              {/* کانتینر پاپ‌اور همراه با پل تعاملی امن (Safe Bridge) */}
               {isActive && spot.productSlug && (
                 <div
                   className={cn(
-                    "absolute left-1/2 -translate-x-1/2 z-30 w-44 sm:w-48 p-2.5 bg-neutral-950/90 backdrop-blur-xl border border-white/15 shadow-2xl text-white pointer-events-auto animate-in fade-in zoom-in-95 duration-150",
-                    placeBelow ? "top-full mt-2" : "bottom-full mb-2",
+                    "absolute left-1/2 -translate-x-1/2 z-30 pointer-events-auto",
+                    placeBelow ? "top-full pt-2" : "bottom-full pb-2", // پدینگ به عنوان پل ارتباطی موس
                   )}
+                  onMouseEnter={() => handleMouseEnter(spot.id)}
+                  onMouseLeave={handleMouseLeave}
                 >
-                  {/* فلش اشاره‌گر کوچک رو به پین */}
-                  <div
-                    className={cn(
-                      "absolute left-1/2 -translate-x-1/2 size-2 bg-neutral-950/90 border-white/15 rotate-45",
-                      placeBelow
-                        ? "-top-1 border-t border-s"
-                        : "-bottom-1 border-b border-e",
-                    )}
-                  />
+                  <div className="relative w-48 sm:w-52 p-3 bg-neutral-950/90 backdrop-blur-xl border border-white/20 shadow-2xl text-white animate-in fade-in zoom-in-95 duration-150">
+                    {/* فلش جهت‌نما */}
+                    <div
+                      className={cn(
+                        "absolute left-1/2 -translate-x-1/2 size-2 bg-neutral-950 border-white/20 rotate-45 pointer-events-none",
+                        placeBelow
+                          ? "-top-1 border-t border-s"
+                          : "-bottom-1 border-b border-e",
+                      )}
+                    />
 
-                  {spot.label && (
-                    <span className="text-[10px] text-neutral-400 block mb-1 font-light truncate text-start">
-                      {spot.label}
-                    </span>
-                  )}
-
-                  <div className="flex items-center justify-between gap-1.5 pb-1.5 border-b border-white/10">
-                    <h4 className="text-xs font-medium text-white truncate">
-                      {spot.productTitle}
-                    </h4>
-                    {spot.productCode && (
-                      <span className="text-[10px] text-primary font-mono tracking-wider bg-primary/10 px-1 py-0.5 border border-primary/30 shrink-0">
-                        {spot.productCode}
+                    {spot.label && (
+                      <span className="text-[10px] text-neutral-400 block mb-1.5 font-light leading-tight truncate text-start">
+                        {spot.label}
                       </span>
                     )}
-                  </div>
 
-                  <Link
-                    href={`/products/${spot.productSlug}`}
-                    className="mt-1.5 pt-0.5 flex items-center justify-between text-[10px] font-medium tracking-wider text-neutral-300 hover:text-primary transition-colors group/link"
-                  >
-                    <span>{t("viewSlab")}</span>
-                    <ArrowUpRight className="size-3 transition-transform duration-200 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 text-primary" />
-                  </Link>
+                    <div className="flex items-center justify-between gap-2 pb-2 border-b border-white/10">
+                      <h4 className="text-xs sm:text-sm font-medium text-white truncate">
+                        {spot.productTitle}
+                      </h4>
+                      {spot.productCode && (
+                        <span className="text-[10px] text-primary font-mono tracking-wider bg-primary/10 px-1.5 py-0.5 border border-primary/30 shrink-0">
+                          {spot.productCode}
+                        </span>
+                      )}
+                    </div>
+
+                    <Link
+                      href={`/products/${spot.productSlug}`}
+                      className="mt-2 flex items-center justify-between text-[11px] font-medium tracking-wider text-neutral-300 hover:text-primary transition-colors group/link cursor-pointer"
+                    >
+                      <span>{t("viewSlab")}</span>
+                      <ArrowUpRight className="size-3.5 transition-transform duration-200 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 text-primary" />
+                    </Link>
+                  </div>
                 </div>
               )}
             </div>
