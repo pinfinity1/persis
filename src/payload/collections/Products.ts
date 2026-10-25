@@ -3,11 +3,23 @@ import { revalidateTag } from "next/cache";
 import type { CollectionConfig } from "payload";
 import {
   lexicalEditor,
+  HeadingFeature,
   ParagraphFeature,
   BoldFeature,
   ItalicFeature,
-  LinkFeature,
+  UnderlineFeature,
+  StrikethroughFeature,
+  SubscriptFeature,
+  SuperscriptFeature,
+  InlineCodeFeature,
+  AlignFeature,
   InlineToolbarFeature,
+  FixedToolbarFeature,
+  OrderedListFeature,
+  UnorderedListFeature,
+  BlockquoteFeature,
+  HorizontalRuleFeature,
+  LinkFeature,
 } from "@payloadcms/richtext-lexical";
 
 export const Products: CollectionConfig = {
@@ -199,17 +211,32 @@ export const Products: CollectionConfig = {
       localized: true,
       editor: lexicalEditor({
         features: () => [
-          InlineToolbarFeature(),
           ParagraphFeature(),
+          HeadingFeature({
+            enabledHeadingSizes: ["h1", "h2", "h3", "h4", "h5", "h6"],
+          }),
+          FixedToolbarFeature(),
+          InlineToolbarFeature(),
           BoldFeature(),
           ItalicFeature(),
+          UnderlineFeature(),
+          StrikethroughFeature(),
+          SubscriptFeature(),
+          SuperscriptFeature(),
+          InlineCodeFeature(),
+          AlignFeature(),
+          OrderedListFeature(),
+          UnorderedListFeature(),
+          BlockquoteFeature(),
+          HorizontalRuleFeature(),
           LinkFeature({
             enabledCollections: ["products", "posts", "catalogs"],
           }),
         ],
       }),
       admin: {
-        description: "توضیحات جامع و معمارانه با امکان بولد و لینک‌دهی آزاد",
+        description:
+          "متن کامل با دسترسی به تمام هدینگ‌های H1 تا H6 و استایل‌های نوشتاری",
       },
     },
     {

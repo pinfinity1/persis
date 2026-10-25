@@ -3,11 +3,18 @@ import { CollectionConfig } from "payload";
 import { revalidateTag } from "next/cache";
 import {
   lexicalEditor,
+  HeadingFeature,
   ParagraphFeature,
   BoldFeature,
   ItalicFeature,
   UnderlineFeature,
+  StrikethroughFeature,
+  SubscriptFeature,
+  SuperscriptFeature,
+  InlineCodeFeature,
+  AlignFeature,
   InlineToolbarFeature,
+  FixedToolbarFeature,
   UnorderedListFeature,
   OrderedListFeature,
   LinkFeature,
@@ -53,8 +60,7 @@ export const Inspirations: CollectionConfig = {
       required: true,
       localized: true,
       admin: {
-        description:
-          "عنوان شاخص فضا یا ایده (مثال: برای کابینت طوسی چه سنگ کوارتزی انتخاب کنیم؟)",
+        description: "عنوان شاخص فضا یا ایده",
       },
     },
     {
@@ -63,8 +69,7 @@ export const Inspirations: CollectionConfig = {
       relationTo: "media",
       required: true,
       admin: {
-        description:
-          "تصویر اصلی فضا (نسبت افقی ۱۶:۹ برای آشپزخانه و ۴:۳ برای فضاها)",
+        description: "تصویر اصلی فضا",
       },
     },
     {
@@ -124,10 +129,19 @@ export const Inspirations: CollectionConfig = {
       editor: lexicalEditor({
         features: () => [
           ParagraphFeature(),
+          HeadingFeature({
+            enabledHeadingSizes: ["h1", "h2", "h3", "h4", "h5", "h6"],
+          }),
+          FixedToolbarFeature(),
+          InlineToolbarFeature(),
           BoldFeature(),
           ItalicFeature(),
           UnderlineFeature(),
-          InlineToolbarFeature(),
+          StrikethroughFeature(),
+          SubscriptFeature(),
+          SuperscriptFeature(),
+          InlineCodeFeature(),
+          AlignFeature(),
           UnorderedListFeature(),
           OrderedListFeature(),
           LinkFeature({
@@ -137,7 +151,7 @@ export const Inspirations: CollectionConfig = {
       }),
       admin: {
         description:
-          "شرح معمارانه ایده، ترکیب رنگ‌ها و متریال‌ها با امکان بولد کردن و لیست‌گذاری",
+          "شرح معمارانه ایده، امکان استفاده از تمام هدینگ‌ها (H1 تا H6) و ابزارهای نگارش متن",
       },
     },
     {

@@ -8,13 +8,19 @@ import {
   BoldFeature,
   ItalicFeature,
   UnderlineFeature,
+  StrikethroughFeature,
+  SubscriptFeature,
+  SuperscriptFeature,
+  InlineCodeFeature,
+  AlignFeature,
+  InlineToolbarFeature,
+  FixedToolbarFeature,
   OrderedListFeature,
   UnorderedListFeature,
   LinkFeature,
   BlockquoteFeature,
   HorizontalRuleFeature,
   UploadFeature,
-  InlineToolbarFeature,
 } from "@payloadcms/richtext-lexical";
 
 export const Posts: CollectionConfig = {
@@ -100,11 +106,20 @@ export const Posts: CollectionConfig = {
       editor: lexicalEditor({
         features: () => [
           ParagraphFeature(),
-          HeadingFeature({ enabledHeadingSizes: ["h2", "h3", "h4"] }),
+          // فعال‌سازی تمام سطوح هدینگ H1 تا H6
+          HeadingFeature({
+            enabledHeadingSizes: ["h1", "h2", "h3", "h4", "h5", "h6"],
+          }),
+          FixedToolbarFeature(),
+          InlineToolbarFeature(),
           BoldFeature(),
           ItalicFeature(),
           UnderlineFeature(),
-          InlineToolbarFeature(),
+          StrikethroughFeature(),
+          SubscriptFeature(),
+          SuperscriptFeature(),
+          InlineCodeFeature(),
+          AlignFeature(),
           OrderedListFeature(),
           UnorderedListFeature(),
           BlockquoteFeature(),
@@ -129,7 +144,7 @@ export const Posts: CollectionConfig = {
       }),
       admin: {
         description:
-          "متن کامل مقاله با امکان درج هدینگ‌های H2/H3، لیست‌های عددی و بالت، نقل‌قول و تصاویر بین‌متنی",
+          "متن کامل مقاله با دسترسی به تمام سطوح هدینگ (H1 تا H6)، تنظیمات تراز متن، زیرنویس و سایزبندی متن",
       },
     },
     {

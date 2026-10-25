@@ -33,6 +33,8 @@ export function ProductConfigurator({
     }
   };
 
+  const hasDescription = Boolean(product.description);
+
   return (
     <div className="flex flex-col justify-between h-full max-h-[580px] select-none">
       <div className="space-y-7">
@@ -92,9 +94,8 @@ export function ProductConfigurator({
             )}
           </div>
 
-          {/* ۴. متن کانسپت و معرفی محصول */}
-          {product.description && (
-            <div className="pt-2 text-xs sm:text-sm font-light text-muted-foreground leading-relaxed prose prose-sm dark:prose-invert prose-p:leading-relaxed prose-strong:text-foreground prose-strong:font-semibold prose-a:text-primary prose-a:underline hover:prose-a:text-primary/80">
+          {hasDescription ? (
+            <div dir="auto" className="pt-2 persis-prose">
               {typeof product.description === "string" ? (
                 <p>{product.description}</p>
               ) : (
@@ -107,7 +108,7 @@ export function ProductConfigurator({
                 />
               )}
             </div>
-          )}
+          ) : null}
         </div>
       </div>
 

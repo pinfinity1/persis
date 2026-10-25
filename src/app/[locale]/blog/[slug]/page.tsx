@@ -195,24 +195,7 @@ export default async function SinglePostPage({
         )}
 
         {/* محتوای رندر شده استاندارد با پشتیبانی کامل از ترکیب فارسی و انگلیسی */}
-        <div
-          dir={isRtl ? "rtl" : "ltr"}
-          className="w-full text-foreground space-y-6 text-start leading-relaxed [unicode-bidi:isolate]
-            [&_h1]:text-2xl sm:[&_h1]:text-3xl [&_h1]:font-bold [&_h1]:mt-10 [&_h1]:mb-4 [&_h1]:text-foreground
-            [&_h2]:text-xl sm:[&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mt-12 [&_h2]:mb-4 [&_h2]:pt-6 [&_h2]:border-t [&_h2]:border-border/40 [&_h2]:text-foreground
-            [&_h3]:text-lg sm:[&_h3]:text-xl [&_h3]:font-bold [&_h3]:mt-8 [&_h3]:mb-3 [&_h3]:text-foreground
-            [&_h4]:text-base sm:[&_h4]:text-lg [&_h4]:font-semibold [&_h4]:mt-6 [&_h4]:mb-2 [&_h4]:text-foreground
-            [&_p]:text-muted-foreground [&_p]:text-xs sm:[&_p]:text-sm [&_p]:leading-[2.2] sm:[&_p]:leading-[2.4] [&_p]:font-light [&_p]:mb-4
-            [&_strong]:font-bold [&_strong]:text-foreground [&_strong]:text-sm sm:[&_strong]:text-base
-            [&_b]:font-bold [&_b]:text-foreground
-            [&_em]:italic [&_em]:text-foreground/90
-            [&_hr]:my-8 [&_hr]:border-border/40
-            [&_a]:text-primary [&_a]:underline hover:[&_a]:text-primary/80
-            [&_ol]:list-decimal [&_ol]:ps-6 [&_ol]:my-4 [&_ol]:space-y-2
-            [&_ul]:list-disc [&_ul]:ps-6 [&_ul]:my-4 [&_ul]:space-y-2
-            [&_li]:text-xs sm:[&_li]:text-sm [&_li]:text-muted-foreground [&_li]:leading-relaxed
-            [&_blockquote]:border-s-4 [&_blockquote]:border-primary [&_blockquote]:bg-muted/20 [&_blockquote]:py-3 [&_blockquote]:px-5 [&_blockquote]:my-6 [&_blockquote]:text-foreground/90 [&_blockquote]:font-light [&_blockquote]:not-italic"
-        >
+        <div dir={isRtl ? "rtl" : "ltr"} className="persis-prose">
           <RichText data={post.content} />
         </div>
       </article>
