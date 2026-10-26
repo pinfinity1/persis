@@ -43,7 +43,9 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
 
   return (
     <>
+      {/* ========================================================= */}
       {/* ۱. کارت گالری در صفحه اصلی */}
+      {/* ========================================================= */}
       <div
         onClick={() => setIsDialogOpen(true)}
         className="group relative flex flex-col bg-card border border-border/50 hover:border-foreground/40 transition-colors duration-300 cursor-pointer overflow-hidden select-none"
@@ -71,14 +73,14 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
             </span>
           </div>
 
-          {/* پلاک نشانگر تعاملی کشف جزئیات */}
+          {/* نشانگر قابلیت کلیک جهت هدایت کاربر */}
           <div className="absolute top-4 end-4 z-10">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white/15 backdrop-blur-md border border-white/20 text-[10px] text-white/90 font-light transition-colors group-hover:bg-primary group-hover:border-primary group-hover:text-white">
               <ArrowUpRight className="size-3" />
             </span>
           </div>
 
-          {/* عنوان فضا در پایین تصویر */}
+          {/* عنوان فضا */}
           <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7 z-10">
             <h3 className="text-base sm:text-lg lg:text-xl font-light text-white tracking-tight leading-snug">
               {item.title}
@@ -114,13 +116,15 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
         )}
       </div>
 
-      {/* ۲. دیالوگ معمارانه: تمام صفحه واقعی در تبلت/موبایل و سنترد لوکس در دسکتاپ */}
+      {/* ========================================================= */}
+      {/* ۲. دیالوگ سینمایی (تمام‌صفحه موبایل + اسپلیت اسکرین دسکتاپ) */}
+      {/* ========================================================= */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent
           showCloseButton={false}
-          className="!fixed !inset-0 !top-0 !left-0 !translate-x-0 !translate-y-0 !w-full !h-full !max-w-none !max-h-none !rounded-none p-0 border-0 bg-neutral-950 text-white flex flex-col z-50
-            lg:!top-1/2 lg:!left-1/2 lg:!-translate-x-1/2 lg:!-translate-y-1/2 lg:!inset-auto
-            lg:!w-[92vw] lg:!h-[88vh] lg:!max-w-[92vw] lg:!max-h-[88vh] lg:!border lg:!border-white/15 lg:shadow-2xl"
+          className="!flex flex-col gap-0 p-0 border-0 lg:border lg:border-white/15 bg-neutral-950 text-white overflow-hidden rounded-none shadow-2xl
+            !fixed !w-screen !h-[100dvh] !max-w-none !max-h-none !top-0 !left-0 !translate-x-0 !translate-y-0
+            lg:!w-[94vw] lg:!h-[90vh] lg:!max-w-[94vw] lg:!max-h-[90vh] lg:!top-1/2 lg:!left-1/2 lg:!-translate-x-1/2 lg:!-translate-y-1/2"
         >
           {/* هدر بالای دیالوگ */}
           <div className="px-5 sm:px-8 py-3.5 border-b border-white/10 flex items-center justify-between bg-neutral-950 shrink-0 z-30">
@@ -141,23 +145,23 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
             </button>
           </div>
 
-          {/* بدنه اسکرول‌پذیر: در موبایل و تبلت با اسکرول دست عکس و متن بالا می‌روند */}
+          {/* بدنه دو ستونه */}
           <div className="flex-1 overflow-y-auto lg:overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-0">
-            {/* ستون عکس همراه با هات‌اسپات‌ها (۶۰٪ دسکتاپ) */}
+            {/* قاب تصویر همراه با هات‌اسپات‌های تعاملی */}
             <div
-              className="lg:col-span-7 xl:col-span-8 relative bg-neutral-900 w-full min-h-[360px] sm:min-h-[480px] lg:h-full lg:min-h-0 shrink-0 border-b lg:border-b-0 lg:border-e border-white/10 flex items-center justify-center overflow-hidden"
+              className="lg:col-span-8 relative bg-neutral-900 w-full min-h-[340px] sm:min-h-[460px] lg:h-full lg:min-h-0 shrink-0 border-b lg:border-b-0 lg:border-e border-white/10 flex items-center justify-center overflow-hidden"
               onClick={() => setActiveSpot(null)}
             >
               <Image
                 src={item.image}
                 alt={item.title}
                 fill
-                sizes="(max-width: 1024px) 100vw, 65vw"
+                sizes="(max-width: 1024px) 100vw, 68vw"
                 className="object-cover"
                 priority
               />
 
-              {/* نقاط تعاملی هات‌اسپات */}
+              {/* رندر هات‌اسپات‌ها روی تصویر دیالوگ */}
               {item.hotspots.map((spot) => {
                 const isActive = activeSpot === spot.id;
                 const placeBelow = spot.yPercent < 45;
@@ -174,6 +178,7 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
                     onMouseLeave={handleMouseLeaveSpot}
                     onClick={(e) => e.stopPropagation()}
                   >
+                    {/* دکمه پین مرکزی */}
                     <button
                       type="button"
                       onClick={() =>
@@ -242,8 +247,8 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
               })}
             </div>
 
-            {/* ستون متن و مشخصات اسلب‌ها با persis-prose-dark */}
-            <div className="lg:col-span-5 xl:col-span-4 p-6 sm:p-8 lg:p-10 flex flex-col justify-between lg:overflow-y-auto space-y-8 bg-neutral-950">
+            {/* ستون متن و مشخصات اسلب‌ها با استایل persis-prose-dark */}
+            <div className="lg:col-span-4 p-6 sm:p-8 lg:p-10 flex flex-col lg:overflow-y-auto space-y-8 bg-neutral-950 min-h-0">
               <div className="space-y-6">
                 <DialogTitle className="text-xl sm:text-2xl font-light text-white leading-snug tracking-tight text-start">
                   {item.title}
@@ -265,7 +270,7 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
                   </div>
                 ) : null}
 
-                {/* فهرست اسلب‌های به‌کاررفته در فضا */}
+                {/* فهرست اسلب‌های فضا */}
                 {item.hotspots.length > 0 && (
                   <div className="space-y-3 pt-5 border-t border-white/10">
                     <div className="text-[10px] uppercase tracking-[0.2em] text-neutral-400 font-medium flex items-center gap-2">
@@ -279,12 +284,12 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
                           key={spot.id}
                           className="flex items-center justify-between p-3.5 bg-white/5 border border-white/10"
                         >
-                          <div className="space-y-1 pe-2">
-                            <span className="text-xs sm:text-sm font-medium text-white block">
+                          <div className="space-y-1 pe-2 min-w-0">
+                            <span className="text-xs sm:text-sm font-medium text-white block truncate">
                               {spot.productTitle}
                             </span>
                             {spot.label && (
-                              <span className="text-[11px] text-neutral-400 font-light block">
+                              <span className="text-[11px] text-neutral-400 font-light block truncate">
                                 {spot.label}
                               </span>
                             )}
