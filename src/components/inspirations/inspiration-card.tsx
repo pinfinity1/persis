@@ -44,7 +44,7 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
   return (
     <>
       {/* ========================================================= */}
-      {/* ۱. کارت مینیمال در صفحه لیست ایده‌ها                        */}
+      {/* ۱. کارت مینیمال در صفحه اصلی با پلاک هدایت‌کننده کلیک       */}
       {/* ========================================================= */}
       <div
         onClick={() => setIsDialogOpen(true)}
@@ -73,15 +73,14 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
             </span>
           </div>
 
-          {/* نشانگر قابلیت کلیک جهت هدایت کاربر */}
+          {/* نشانگر امکان کلیک با هاور قرمز */}
           <div className="absolute top-4 end-4 z-10">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white/15 backdrop-blur-md border border-white/20 text-[10px] text-white/90 font-light transition-colors group-hover:bg-primary group-hover:border-primary group-hover:text-white">
-              <span>مشاهده جزئیات فضا</span>
               <ArrowUpRight className="size-3" />
             </span>
           </div>
 
-          {/* عنوان فضا در پایین تصویر */}
+          {/* عنوان فضا */}
           <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7 z-10">
             <h3 className="text-base sm:text-lg lg:text-xl font-light text-white tracking-tight leading-snug">
               {item.title}
@@ -118,16 +117,21 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
       </div>
 
       {/* ========================================================= */}
-      {/* ۲. دیالوگ سینمایی (تمام‌صفحه موبایل + اسپلیت اسکرین دسکتاپ)   */}
+      {/* ۲. دیالوگ: تمام‌صفحه در موبایل + کادر لوکس در دسکتاپ       */}
       {/* ========================================================= */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent
           showCloseButton={false}
-          className="p-0 border-0 lg:border lg:border-white/15 bg-neutral-950 text-white overflow-hidden flex flex-col rounded-none shadow-2xl
-            !w-screen !h-[100dvh] !max-w-none !max-h-none inset-0
-            lg:!w-[94vw] lg:!h-[90vh] lg:!max-w-[94vw] lg:!max-h-[90vh] lg:inset-auto lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2"
+          className="p-0 border-0 lg:border lg:border-white/15 bg-neutral-950 text-white rounded-none shadow-2xl flex flex-col
+            fixed z-50
+            /* موبایل: تمام‌صفحه بدون فاصله و بدون ترنسلیت */
+            top-0 left-0 right-0 bottom-0 translate-x-0 translate-y-0
+            w-screen h-[100dvh] max-w-none max-h-none
+            /* دسکتاپ: شناور در مرکز با ابعاد استاندارد */
+            lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2 lg:right-auto lg:bottom-auto
+            lg:w-[94vw] lg:h-[90vh] lg:max-w-[94vw] lg:max-h-[90vh]"
         >
-          {/* هدر بالای دیالوگ */}
+          {/* نوار هدر بالای دیالوگ */}
           <div className="px-5 sm:px-8 py-3.5 border-b border-white/10 flex items-center justify-between bg-neutral-950 shrink-0 z-30">
             <div className="flex items-center gap-3">
               <span className="h-px w-5 bg-primary shrink-0" />
@@ -146,11 +150,11 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
             </button>
           </div>
 
-          {/* بدنه دو ستونه دیالوگ */}
+          {/* محتوا: در موبایل کل صفحه یکپارچه اسکرول می‌خورد و در دسکتاپ دو ستونه می‌شود */}
           <div className="flex-1 overflow-y-auto lg:overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-0">
-            {/* قاب تصویر همراه با هات‌اسپات‌های تعاملی */}
+            {/* ستون عکس با هات‌اسپات‌های تعاملی */}
             <div
-              className="lg:col-span-8 relative bg-neutral-900 w-full min-h-[340px] sm:min-h-[460px] lg:h-full lg:min-h-0 shrink-0 border-b lg:border-b-0 lg:border-e border-white/10 flex items-center justify-center overflow-hidden"
+              className="lg:col-span-8 relative bg-neutral-900 w-full min-h-[320px] sm:min-h-[460px] lg:h-full lg:min-h-0 shrink-0 border-b lg:border-b-0 lg:border-e border-white/10 flex items-center justify-center overflow-hidden"
               onClick={() => setActiveSpot(null)}
             >
               <Image
@@ -162,7 +166,7 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
                 priority
               />
 
-              {/* رندر هات‌اسپات‌ها روی تصویر دیالوگ */}
+              {/* هات‌اسپات‌های پین‌شده روی تصویر */}
               {item.hotspots.map((spot) => {
                 const isActive = activeSpot === spot.id;
                 const placeBelow = spot.yPercent < 45;
@@ -179,7 +183,6 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
                     onMouseLeave={handleMouseLeaveSpot}
                     onClick={(e) => e.stopPropagation()}
                   >
-                    {/* دکمه پین مرکزی */}
                     <button
                       type="button"
                       onClick={() =>
@@ -271,7 +274,7 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
                   </div>
                 ) : null}
 
-                {/* فهرست اسلب‌های فضا */}
+                {/* فهرست اسلب‌های به‌کاررفته در فضا */}
                 {item.hotspots.length > 0 && (
                   <div className="space-y-3 pt-5 border-t border-white/10">
                     <div className="text-[10px] uppercase tracking-[0.2em] text-neutral-400 font-medium flex items-center gap-2">
