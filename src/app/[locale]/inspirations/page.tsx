@@ -100,11 +100,9 @@ export default async function InspirationsPage({
             </span>
           </div>
         ) : (
-          <div className="columns-1 md:columns-2 gap-6 lg:gap-8 w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10 w-full">
             {inspirations.map((item) => (
-              <div key={item.id} className="break-inside-avoid mb-6 lg:mb-8">
-                <InspirationCard item={item} />
-              </div>
+              <InspirationCard key={item.id} item={item} />
             ))}
           </div>
         )}
