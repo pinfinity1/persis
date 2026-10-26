@@ -1,66 +1,56 @@
+// src/app/[locale]/inspirations/page.tsx
+import React from "react";
+import type { Metadata } from "next";
 import { getInspirationsService } from "@/services/inspiration.service";
+import { getSeoSettingsService } from "@/services/seo.service";
 import { PageWatermarkHeader } from "@/components/shared/page-watermark-header";
 import { InspirationCard } from "@/components/inspirations/inspiration-card";
 import { setRequestLocale, getTranslations } from "next-intl/server";
-import type { Locale } from "@/services/product.service";
-import type { Metadata } from "next";
+import {
+  generateStaticPageMetadata,
+  safeJsonLdReplacer,
+  extractPlainTextFromLexical,
+  type Locale,
+} from "@/lib/seo";
+
+interface PageProps {
+  params: Promise<{ locale: string }>;
+}
 
 export async function generateMetadata({
   params,
-}: {
-  params: Promise<{ locale: string }>;
-}): Promise<Metadata> {
+}: PageProps): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations({
-    locale,
-    namespace: "Metadata.inspirations",
-  });
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL || "https://persisquartz.com";
+  const currentLocale = (locale as Locale) || "fa";
 
-  return {
-    title: t("title"),
-    description: t("description"),
-    alternates: {
-      canonical: `${siteUrl}/${locale}/inspirations`,
-      languages: {
-        fa: `${siteUrl}/fa/inspirations`,
-        en: `${siteUrl}/en/inspirations`,
-        ar: `${siteUrl}/ar/inspirations`,
-        "x-default": `${siteUrl}/fa/inspirations`,
-      },
-    },
-    openGraph: {
-      title: t("title"),
-      description: t("description"),
-      url: `${siteUrl}/${locale}/inspirations`,
-      siteName: "Persis Quartz",
-      type: "website",
-      locale: locale === "fa" ? "fa_IR" : locale === "ar" ? "ar_AE" : "en_US",
-    },
-  };
+  return generateStaticPageMetadata(
+    "inspirations",
+    currentLocale,
+    "/inspirations",
+  );
 }
 
-export default async function InspirationsPage({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}) {
+export default async function InspirationsPage({ params }: PageProps) {
   const { locale } = await params;
-  setRequestLocale(locale);
+  const currentLocale = (locale as Locale) || "fa";
+  setRequestLocale(currentLocale);
 
-  // هماهنگی واترمارک و عناوین با سیستم یکپارچه next-intl
-  const t = await getTranslations({ locale, namespace: "Inspirations" });
-  const inspirations = await getInspirationsService(locale as Locale);
+  const [t, inspirations, seoSettings] = await Promise.all([
+    getTranslations({ locale: currentLocale, namespace: "Inspirations" }),
+    getInspirationsService(currentLocale),
+    getSeoSettingsService(currentLocale),
+  ]);
+
   const siteUrl =
     process.env.NEXT_PUBLIC_SITE_URL || "https://persisquartz.com";
 
-  // GEO Schema ImageGallery
+  // ساخت اسکیمای استاندارد متصل به سئوی متمرکز پیلود
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ImageGallery",
-    name: t("title"),
-    url: `${siteUrl}/${locale}/inspirations`,
+    name: seoSettings.pages.inspirations.title || "Persis Quartz Inspirations",
+    description: seoSettings.pages.inspirations.description || "",
+    url: `${siteUrl}/${currentLocale}/inspirations`,
     publisher: {
       "@type": "Organization",
       name: "Persis Quartz",
@@ -76,7 +66,7 @@ export default async function InspirationsPage({
         ? item.image
         : `${siteUrl}${item.image}`,
       name: item.title,
-      description: item.description,
+      description: extractPlainTextFromLexical(item.description) || item.title,
     })),
   };
 
@@ -84,7 +74,7 @@ export default async function InspirationsPage({
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLdReplacer(jsonLd) }}
       />
       <main className="container mx-auto px-4 sm:px-12 py-20 sm:py-32 select-none">
         <PageWatermarkHeader

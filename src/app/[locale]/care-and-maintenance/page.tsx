@@ -2,7 +2,7 @@
 import React from "react";
 import type { Metadata } from "next";
 import Image from "next/image";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
 import { PageWatermarkHeader } from "@/components/shared/page-watermark-header";
@@ -12,7 +12,7 @@ import { CareIcon } from "@/components/care/care-icons";
 import { ArrowUpRight, FileText } from "lucide-react";
 import {
   safeJsonLdReplacer,
-  generateSeoMetadata,
+  generateStaticPageMetadata,
   type Locale,
 } from "@/lib/seo";
 
@@ -25,22 +25,18 @@ export async function generateMetadata({
 }: PageProps): Promise<Metadata> {
   const { locale } = await params;
   const currentLocale = (locale as Locale) || "fa";
-  const t = await getTranslations({
-    locale: currentLocale,
-    namespace: "Metadata",
-  });
 
-  return generateSeoMetadata({
-    title: t("care.title"),
-    description: t("care.description"),
-    locale: currentLocale,
-    path: "/care-and-maintenance",
-  });
+  return generateStaticPageMetadata(
+    "care",
+    currentLocale,
+    "/care-and-maintenance",
+  );
 }
 
 export default async function CareAndMaintenancePage({ params }: PageProps) {
   const { locale } = await params;
   const currentLocale = (locale as Locale) || "fa";
+  setRequestLocale(currentLocale);
 
   const [t, careData] = await Promise.all([
     getTranslations({ locale: currentLocale, namespace: "CareMaintenance" }),

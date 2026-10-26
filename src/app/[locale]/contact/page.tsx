@@ -1,12 +1,13 @@
 // src/app/[locale]/contact/page.tsx
 import React, { Suspense } from "react";
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ContactFormClient } from "@/components/contact/contact-form-client";
 import { Phone, Mail, Factory, ArrowUpRight } from "lucide-react";
 import { PageWatermarkHeader } from "@/components/shared/page-watermark-header";
+import { getSeoSettingsService } from "@/services/seo.service";
 import {
-  generateSeoMetadata,
+  generateStaticPageMetadata,
   getOrganizationSchema,
   safeJsonLdReplacer,
   type Locale,
@@ -21,36 +22,28 @@ export async function generateMetadata({
 }: PageProps): Promise<Metadata> {
   const { locale } = await params;
   const currentLocale = (locale as Locale) || "fa";
-  const t = await getTranslations({
-    locale: currentLocale,
-    namespace: "Metadata",
-  });
 
-  return generateSeoMetadata({
-    title: t("contact.title"),
-    description: t("contact.description"),
-    locale: currentLocale,
-    path: "/contact",
-  });
+  return generateStaticPageMetadata("contact", currentLocale, "/contact");
 }
 
 export default async function ContactPage({ params }: PageProps) {
   const { locale } = await params;
   const currentLocale = (locale as Locale) || "fa";
-  const t = await getTranslations({
-    locale: currentLocale,
-    namespace: "ContactPage",
-  });
-  const tMeta = await getTranslations({
-    locale: currentLocale,
-    namespace: "Metadata",
-  });
+  setRequestLocale(currentLocale);
+
+  const [t, seoSettings] = await Promise.all([
+    getTranslations({
+      locale: currentLocale,
+      namespace: "ContactPage",
+    }),
+    getSeoSettingsService(currentLocale),
+  ]);
 
   const contactSchema = {
     "@context": "https://schema.org",
     "@type": "ContactPage",
-    name: tMeta("contact.title"),
-    description: tMeta("contact.description"),
+    name: seoSettings.pages.contact.title || "Persis Quartz",
+    description: seoSettings.pages.contact.description || "",
     mainEntity: getOrganizationSchema(),
   };
 

@@ -5,9 +5,9 @@ import { PageWatermarkHeader } from "@/components/shared/page-watermark-header";
 import { PinnedApplicationsShowcase } from "@/components/applications/pinned-applications-showcase";
 import { ApplicationSectionsList } from "@/components/applications/application-sections-list";
 import { getApplicationsPageDataService } from "@/services/application.service";
-import { getTranslations } from "next-intl/server";
+import { getSeoSettingsService } from "@/services/seo.service";
 import {
-  generateSeoMetadata,
+  generateStaticPageMetadata,
   safeJsonLdReplacer,
   type Locale,
 } from "@/lib/seo";
@@ -21,33 +21,28 @@ export async function generateMetadata({
 }: PageProps): Promise<Metadata> {
   const { locale } = await params;
   const currentLocale = (locale as Locale) || "fa";
-  const t = await getTranslations({
-    locale: currentLocale,
-    namespace: "Metadata",
-  });
 
-  return generateSeoMetadata({
-    title: t("applications.title"),
-    description: t("applications.description"),
-    locale: currentLocale,
-    path: "/applications",
-  });
+  return generateStaticPageMetadata(
+    "applications",
+    currentLocale,
+    "/applications",
+  );
 }
 
 export default async function ApplicationsPage({ params }: PageProps) {
   const { locale } = await params;
   const currentLocale = (locale as Locale) || "fa";
 
-  const [data, tMeta] = await Promise.all([
+  const [data, seoSettings] = await Promise.all([
     getApplicationsPageDataService(currentLocale),
-    getTranslations({ locale: currentLocale, namespace: "Metadata" }),
+    getSeoSettingsService(currentLocale),
   ]);
 
   const appSchema = {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    name: tMeta("applications.title"),
-    description: tMeta("applications.description"),
+    name: seoSettings.pages.applications.title || "Persis Quartz",
+    description: seoSettings.pages.applications.description || "",
     mainEntity: {
       "@type": "ItemList",
       itemListElement: data.sections.map((sec, idx) => ({

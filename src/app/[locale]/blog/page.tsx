@@ -1,9 +1,13 @@
-import { getPublishedPostsService } from "@/services/post.service";
+// src/app/[locale]/blog/page.tsx
+import {
+  getPublishedPostsService,
+  type PostItemDTO,
+} from "@/services/post.service";
 import { Link } from "@/i18n/routing";
 import Image from "next/image";
 import { PageWatermarkHeader } from "@/components/shared/page-watermark-header";
 import { setRequestLocale, getTranslations } from "next-intl/server";
-import type { Locale } from "@/services/product.service";
+import { generateStaticPageMetadata, type Locale } from "@/lib/seo";
 import type { Metadata } from "next";
 
 export async function generateMetadata({
@@ -12,31 +16,9 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "Metadata.blog" });
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL || "https://persisquartz.com";
+  const currentLocale = (locale as Locale) || "fa";
 
-  return {
-    title: `${t("title")}`,
-    description: t("description"),
-    alternates: {
-      canonical: `${siteUrl}/${locale}/blog`,
-      languages: {
-        fa: `${siteUrl}/fa/blog`,
-        en: `${siteUrl}/en/blog`,
-        ar: `${siteUrl}/ar/blog`,
-        "x-default": `${siteUrl}/fa/blog`,
-      },
-    },
-    openGraph: {
-      title: t("title"),
-      description: t("description"),
-      url: `${siteUrl}/${locale}/blog`,
-      siteName: "Persis Quartz",
-      type: "website",
-      locale: locale === "fa" ? "fa_IR" : locale === "ar" ? "ar_AE" : "en_US",
-    },
-  };
+  return generateStaticPageMetadata("blog", currentLocale, "/blog");
 }
 
 export default async function BlogPage({
@@ -45,10 +27,11 @@ export default async function BlogPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  setRequestLocale(locale);
+  const currentLocale = (locale as Locale) || "fa";
+  setRequestLocale(currentLocale);
 
-  const t = await getTranslations({ locale, namespace: "Blog" });
-  const posts = await getPublishedPostsService(locale as Locale);
+  const t = await getTranslations({ locale: currentLocale, namespace: "Blog" });
+  const posts = await getPublishedPostsService(currentLocale);
 
   return (
     <main className="container mx-auto px-4 sm:px-12 py-20 sm:py-32 select-none">
@@ -66,7 +49,7 @@ export default async function BlogPage({
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-10">
-          {posts.map((post) => (
+          {posts.map((post: PostItemDTO) => (
             <Link
               key={post.id}
               href={`/blog/${post.slug}`}

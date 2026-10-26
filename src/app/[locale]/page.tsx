@@ -1,6 +1,7 @@
+// src/app/[locale]/page.tsx
 import React from "react";
 import type { Metadata } from "next";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { setRequestLocale } from "next-intl/server";
 import { getHomePageDataService } from "@/services/home.service";
 import { getFeaturedProductsService } from "@/services/product.service";
 import { HeroBanner } from "@/components/home/hero-banner";
@@ -9,7 +10,7 @@ import { ProductShowcase } from "@/components/home/product-showcase";
 import { InfoCardsStack } from "@/components/home/info-cards-stack";
 import { InteractiveTools } from "@/components/home/interactive-tools";
 import {
-  generateSeoMetadata,
+  generateStaticPageMetadata,
   getOrganizationSchema,
   getWebSiteSchema,
   safeJsonLdReplacer,
@@ -26,17 +27,7 @@ export async function generateMetadata({
   const { locale } = await params;
   const currentLocale = (locale as Locale) || "fa";
 
-  const t = await getTranslations({
-    locale: currentLocale,
-    namespace: "Metadata",
-  });
-
-  return generateSeoMetadata({
-    title: t("home.title"),
-    description: t("home.description"),
-    locale: currentLocale,
-    path: "",
-  });
+  return generateStaticPageMetadata("home", currentLocale, "");
 }
 
 export default async function HomePage({ params }: PageProps) {

@@ -2,11 +2,12 @@
 import React from "react";
 import type { Metadata } from "next";
 import { getGroupedCatalogsService } from "@/services/catalog.service";
+import { getSeoSettingsService } from "@/services/seo.service";
 import { CatalogCard } from "@/components/catalogs/catalog-card";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { PageWatermarkHeader } from "@/components/shared/page-watermark-header";
 import {
-  generateSeoMetadata,
+  generateStaticPageMetadata,
   safeJsonLdReplacer,
   type Locale,
 } from "@/lib/seo";
@@ -20,27 +21,19 @@ export async function generateMetadata({
 }: PageProps): Promise<Metadata> {
   const { locale } = await params;
   const currentLocale = (locale as Locale) || "fa";
-  const t = await getTranslations({
-    locale: currentLocale,
-    namespace: "Metadata",
-  });
 
-  return generateSeoMetadata({
-    title: t("catalogs.title"),
-    description: t("catalogs.description"),
-    locale: currentLocale,
-    path: "/catalogs",
-  });
+  return generateStaticPageMetadata("catalogs", currentLocale, "/catalogs");
 }
 
 export default async function CatalogsPage({ params }: PageProps) {
   const { locale } = await params;
   const currentLocale = (locale as Locale) || "fa";
+  setRequestLocale(currentLocale);
 
-  const [groupedCatalogs, t, tMeta] = await Promise.all([
+  const [groupedCatalogs, t, seoSettings] = await Promise.all([
     getGroupedCatalogsService(currentLocale),
     getTranslations({ locale: currentLocale, namespace: "Catalogs" }),
-    getTranslations({ locale: currentLocale, namespace: "Metadata" }),
+    getSeoSettingsService(currentLocale),
   ]);
 
   const years = Object.keys(groupedCatalogs)
@@ -53,8 +46,8 @@ export default async function CatalogsPage({ params }: PageProps) {
   const catalogsSchema = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    name: tMeta("catalogs.title"),
-    description: tMeta("catalogs.description"),
+    name: seoSettings.pages.catalogs.title || "Persis Quartz",
+    description: seoSettings.pages.catalogs.description || "",
     mainEntity: {
       "@type": "ItemList",
       itemListElement: allCatalogs.map((cat, idx) => ({

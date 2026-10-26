@@ -1,5 +1,9 @@
 // src/lib/seo.ts
 import type { Metadata } from "next";
+import {
+  getSeoSettingsService,
+  type StaticPageSeoKey,
+} from "@/services/seo.service";
 
 export type Locale = "fa" | "en" | "ar";
 
@@ -136,6 +140,8 @@ interface ProductMetadataParams {
   product: {
     title: string;
     code: string;
+    meta_title?: string;
+    meta_description?: string;
     description?: unknown;
     thumbnail?: string | null;
     slug: string;
@@ -147,12 +153,6 @@ export function generateProductSeoMetadata({
   product,
   locale,
 }: ProductMetadataParams): Metadata {
-  const titles: Record<Locale, string> = {
-    fa: `${product.title} (${product.code})`,
-    en: `${product.title} (${product.code})`,
-    ar: `${product.title} (${product.code})`,
-  };
-
   const plainDesc = extractPlainTextFromLexical(product.description);
 
   const defaultDescriptions: Record<Locale, string> = {
@@ -161,9 +161,18 @@ export function generateProductSeoMetadata({
     ar: `المواصفات الفنية والأبعاد والتطبيقات المعمارية للوح الكوارتز ${product.title} كود ${product.code} من Persis Quartz.`,
   };
 
+  // اولویت ۱: متای وارد شده توسط کارفرما در پنل اسلب
+  // اولویت ۲: متن استخراج شده یا متن پیش‌فرض سیستم
+  const finalTitle =
+    product.meta_title?.trim() || `${product.title} (${product.code})`;
+  const finalDescription =
+    product.meta_description?.trim() ||
+    plainDesc ||
+    defaultDescriptions[locale];
+
   return generateSeoMetadata({
-    title: titles[locale],
-    description: plainDesc || defaultDescriptions[locale],
+    title: finalTitle,
+    description: finalDescription,
     locale,
     image: product.thumbnail || undefined,
     path: `/products/${product.slug}`,
@@ -341,4 +350,28 @@ export function getProductSchema({
       },
     },
   };
+}
+
+export async function generateStaticPageMetadata(
+  pageKey: StaticPageSeoKey,
+  locale: Locale,
+  path: string,
+): Promise<Metadata> {
+  const seoSettings = await getSeoSettingsService(locale);
+  const pageSeo = seoSettings.pages[pageKey];
+
+  // اگر کارفرما عنوان یا توضیحی نداده باشد، از تنظیمات تب پیش‌فرض (Default) استفاده می‌شود
+  const title =
+    pageSeo?.title || seoSettings.pages.home.title || "Persis Quartz";
+  const description =
+    pageSeo?.description || seoSettings.pages.home.description || "";
+  const image = seoSettings.defaultOgImage || undefined;
+
+  return generateSeoMetadata({
+    title,
+    description,
+    locale,
+    image,
+    path,
+  });
 }

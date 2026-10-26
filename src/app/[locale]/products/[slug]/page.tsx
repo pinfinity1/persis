@@ -14,6 +14,7 @@ import {
   type Locale,
   type GalleryItemDTO,
 } from "@/services/product.service";
+import { getSeoSettingsService } from "@/services/seo.service";
 import { ProductGallery } from "@/components/products/product-gallery";
 import { ProductConfigurator } from "@/components/products/product-configurator";
 import { ProductSpecsMatrix } from "@/components/products/product-specs-matrix";
@@ -26,7 +27,6 @@ import {
   safeJsonLdReplacer,
 } from "@/lib/seo";
 
-// فعال‌سازی رندرینگ افزایشی بر اساس تقاضا (Incremental Static Regeneration)
 export const dynamicParams = true;
 
 interface ProductPageProps {
@@ -92,14 +92,13 @@ export async function generateMetadata({
   const { locale, slug } = await params;
   const currentLocale = (locale as Locale) || "fa";
 
-  // ثبت زبان درخواست برای جلوگیری از دسترسی داینامیک هدرها در زمان تولید متادیتا
   setRequestLocale(currentLocale);
 
   let product = null;
   try {
     product = await getProductBySlugService(slug, currentLocale);
   } catch {
-    // در صورت خطا در واکشی متادیتا متوقف نشود
+    // در صورت بروز خطا بیلد متوقف نمی‌شود
   }
 
   if (!product) {
@@ -113,7 +112,9 @@ export async function generateMetadata({
     product: {
       title: product.title,
       code: product.code,
-      description: product.description, // اکنون با تایپ unknown یا string هماهنگ است
+      meta_title: product.meta_title,
+      meta_description: product.meta_description,
+      description: product.description,
       thumbnail: resolveMediaUrl(product.thumbnail),
       slug: product.slug,
     },
@@ -125,13 +126,12 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   const { locale, slug } = await params;
   const currentLocale = (locale as Locale) || "fa";
 
-  // الزامی برای تولید استاتیک استاندارد در next-intl بدون پرتاب خطای Dynamic Usage
   setRequestLocale(currentLocale);
 
-  const [product, t, tMeta] = await Promise.all([
+  const [product, t, seoSettings] = await Promise.all([
     getProductBySlugService(slug, currentLocale),
     getTranslations({ locale: currentLocale, namespace: "ProductDetail" }),
-    getTranslations({ locale: currentLocale, namespace: "Metadata" }),
+    getSeoSettingsService(currentLocale),
   ]);
 
   if (!product) {
@@ -168,9 +168,12 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     product.finishes?.length ? product.finishes : fallbackFinishes,
   );
 
+  const homeTitle = seoSettings.pages.home.title || "Persis Quartz";
+  const productsTitle = seoSettings.pages.products.title || "Products Catalog";
+
   const breadcrumbItems = [
-    { name: tMeta("home.title"), path: "" },
-    { name: tMeta("products.title"), path: "/products" },
+    { name: homeTitle, path: "" },
+    { name: productsTitle, path: "/products" },
   ];
   if (categoryTitle && categorySlug) {
     breadcrumbItems.push({

@@ -1,7 +1,7 @@
 // src/app/[locale]/products/page.tsx
 import React, { Suspense } from "react";
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { setRequestLocale } from "next-intl/server";
 
 import {
   getProductsService,
@@ -9,12 +9,13 @@ import {
   getColorsService,
   getVeinPatternsService,
 } from "@/services/product.service";
+import { getSeoSettingsService } from "@/services/seo.service";
 import ProductGridClient from "@/components/products/product-grid-client";
 import { ProductFiltersClient } from "@/components/products/product-filters-client";
 import SkeletonLoader from "@/components/products/skeleton-loader";
 import { PageWatermarkHeader } from "@/components/shared/page-watermark-header";
 import {
-  generateSeoMetadata,
+  generateStaticPageMetadata,
   safeJsonLdReplacer,
   getBreadcrumbSchema,
   type Locale,
@@ -30,17 +31,8 @@ export async function generateMetadata({
 }: PageProps): Promise<Metadata> {
   const { locale } = await params;
   const currentLocale = (locale as Locale) || "fa";
-  const t = await getTranslations({
-    locale: currentLocale,
-    namespace: "Metadata",
-  });
 
-  return generateSeoMetadata({
-    title: t("products.title"),
-    description: t("products.description"),
-    locale: currentLocale,
-    path: "/products",
-  });
+  return generateStaticPageMetadata("products", currentLocale, "/products");
 }
 
 // کامپوننت داخلی و نامرئی جهت فچ دیتای سنگین و اسکیما در پس‌زمینه
@@ -69,7 +61,7 @@ async function ProductsDataWrapper({
     colors,
     veinPatterns,
     totalBaseResult,
-    tMeta,
+    seoSettings,
   ] = await Promise.all([
     getProductsService({
       locale,
@@ -87,14 +79,18 @@ async function ProductsDataWrapper({
       locale,
       limit: 1,
     }),
-    getTranslations({ locale, namespace: "Metadata" }),
+    getSeoSettingsService(locale),
   ]);
+
+  const homeTitle = seoSettings.pages.home.title || "Persis Quartz";
+  const productsTitle = seoSettings.pages.products.title || "Products Catalog";
+  const productsDescription = seoSettings.pages.products.description || "";
 
   // ساخت Breadcrumb Schema
   const breadcrumbSchema = getBreadcrumbSchema(
     [
-      { name: tMeta("home.title"), path: "" },
-      { name: tMeta("products.title"), path: "/products" },
+      { name: homeTitle, path: "" },
+      { name: productsTitle, path: "/products" },
     ],
     locale,
   );
@@ -103,8 +99,8 @@ async function ProductsDataWrapper({
   const productsSchema = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    name: tMeta("products.title"),
-    description: tMeta("products.description"),
+    name: productsTitle,
+    description: productsDescription,
     mainEntity: {
       "@type": "ItemList",
       itemListElement: initialProducts.map((product, idx) => ({
@@ -149,6 +145,7 @@ export default async function ProductsPage({
 }: PageProps) {
   const { locale } = await params;
   const currentLocale = (locale as Locale) || "fa";
+  setRequestLocale(currentLocale);
 
   return (
     <main className="container mx-auto px-4 sm:px-12 pt-28 sm:pt-36 pb-20 min-h-screen select-none">

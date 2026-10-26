@@ -117,6 +117,7 @@ export interface Config {
     'care-page': CarePage;
     'applications-page': ApplicationsPage;
     'products-order-settings': ProductsOrderSetting;
+    'seo-settings': SeoSetting;
   };
   globalsSelect: {
     'about-page': AboutPageSelect<false> | AboutPageSelect<true>;
@@ -124,6 +125,7 @@ export interface Config {
     'care-page': CarePageSelect<false> | CarePageSelect<true>;
     'applications-page': ApplicationsPageSelect<false> | ApplicationsPageSelect<true>;
     'products-order-settings': ProductsOrderSettingsSelect<false> | ProductsOrderSettingsSelect<true>;
+    'seo-settings': SeoSettingsSelect<false> | SeoSettingsSelect<true>;
   };
   locale: 'fa' | 'en' | 'ar';
   widgets: {
@@ -1342,6 +1344,38 @@ export interface ProductsOrderSetting {
   createdAt?: string | null;
 }
 /**
+ * مدیریت جامع متادیتای سئو، عنوان‌ها و توضیحات صفحات ثابت سایت
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "seo-settings".
+ */
+export interface SeoSetting {
+  id: number;
+  defaultOgImage?: (number | null) | Media;
+  homeTitle?: string | null;
+  homeDescription?: string | null;
+  productsTitle?: string | null;
+  productsDescription?: string | null;
+  applicationsTitle?: string | null;
+  applicationsDescription?: string | null;
+  inspirationsTitle?: string | null;
+  inspirationsDescription?: string | null;
+  blogTitle?: string | null;
+  blogDescription?: string | null;
+  aboutTitle?: string | null;
+  aboutDescription?: string | null;
+  catalogsTitle?: string | null;
+  catalogsDescription?: string | null;
+  careTitle?: string | null;
+  careDescription?: string | null;
+  dealersTitle?: string | null;
+  dealersDescription?: string | null;
+  contactTitle?: string | null;
+  contactDescription?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "about-page_select".
  */
@@ -1474,6 +1508,36 @@ export interface ApplicationsPageSelect<T extends boolean = true> {
  */
 export interface ProductsOrderSettingsSelect<T extends boolean = true> {
   categoryOrder?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "seo-settings_select".
+ */
+export interface SeoSettingsSelect<T extends boolean = true> {
+  defaultOgImage?: T;
+  homeTitle?: T;
+  homeDescription?: T;
+  productsTitle?: T;
+  productsDescription?: T;
+  applicationsTitle?: T;
+  applicationsDescription?: T;
+  inspirationsTitle?: T;
+  inspirationsDescription?: T;
+  blogTitle?: T;
+  blogDescription?: T;
+  aboutTitle?: T;
+  aboutDescription?: T;
+  catalogsTitle?: T;
+  catalogsDescription?: T;
+  careTitle?: T;
+  careDescription?: T;
+  dealersTitle?: T;
+  dealersDescription?: T;
+  contactTitle?: T;
+  contactDescription?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

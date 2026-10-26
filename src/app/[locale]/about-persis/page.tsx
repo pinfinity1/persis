@@ -4,8 +4,9 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getAboutPageDataService } from "@/services/about.service";
+import { getSeoSettingsService } from "@/services/seo.service";
 import {
-  generateSeoMetadata,
+  generateStaticPageMetadata,
   getOrganizationSchema,
   safeJsonLdReplacer,
   type Locale,
@@ -15,22 +16,14 @@ interface PageProps {
   params: Promise<{ locale: string }>;
 }
 
+// ۱. تولید متادیتا به شکل یکپارچه از گلوبال SeoSettings پیلود
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { locale } = await params;
   const currentLocale = (locale as Locale) || "fa";
-  const t = await getTranslations({
-    locale: currentLocale,
-    namespace: "Metadata",
-  });
 
-  return generateSeoMetadata({
-    title: t("about.title"),
-    description: t("about.description"),
-    locale: currentLocale,
-    path: "/about-persis",
-  });
+  return generateStaticPageMetadata("about", currentLocale, "/about-persis");
 }
 
 const FALLBACK_IMG = "/PersisQuartz-Red.png";
@@ -85,11 +78,11 @@ export default async function AboutPersisPage({ params }: PageProps) {
   const currentLocale = (locale as Locale) || "fa";
   setRequestLocale(currentLocale);
 
-  // واکشی صحیح متغیرها: tAbout برای متون داخل صفحه و tMeta برای اسکیما سئو
-  const [data, tAbout, tMeta] = await Promise.all([
+  // واکشی هم‌زمان اطلاعات صفحه، متون رابط کاربری و اطلاعات سئو
+  const [data, tAbout, seoSettings] = await Promise.all([
     getAboutPageDataService(currentLocale),
     getTranslations({ locale: currentLocale, namespace: "About" }),
-    getTranslations({ locale: currentLocale, namespace: "Metadata" }),
+    getSeoSettingsService(currentLocale),
   ]);
 
   const gallery = data.gallery.images;
@@ -99,11 +92,12 @@ export default async function AboutPersisPage({ params }: PageProps) {
     ? gallery.slice(mid)
     : galleryRow1;
 
+  // هماهنگی ۱۰۰٪ داده ساختاریافته (Schema) با متای تنظیم‌شده توسط کارفرما در پنل
   const aboutSchema = {
     "@context": "https://schema.org",
     "@type": "AboutPage",
-    name: tMeta("about.title"),
-    description: tMeta("about.description"),
+    name: seoSettings.pages.about.title || "Persis Quartz",
+    description: seoSettings.pages.about.description || "",
     mainEntity: getOrganizationSchema(),
   };
 
@@ -114,7 +108,7 @@ export default async function AboutPersisPage({ params }: PageProps) {
         dangerouslySetInnerHTML={{ __html: safeJsonLdReplacer(aboutSchema) }}
       />
 
-      {/* 1. Header Hero with Watermark (حفظ کامل دیزاین شما) */}
+      {/* 1. Header Hero with Watermark */}
       <section className="relative w-full pt-28 pb-14 sm:pt-36 sm:pb-20 bg-muted/20 border-b border-border/40 overflow-hidden select-none">
         <div
           aria-hidden="true"
@@ -126,7 +120,6 @@ export default async function AboutPersisPage({ params }: PageProps) {
           </span>
         </div>
 
-        {/* نشانگر مرکزی با خطوط تراز و متن ترجمه‌شده brandLabel */}
         <div className="container mx-auto px-6 relative z-10 text-center max-w-4xl pt-4 sm:pt-6">
           <div className="flex items-center justify-center gap-3">
             <span className="h-px w-6 sm:w-8 bg-primary shrink-0" />
