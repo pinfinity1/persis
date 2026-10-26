@@ -4,7 +4,7 @@
 import React, { useState, useRef } from "react";
 import Image from "next/image";
 import { Link } from "@/i18n/routing";
-import { ArrowUpRight, X } from "lucide-react";
+import { ArrowUpRight, X, Layers, Box } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { RichText } from "@payloadcms/richtext-lexical/react";
@@ -21,7 +21,6 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
 
   const hasDescription = Boolean(item.description);
 
-  // نسبت ۱۶ به ۱۰ برای کادر اولیه در صفحه گالری
   const isWide =
     item.spaceType === "kitchen" || item.spaceType === "commercial";
   const aspectRatioClass = isWide
@@ -45,13 +44,12 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
   return (
     <>
       {/* ========================================================= */}
-      {/* ۱. کارت صفحه گالری: مینیمال، بدون اسکیل، با پالت رپ‌شده      */}
+      {/* ۱. کارت مینیمال در صفحه لیست ایده‌ها                        */}
       {/* ========================================================= */}
       <div
         onClick={() => setIsDialogOpen(true)}
-        className="group relative flex flex-col bg-card border border-border/50 hover:border-foreground/30 transition-colors duration-300 cursor-pointer overflow-hidden select-none"
+        className="group relative flex flex-col bg-card border border-border/50 hover:border-foreground/40 transition-colors duration-300 cursor-pointer overflow-hidden select-none"
       >
-        {/* قاب تصویر فضا */}
         <div
           className={cn(
             "relative w-full bg-neutral-950 overflow-hidden",
@@ -66,13 +64,20 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
             className="object-cover"
           />
 
-          {/* گرادینت ثابت و تاریک در پایین عکس برای وضوح عنوان */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent pointer-events-none" />
 
-          {/* تگ سبک معماری فضا در گوشه بالا */}
+          {/* پلاک سبک معماری */}
           <div className="absolute top-4 start-4 z-10 pointer-events-none">
             <span className="px-3 py-1 bg-black/60 backdrop-blur-md border border-white/15 text-[10px] uppercase tracking-[0.2em] text-white/90 font-medium">
               {item.style}
+            </span>
+          </div>
+
+          {/* نشانگر قابلیت کلیک جهت هدایت کاربر */}
+          <div className="absolute top-4 end-4 z-10">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white/15 backdrop-blur-md border border-white/20 text-[10px] text-white/90 font-light transition-colors group-hover:bg-primary group-hover:border-primary group-hover:text-white">
+              <span>مشاهده جزئیات فضا</span>
+              <ArrowUpRight className="size-3" />
             </span>
           </div>
 
@@ -84,7 +89,7 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
           </div>
         </div>
 
-        {/* پالت متریال در نوار زیرین (چندخطی تمیز بدون اسکرول بار) */}
+        {/* پالت متریال بدون اسکرول افقی */}
         {item.pairings && item.pairings.length > 0 && (
           <div className="p-4 sm:p-5 bg-card border-t border-border/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium shrink-0">
@@ -94,7 +99,7 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
               {item.pairings.map((p) => (
                 <div
                   key={p.id}
-                  className="flex items-center gap-1.5 px-2.5 py-1 bg-muted/40 border border-border/40 text-[11px] text-foreground font-light"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-muted/40 border border-border/40 text-[11px] text-foreground font-light"
                 >
                   {p.colorHex ? (
                     <span
@@ -113,15 +118,17 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
       </div>
 
       {/* ========================================================= */}
-      {/* ۲. دیالوگ سینمایی بزرگ دسکتاپ و ریسپانسیو موبایل            */}
+      {/* ۲. دیالوگ سینمایی (تمام‌صفحه موبایل + اسپلیت اسکرین دسکتاپ)   */}
       {/* ========================================================= */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent
           showCloseButton={false}
-          className="p-0 !max-w-[94vw] !w-[94vw] h-[90vh] max-h-[90vh] bg-neutral-950 text-white border border-white/15 overflow-hidden flex flex-col rounded-none shadow-2xl sm:!max-w-[94vw]"
+          className="p-0 border-0 lg:border lg:border-white/15 bg-neutral-950 text-white overflow-hidden flex flex-col rounded-none shadow-2xl
+            !w-screen !h-[100dvh] !max-w-none !max-h-none inset-0
+            lg:!w-[94vw] lg:!h-[90vh] lg:!max-w-[94vw] lg:!max-h-[90vh] lg:inset-auto lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2"
         >
-          {/* هدر مینیمال بالای مودال */}
-          <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between bg-neutral-950 shrink-0 z-30">
+          {/* هدر بالای دیالوگ */}
+          <div className="px-5 sm:px-8 py-3.5 border-b border-white/10 flex items-center justify-between bg-neutral-950 shrink-0 z-30">
             <div className="flex items-center gap-3">
               <span className="h-px w-5 bg-primary shrink-0" />
               <span className="text-[10px] uppercase tracking-[0.25em] text-primary font-medium">
@@ -139,11 +146,11 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
             </button>
           </div>
 
-          {/* بدنه دو ستونه (اسپلیت اسکرین وسیع) */}
-          <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-y-auto lg:overflow-hidden min-h-0">
-            {/* ستون عکس با هات‌اسپات‌ها (۸ ستون در دسکتاپ = ۶۶٪ کل عرض) */}
+          {/* بدنه دو ستونه دیالوگ */}
+          <div className="flex-1 overflow-y-auto lg:overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-0">
+            {/* قاب تصویر همراه با هات‌اسپات‌های تعاملی */}
             <div
-              className="lg:col-span-8 relative bg-neutral-900 w-full h-[50vh] sm:h-[60vh] lg:h-full overflow-hidden flex items-center justify-center border-b lg:border-b-0 lg:border-e border-white/10"
+              className="lg:col-span-8 relative bg-neutral-900 w-full min-h-[340px] sm:min-h-[460px] lg:h-full lg:min-h-0 shrink-0 border-b lg:border-b-0 lg:border-e border-white/10 flex items-center justify-center overflow-hidden"
               onClick={() => setActiveSpot(null)}
             >
               <Image
@@ -155,7 +162,7 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
                 priority
               />
 
-              {/* نقاط تعاملی هات‌اسپات */}
+              {/* رندر هات‌اسپات‌ها روی تصویر دیالوگ */}
               {item.hotspots.map((spot) => {
                 const isActive = activeSpot === spot.id;
                 const placeBelow = spot.yPercent < 45;
@@ -172,7 +179,7 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
                     onMouseLeave={handleMouseLeaveSpot}
                     onClick={(e) => e.stopPropagation()}
                   >
-                    {/* پین شیشه‌ای مدرن */}
+                    {/* دکمه پین مرکزی */}
                     <button
                       type="button"
                       onClick={() =>
@@ -184,7 +191,7 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
                       aria-label={spot.label || "Slab Hotspot"}
                     >
                       <span className="animate-ping absolute inline-flex h-6 w-6 rounded-full bg-primary/50 opacity-75" />
-                      <span className="relative flex items-center justify-center size-5 rounded-full bg-black/80 backdrop-blur-xs border border-white/70 shadow-lg">
+                      <span className="relative flex items-center justify-center size-5 rounded-full bg-black/80 backdrop-blur-xs border border-white/70 shadow-lg transition-transform duration-300 group-hover/pin:scale-110">
                         <span className="size-2 rounded-full bg-primary ring-2 ring-white" />
                       </span>
                     </button>
@@ -241,19 +248,15 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
               })}
             </div>
 
-            {/* ستون محتوا و مشخصات متریال (۴ ستون در دسکتاپ = ۳۴٪ عرض) */}
-            <div className="lg:col-span-4 p-6 sm:p-8 flex flex-col justify-between overflow-y-auto space-y-8 bg-neutral-950">
+            {/* ستون متن و مشخصات اسلب‌ها با استایل persis-prose-dark */}
+            <div className="lg:col-span-4 p-6 sm:p-8 flex flex-col justify-between lg:overflow-y-auto space-y-8 bg-neutral-950">
               <div className="space-y-6">
                 <DialogTitle className="text-xl sm:text-2xl font-light text-white leading-snug tracking-tight text-start">
                   {item.title}
                 </DialogTitle>
 
-                {/* شرح معماری فضا با کلاس persis-prose */}
                 {hasDescription ? (
-                  <div
-                    dir="auto"
-                    className="persis-prose text-neutral-300 text-start leading-relaxed text-xs sm:text-sm"
-                  >
+                  <div dir="auto" className="persis-prose persis-prose-dark">
                     {typeof item.description === "string" ? (
                       <p>{item.description}</p>
                     ) : (
@@ -268,25 +271,26 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
                   </div>
                 ) : null}
 
-                {/* لیست اختصاصی اسلب‌های این فضا */}
+                {/* فهرست اسلب‌های فضا */}
                 {item.hotspots.length > 0 && (
                   <div className="space-y-3 pt-5 border-t border-white/10">
-                    <span className="text-[10px] uppercase tracking-[0.2em] text-neutral-400 block font-medium">
-                      اسلب‌های استفاده‌شده
-                    </span>
+                    <div className="text-[10px] uppercase tracking-[0.2em] text-neutral-400 font-medium flex items-center gap-2">
+                      <Layers className="size-3.5 text-primary" />
+                      <span>اسلب‌های طراحی‌شده در این فضا</span>
+                    </div>
 
                     <div className="space-y-2">
                       {item.hotspots.map((spot) => (
                         <div
                           key={spot.id}
-                          className="flex items-center justify-between p-3 bg-white/5 border border-white/10"
+                          className="flex items-center justify-between p-3.5 bg-white/5 border border-white/10"
                         >
-                          <div className="space-y-0.5 min-w-0 pe-2">
-                            <span className="text-xs font-medium text-white block truncate">
+                          <div className="space-y-1 pe-2">
+                            <span className="text-xs sm:text-sm font-medium text-white block">
                               {spot.productTitle}
                             </span>
                             {spot.label && (
-                              <span className="text-[10px] text-neutral-400 font-light block truncate">
+                              <span className="text-[11px] text-neutral-400 font-light block">
                                 {spot.label}
                               </span>
                             )}
@@ -295,10 +299,10 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
                           {spot.productSlug && (
                             <Link
                               href={`/products/${spot.productSlug}`}
-                              className="px-3 py-1.5 bg-primary/20 hover:bg-primary text-primary hover:text-white border border-primary/40 text-[10px] uppercase tracking-wider font-medium flex items-center gap-1 shrink-0 transition-colors"
+                              className="px-3.5 py-1.5 bg-primary/20 hover:bg-primary text-primary hover:text-white border border-primary/40 text-[11px] uppercase tracking-wider font-medium inline-flex items-center gap-1.5 shrink-0 transition-colors"
                             >
                               <span>{t("viewSlab")}</span>
-                              <ArrowUpRight className="size-3" />
+                              <ArrowUpRight className="size-3.5" />
                             </Link>
                           )}
                         </div>
@@ -308,21 +312,22 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
                 )}
               </div>
 
-              {/* پالت هارمونی کامل در انتهای ستون مشخصات */}
+              {/* پالت متریال */}
               {item.pairings && item.pairings.length > 0 && (
                 <div className="pt-6 border-t border-white/10 mt-auto">
-                  <span className="text-[10px] uppercase tracking-[0.2em] text-neutral-400 block mb-3 font-medium">
-                    {t("materialPalette")}
-                  </span>
+                  <div className="text-[10px] uppercase tracking-[0.2em] text-neutral-400 mb-3 font-medium flex items-center gap-2">
+                    <Box className="size-3.5 text-primary" />
+                    <span>{t("materialPalette")}</span>
+                  </div>
                   <div className="flex flex-wrap gap-2">
                     {item.pairings.map((p) => (
                       <div
                         key={p.id}
-                        className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 text-xs text-neutral-200 font-light"
+                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 text-xs text-neutral-200 font-light"
                       >
                         {p.colorHex ? (
                           <span
-                            className="size-2 rounded-full border border-black/30 shrink-0"
+                            className="size-2.5 rounded-full border border-black/30 shrink-0 shadow-xs"
                             style={{ backgroundColor: p.colorHex }}
                           />
                         ) : (
