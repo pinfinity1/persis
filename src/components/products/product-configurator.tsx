@@ -26,7 +26,30 @@ export function ProductConfigurator({
   )}`;
 
   const handleShare = async () => {
-    if (typeof window !== "undefined" && navigator.clipboard) {
+    if (typeof window === "undefined") return;
+
+    const shareData = {
+      title: `${product.title} (${product.code}) | Persis Quartz`,
+      text: `${product.title} (${product.code}) - Engineered Quartz Surfaces by Persis Quartz`,
+      url: window.location.href,
+    };
+
+    // اگر مرورگر از منوی نیتیو اشتراک‌گذاری پشتیبانی کند
+    if (
+      navigator.share &&
+      navigator.canShare &&
+      navigator.canShare(shareData)
+    ) {
+      try {
+        await navigator.share(shareData);
+        return;
+      } catch {
+        // در صورت انصراف کاربر بدون خطا رد می‌شود
+      }
+    }
+
+    // حالت فال‌بک برای دسکتاپ: کپی لینک در کلیپ‌بورد
+    if (navigator.clipboard) {
       await navigator.clipboard.writeText(window.location.href);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -38,9 +61,9 @@ export function ProductConfigurator({
   return (
     <div className="flex flex-col justify-between h-full max-h-[580px] select-none">
       <div className="space-y-7">
-        {/* ۱. کد محصول و دکمه اشتراک‌گذاری */}
+        {/* ۱. کد محصول و دکمه اشتراک‌گذاری هوشمند */}
         <div className="flex items-center justify-between gap-4 pb-4 border-b border-border/30">
-          <span className="text-sm font-semibold tracking-wider text-primary">
+          <span className="text-sm font-semibold tracking-wider text-primary font-mono">
             {t("codePrefix")} {product.code}
           </span>
 
@@ -48,6 +71,7 @@ export function ProductConfigurator({
             type="button"
             onClick={handleShare}
             className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer shrink-0"
+            aria-label="Share product"
           >
             {copied ? (
               <>
@@ -69,7 +93,7 @@ export function ProductConfigurator({
             {product.title}
           </h1>
 
-          {/* ۳. کادر مشخصات هویتی ۳ زبانه */}
+          {/* ۳. کادر مشخصات هویتی */}
           <div className="border-s-2 border-primary ps-5 py-3 space-y-2 bg-muted/10">
             {product.color_family?.title && (
               <div className="flex items-center gap-2.5">
@@ -94,6 +118,7 @@ export function ProductConfigurator({
             )}
           </div>
 
+          {/* ۴. متن کانسپت و معرفی محصول */}
           {hasDescription ? (
             <div dir="auto" className="pt-2 persis-prose">
               {typeof product.description === "string" ? (
