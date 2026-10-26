@@ -116,12 +116,14 @@ export interface Config {
     'home-page': HomePage;
     'care-page': CarePage;
     'applications-page': ApplicationsPage;
+    'products-order-settings': ProductsOrderSetting;
   };
   globalsSelect: {
     'about-page': AboutPageSelect<false> | AboutPageSelect<true>;
     'home-page': HomePageSelect<false> | HomePageSelect<true>;
     'care-page': CarePageSelect<false> | CarePageSelect<true>;
     'applications-page': ApplicationsPageSelect<false> | ApplicationsPageSelect<true>;
+    'products-order-settings': ProductsOrderSettingsSelect<false> | ProductsOrderSettingsSelect<true>;
   };
   locale: 'fa' | 'en' | 'ar';
   widgets: {
@@ -365,7 +367,7 @@ export interface Product {
    */
   description?: string | null;
   /**
-   * توضیحات جامع و معمارانه با امکان بولد و لینک‌دهی آزاد
+   * متن کامل با دسترسی به تمام هدینگ‌های H1 تا H6 و استایل‌های نوشتاری
    */
   content?: {
     root: {
@@ -520,7 +522,7 @@ export interface Post {
    */
   excerpt?: string | null;
   /**
-   * متن کامل مقاله با امکان درج هدینگ‌های H2/H3، لیست‌های عددی و بالت، نقل‌قول و تصاویر بین‌متنی
+   * متن کامل مقاله با دسترسی به تمام سطوح هدینگ (H1 تا H6)، تنظیمات تراز متن، زیرنویس و سایزبندی متن
    */
   content: {
     root: {
@@ -551,11 +553,11 @@ export interface Post {
 export interface Inspiration {
   id: number;
   /**
-   * عنوان شاخص فضا یا ایده (مثال: برای کابینت طوسی چه سنگ کوارتزی انتخاب کنیم؟)
+   * عنوان شاخص فضا یا ایده
    */
   title: string;
   /**
-   * تصویر اصلی فضا (نسبت افقی ۱۶:۹ برای آشپزخانه و ۴:۳ برای فضاها)
+   * تصویر اصلی فضا
    */
   image: number | Media;
   /**
@@ -567,7 +569,7 @@ export interface Inspiration {
    */
   style: 'minimal' | 'modern' | 'classic' | 'industrial';
   /**
-   * شرح معمارانه ایده، ترکیب رنگ‌ها و متریال‌ها با امکان بولد کردن و لیست‌گذاری
+   * شرح معمارانه ایده، امکان استفاده از تمام هدینگ‌ها (H1 تا H6) و ابزارهای نگارش متن
    */
   description?: {
     root: {
@@ -1325,6 +1327,21 @@ export interface ApplicationsPage {
   createdAt?: string | null;
 }
 /**
+ * Manage global display priority of products by arranging their categories.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "products-order-settings".
+ */
+export interface ProductsOrderSetting {
+  id: number;
+  /**
+   * Select and order categories from top to bottom. Products belonging to the first category will appear first on the website.
+   */
+  categoryOrder?: (number | Category)[] | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "about-page_select".
  */
@@ -1447,6 +1464,16 @@ export interface ApplicationsPageSelect<T extends boolean = true> {
         gallery?: T;
         id?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "products-order-settings_select".
+ */
+export interface ProductsOrderSettingsSelect<T extends boolean = true> {
+  categoryOrder?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

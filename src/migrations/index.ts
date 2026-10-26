@@ -8,6 +8,7 @@ import * as migration_20261008_133519_add_brand_features_to_home from './2026100
 import * as migration_20261008_140305_add_info_cards_list_to_home from './20261008_140305_add_info_cards_list_to_home';
 import * as migration_20261023_120441_add_content_to_products from './20261023_120441_add_content_to_products';
 import * as migration_20261025_135631_update_inspirations_description_to_richtext from './20261025_135631_update_inspirations_description_to_richtext';
+import * as migration_20261026_151135 from './20261026_151135';
 
 export const migrations = [
   {
@@ -58,6 +59,11 @@ export const migrations = [
   {
     up: migration_20261025_135631_update_inspirations_description_to_richtext.up,
     down: migration_20261025_135631_update_inspirations_description_to_richtext.down,
-    name: '20261025_135631_update_inspirations_description_to_richtext'
+    name: '20261025_135631_update_inspirations_description_to_richtext',
+  },
+  {
+    up: migration_20261026_151135.up,
+    down: migration_20261026_151135.down,
+    name: '20261026_151135'
   },
 ];

@@ -60,7 +60,7 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
             src={item.image}
             alt={item.title}
             fill
-            sizes="(max-width: 768px) 100vw, 50vw"
+            sizes="(max-width: 768px) 100vw, 68vw"
             className="object-cover"
           />
 

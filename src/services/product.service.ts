@@ -65,6 +65,7 @@ export interface ProductItemDTO {
   title: string;
   slug: string;
   code: string;
+  order?: number;
   category?: LookupItem;
   color_family?: LookupItem;
   vein_pattern?: LookupItem;
@@ -210,6 +211,7 @@ function mapProductDocToDTO(raw: unknown): ProductItemDTO {
     title: String(doc.title ?? ""),
     slug: String(doc.slug ?? ""),
     code: String(doc.code ?? ""),
+    order: typeof doc.order === "number" ? doc.order : undefined,
     category: category || { id: "", title: "", slug: "" },
     color_family: colorFamily,
     vein_pattern: veinPattern,
@@ -232,6 +234,38 @@ function mapProductDocToDTO(raw: unknown): ProductItemDTO {
       ? String(doc.meta_description)
       : undefined,
   };
+}
+
+// --- Category Ordering Helper ---
+
+async function getProductsCategoryOrderMap(): Promise<Map<string, number>> {
+  try {
+    const payload = await getPayload({ config: configPromise });
+    // استفاده از تایپ‌کستینگ امن برای حل خطای slug گلوبال
+    const orderSettings = (await (
+      payload.findGlobal as unknown as (args: {
+        slug: string;
+        depth?: number;
+      }) => Promise<unknown>
+    )({
+      slug: "products-order-settings",
+      depth: 0,
+    })) as { categoryOrder?: (string | number | { id: string | number })[] };
+
+    const priorityMap = new Map<string, number>();
+    if (Array.isArray(orderSettings?.categoryOrder)) {
+      orderSettings.categoryOrder.forEach((cat, index) => {
+        const id =
+          typeof cat === "object" && cat !== null
+            ? String((cat as { id: string | number }).id)
+            : String(cat);
+        priorityMap.set(id, index);
+      });
+    }
+    return priorityMap;
+  } catch {
+    return new Map<string, number>();
+  }
 }
 
 // --- Data Access Layer ---
@@ -275,8 +309,9 @@ async function executeProductsQuery(
 
   const where: Where = andConditions.length > 0 ? { and: andConditions } : {};
 
-  let sortField = "-createdAt";
-  if (params.sort === "oldest") sortField = "createdAt";
+  // مرتب‌سازی در سطح کوئری (order اسلب و زمان ساخت)
+  let sortField: string[] | string = ["order", "-createdAt"];
+  if (params.sort === "oldest") sortField = ["order", "createdAt"];
   if (params.sort === "title_asc") sortField = "title";
   if (params.sort === "title_desc") sortField = "-title";
 
@@ -287,19 +322,61 @@ async function executeProductsQuery(
   const page = Math.max(params.page ?? 1, 1);
 
   try {
-    const result = await payload.find({
-      collection: "products",
-      locale: params.locale,
-      page,
-      limit,
-      where,
-      sort: sortField,
-      depth: 1,
-      pagination: true,
-    });
+    const [result, categoryPriorityMap] = await Promise.all([
+      payload.find({
+        collection: "products",
+        locale: params.locale,
+        page,
+        limit,
+        where,
+        sort: sortField,
+        depth: 1,
+        pagination: true,
+      }),
+      getProductsCategoryOrderMap(),
+    ]);
+
+    // در تابع executeProductsQuery:
+    let sortedDocs = result.docs;
+    if (!params.sort || params.sort === "newest" || params.sort === "oldest") {
+      sortedDocs = [...result.docs].sort((a, b) => {
+        // خواندن ایمن فیلد category بدون ارور Conversion
+        const rawCatA = a.category as unknown as
+          { id?: string | number } | string | number | null;
+        const rawCatB = b.category as unknown as
+          { id?: string | number } | string | number | null;
+
+        const catIdA =
+          typeof rawCatA === "object" && rawCatA !== null
+            ? String(rawCatA.id ?? "")
+            : String(rawCatA ?? "");
+        const catIdB =
+          typeof rawCatB === "object" && rawCatB !== null
+            ? String(rawCatB.id ?? "")
+            : String(rawCatB ?? "");
+
+        const priorityA = categoryPriorityMap.has(catIdA)
+          ? categoryPriorityMap.get(catIdA)!
+          : 999;
+        const priorityB = categoryPriorityMap.has(catIdB)
+          ? categoryPriorityMap.get(catIdB)!
+          : 999;
+
+        if (priorityA !== priorityB) {
+          return priorityA - priorityB;
+        }
+
+        // خواندن ایمن فیلد order بدون ارور Property does not exist
+        const rawDocA = a as unknown as { order?: number };
+        const rawDocB = b as unknown as { order?: number };
+        const orderA = typeof rawDocA.order === "number" ? rawDocA.order : 999;
+        const orderB = typeof rawDocB.order === "number" ? rawDocB.order : 999;
+        return orderA - orderB;
+      });
+    }
 
     return {
-      data: result.docs.map(mapProductDocToDTO),
+      data: sortedDocs.map(mapProductDocToDTO),
       meta: {
         current_page: result.page ?? 1,
         total_pages: result.totalPages ?? 1,
@@ -574,17 +651,56 @@ export const getFeaturedProductsService = (locale: Locale) =>
   unstable_cache(
     async (): Promise<ProductItemDTO[]> => {
       try {
-        const payload = await getPayload({ config: configPromise });
+        const [payload, categoryPriorityMap] = await Promise.all([
+          getPayload({ config: configPromise }),
+          getProductsCategoryOrderMap(),
+        ]);
+
         const response = await payload.find({
           collection: "products",
           locale,
-          limit: 6,
+          limit: 12,
           where: { is_featured: { equals: true } },
-          sort: "-updatedAt",
+          sort: ["order", "-createdAt"],
           depth: 1,
         });
 
-        return response.docs.map(mapProductDocToDTO);
+        const sorted = [...response.docs].sort((a, b) => {
+          const rawCatA = a.category as unknown as
+            { id?: string | number } | string | number | null;
+          const rawCatB = b.category as unknown as
+            { id?: string | number } | string | number | null;
+
+          const catIdA =
+            typeof rawCatA === "object" && rawCatA !== null
+              ? String(rawCatA.id ?? "")
+              : String(rawCatA ?? "");
+          const catIdB =
+            typeof rawCatB === "object" && rawCatB !== null
+              ? String(rawCatB.id ?? "")
+              : String(rawCatB ?? "");
+
+          const priorityA = categoryPriorityMap.has(catIdA)
+            ? categoryPriorityMap.get(catIdA)!
+            : 999;
+          const priorityB = categoryPriorityMap.has(catIdB)
+            ? categoryPriorityMap.get(catIdB)!
+            : 999;
+
+          if (priorityA !== priorityB) {
+            return priorityA - priorityB;
+          }
+
+          const rawDocA = a as unknown as { order?: number };
+          const rawDocB = b as unknown as { order?: number };
+          const orderA =
+            typeof rawDocA.order === "number" ? rawDocA.order : 999;
+          const orderB =
+            typeof rawDocB.order === "number" ? rawDocB.order : 999;
+          return orderA - orderB;
+        });
+
+        return sorted.slice(0, 8).map(mapProductDocToDTO);
       } catch {
         return [];
       }

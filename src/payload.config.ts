@@ -24,6 +24,7 @@ import { ApplicationsPage } from "./payload/globals/ApplicationsPage";
 import { migrations } from "./migrations";
 import { Posts } from "./payload/collections/Posts";
 import { Inspirations } from "./payload/collections/Inspirations";
+import { ProductsOrderSettings } from "./payload/globals/ProductsOrderSettings";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -55,7 +56,13 @@ export default buildConfig({
     Posts,
     Inspirations,
   ],
-  globals: [AboutPage, HomePage, CarePage, ApplicationsPage],
+  globals: [
+    AboutPage,
+    HomePage,
+    CarePage,
+    ApplicationsPage,
+    ProductsOrderSettings,
+  ],
 
   editor: lexicalEditor({}),
 
