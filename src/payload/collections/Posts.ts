@@ -21,6 +21,7 @@ import {
   BlockquoteFeature,
   HorizontalRuleFeature,
   UploadFeature,
+  EXPERIMENTAL_TableFeature,
 } from "@payloadcms/richtext-lexical";
 
 export const Posts: CollectionConfig = {
@@ -140,11 +141,12 @@ export const Posts: CollectionConfig = {
           LinkFeature({
             enabledCollections: ["products", "posts", "catalogs"],
           }),
+          EXPERIMENTAL_TableFeature(),
         ],
       }),
       admin: {
         description:
-          "متن کامل مقاله با دسترسی به تمام سطوح هدینگ (H1 تا H6)، تنظیمات تراز متن، زیرنویس و سایزبندی متن",
+          "متن کامل مقاله با دسترسی به جدول (درج دستی از منو یا کپی/پیست مستقیم از اکسل و ورد)، هدینگ‌ها (H1 تا H6)، تصاویر و لینک‌ها",
       },
     },
     {

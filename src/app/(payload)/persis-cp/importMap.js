@@ -21,6 +21,7 @@ import { HeadingFeatureClient as HeadingFeatureClient_e70f5e05f09f93e00b997edb1e
 import { ParagraphFeatureClient as ParagraphFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ExcelProductImportControl as ExcelProductImportControl_9c4b4526906d26e64e9447c8643cce10 } from '@/components/admin/ExcelProductImportControl'
 import { ExcelDealerImportControl as ExcelDealerImportControl_592f1cf1c8df4c52c1c1fc611404db98 } from '@/components/admin/ExcelDealerImportControl'
+import { TableFeatureClient as TableFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { UploadFeatureClient as UploadFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ColorPickerField as ColorPickerField_d572ded1c017fe858839e8cdc754e090 } from '@/components/admin/ColorPickerField'
 import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
@@ -51,6 +52,7 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#ParagraphFeatureClient": ParagraphFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@/components/admin/ExcelProductImportControl#ExcelProductImportControl": ExcelProductImportControl_9c4b4526906d26e64e9447c8643cce10,
   "@/components/admin/ExcelDealerImportControl#ExcelDealerImportControl": ExcelDealerImportControl_592f1cf1c8df4c52c1c1fc611404db98,
+  "@payloadcms/richtext-lexical/client#TableFeatureClient": TableFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#UploadFeatureClient": UploadFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@/components/admin/ColorPickerField#ColorPickerField": ColorPickerField_d572ded1c017fe858839e8cdc754e090,
   "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24,
