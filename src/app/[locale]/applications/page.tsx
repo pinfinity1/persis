@@ -64,7 +64,8 @@ export default async function ApplicationsPage({ params }: PageProps) {
       <div className="container mx-auto px-6 sm:px-12 pt-28 sm:pt-36 pb-16 sm:pb-20 select-none">
         <PageWatermarkHeader
           watermark="APPLICATIONS"
-          title="Architectural Use Cases & Spaces"
+          title={seoSettings.pages.applications.title || data.header.tag}
+          asHeading="h2"
         />
 
         <div className="pt-12 sm:pt-16 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-start">

@@ -1,21 +1,21 @@
 {
-  "name": "PersisQuartz",
+  "name": "Persis Quartz",
   "short_name": "Persis",
   "icons": [
     {
-      "src": "/web-app-manifest-192x192.png",
-      "sizes": "192x192",
+      "src": "/logo-Red.png",
+      "sizes": "440x440",
       "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any"
     },
     {
-      "src": "/web-app-manifest-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
+      "src": "/logo-Red.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "maskable"
     }
   ],
-  "theme_color": "#ffffff",
-  "background_color": "#ffffff",
+  "theme_color": "#0d0d0e",
+  "background_color": "#0d0d0e",
   "display": "standalone"
 }

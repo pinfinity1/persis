@@ -31,11 +31,19 @@ const inter = localFont({
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000",
+    process.env.NEXT_PUBLIC_SITE_URL ||
+      process.env.NEXT_PUBLIC_SERVER_URL ||
+      "https://persisquartz.com",
   ),
-  title: "Persis Quartz",
+  title: "Persis Quartz | سطوح مهندسی‌شده سنگ کوارتز",
   description:
     "تولیدکننده سطوح کوارتز مهندسی‌شده با استانداردهای جهانی؛ تلفیقی از استحکام بی‌نظیر و زیبایی معماری.",
+  other: {
+    "geo.region": "IR-08",
+    "geo.placename": "Shahrekord",
+    "geo.position": "32.3276;50.8524",
+    ICBM: "32.3276, 50.8524",
+  },
 };
 
 export default async function RootLayout({

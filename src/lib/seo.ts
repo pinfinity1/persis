@@ -83,7 +83,9 @@ export function generateSeoMetadata({
   const canonicalUrl = `${SITE_URL}/${locale}${cleanPath}`;
 
   return {
-    title: fullTitle,
+    title: {
+      absolute: fullTitle,
+    },
     description: finalDescription,
     metadataBase: new URL(SITE_URL),
     alternates: {
@@ -121,7 +123,7 @@ export function generateSeoMetadata({
           alt: baseTitle || BRAND_NAME,
         },
       ],
-      locale: locale === "fa" ? "fa_IR" : locale === "ar" ? "ar_AR" : "en_US",
+      locale: locale === "fa" ? "fa_IR" : locale === "ar" ? "ar_AE" : "en_US",
       type: "website",
     },
     twitter: {
@@ -194,15 +196,22 @@ export function safeJsonLdReplacer(
 export function getOrganizationSchema() {
   return {
     "@context": "https://schema.org",
-    "@type": "Organization",
+    "@type": ["Organization", "LocalBusiness"],
     "@id": `${SITE_URL}/#organization`,
     name: BRAND_NAME,
+    alternateName: [
+      "پرسیس کوارتز",
+      "سنگ کوارتز پرسیس",
+      "Persis Quartz",
+      "Persis Quartz Stone",
+    ],
     url: SITE_URL,
     logo: {
       "@type": "ImageObject",
       url: `${SITE_URL}/PersisQuartz-Red.png`,
       caption: BRAND_NAME,
     },
+    priceRange: "$$$",
     contactPoint: [
       {
         "@type": "ContactPoint",
@@ -219,6 +228,15 @@ export function getOrganizationSchema() {
       addressRegion: "Chaharmahal and Bakhtiari",
       addressCountry: "IR",
     },
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: 32.3276,
+      longitude: 50.8524,
+    },
+    sameAs: [
+      "https://www.instagram.com/persisquartz",
+      "https://www.linkedin.com/company/persisquartz",
+    ],
   };
 }
 

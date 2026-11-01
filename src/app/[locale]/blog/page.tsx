@@ -7,7 +7,11 @@ import { Link } from "@/i18n/routing";
 import Image from "next/image";
 import { PageWatermarkHeader } from "@/components/shared/page-watermark-header";
 import { setRequestLocale, getTranslations } from "next-intl/server";
-import { generateStaticPageMetadata, type Locale } from "@/lib/seo";
+import {
+  generateStaticPageMetadata,
+  safeJsonLdReplacer,
+  type Locale,
+} from "@/lib/seo";
 import type { Metadata } from "next";
 
 export async function generateMetadata({
@@ -33,8 +37,43 @@ export default async function BlogPage({
   const t = await getTranslations({ locale: currentLocale, namespace: "Blog" });
   const posts = await getPublishedPostsService(currentLocale);
 
+  const siteUrl = (
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    process.env.NEXT_PUBLIC_SERVER_URL ||
+    "https://persisquartz.com"
+  ).replace(/\/$/, "");
+
+  const blogSchema = {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    name: t("title"),
+    description: t("metaDescription"),
+    url: `${siteUrl}/${currentLocale}/blog`,
+    publisher: {
+      "@type": "Organization",
+      name: "Persis Quartz",
+      url: siteUrl,
+      logo: {
+        "@type": "ImageObject",
+        url: `${siteUrl}/PersisQuartz-Red.png`,
+      },
+    },
+    blogPost: posts.map((post: PostItemDTO) => ({
+      "@type": "BlogPosting",
+      headline: post.title,
+      description: post.excerpt,
+      url: `${siteUrl}/${currentLocale}/blog/${post.slug}`,
+      image: post.coverImage ? [post.coverImage] : [],
+      datePublished: post.publishedAt,
+    })),
+  };
+
   return (
     <main className="container mx-auto px-4 sm:px-12 py-20 sm:py-32 select-none">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLdReplacer(blogSchema) }}
+      />
       <PageWatermarkHeader
         watermark={t("watermark")}
         title={t("title")}

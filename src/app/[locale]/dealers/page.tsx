@@ -112,11 +112,16 @@ export default async function DealersPage({ params, searchParams }: PageProps) {
   const currentLocale = (locale as Locale) || "fa";
   setRequestLocale(currentLocale);
 
+  const tMeta = await getTranslations({
+    locale: currentLocale,
+    namespace: "Metadata",
+  });
+
   return (
     <main className="container mx-auto px-4 sm:px-12 pt-28 sm:pt-36 pb-20 min-h-screen space-y-12 select-none">
       <PageWatermarkHeader
         watermark="SHOWROOMS"
-        title="Official Sales Network & Dealers"
+        title={tMeta("dealers.title")}
       />
 
       <Suspense fallback={<SkeletonLoader />}>

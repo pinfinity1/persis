@@ -8,8 +8,8 @@ const intlMiddleware = createMiddleware(routing);
 export default function middleware(request: NextRequest) {
   const host = request.headers.get("host") || "";
 
-  // هدایت دامنه .ir به .com به صورت دائمی (SEO 301)
-  if (host.includes("persisquartz.ir")) {
+  // هدایت دامنه .ir یا دامنه‌های دارای www به دامنه اصلی (SEO 301 Canonicalization)
+  if (host.includes("persisquartz.ir") || host.startsWith("www.persisquartz.com")) {
     const targetUrl = new URL(request.url);
     targetUrl.host = "persisquartz.com";
     targetUrl.protocol = "https:";

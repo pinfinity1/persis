@@ -3,7 +3,9 @@ import { getPayload } from "payload";
 import configPromise from "@/payload.config";
 
 const BASE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL || "https://persisquartz.com"
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  process.env.NEXT_PUBLIC_SERVER_URL ||
+  "https://persisquartz.com"
 ).replace(/\/$/, "");
 
 const LOCALES = ["fa", "en", "ar"] as const;

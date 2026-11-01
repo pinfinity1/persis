@@ -9,6 +9,7 @@ import { getPayload } from "payload";
 import configPromise from "@/payload.config";
 import type { Locale } from "@/services/product.service";
 import type { Metadata } from "next";
+import { safeJsonLdReplacer } from "@/lib/seo";
 
 export async function generateStaticParams() {
   try {
@@ -45,8 +46,11 @@ export async function generateMetadata({
 
   if (!post) return {};
 
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SERVER_URL || "https://persisquartz.com";
+  const siteUrl = (
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    process.env.NEXT_PUBLIC_SERVER_URL ||
+    "https://persisquartz.com"
+  ).replace(/\/$/, "");
   const postUrl = `${siteUrl}/${locale}/blog/${slug}`;
 
   const rawCoverUrl =
@@ -61,7 +65,9 @@ export async function generateMetadata({
   const coverUrl: string = rawCoverUrl || `${siteUrl}/PersisQuartz-Red.png`;
 
   return {
-    title: `${post.title} | Persis Quartz`,
+    title: {
+      absolute: `${post.title} | Persis Quartz`,
+    },
     description: post.excerpt || undefined,
     alternates: {
       canonical: postUrl,
@@ -69,6 +75,7 @@ export async function generateMetadata({
         fa: `${siteUrl}/fa/blog/${slug}`,
         en: `${siteUrl}/en/blog/${slug}`,
         ar: `${siteUrl}/ar/blog/${slug}`,
+        "x-default": `${siteUrl}/fa/blog/${slug}`,
       },
     },
     openGraph: {
@@ -105,8 +112,11 @@ export default async function SinglePostPage({
 
   if (!post) notFound();
 
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SERVER_URL || "https://persisquartz.com";
+  const siteUrl = (
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    process.env.NEXT_PUBLIC_SERVER_URL ||
+    "https://persisquartz.com"
+  ).replace(/\/$/, "");
 
   const coverUrl =
     post.coverImage &&
@@ -123,6 +133,11 @@ export default async function SinglePostPage({
     inLanguage: locale,
     datePublished: post.publishedAt || post.createdAt,
     dateModified: post.updatedAt,
+    author: {
+      "@type": "Organization",
+      name: "Persis Quartz",
+      url: siteUrl,
+    },
     mainEntityOfPage: {
       "@type": "WebPage",
       "@id": `${siteUrl}/${locale}/blog/${slug}`,
@@ -143,7 +158,7 @@ export default async function SinglePostPage({
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLdReplacer(jsonLd) }}
       />
 
       <article className="container max-w-4xl mx-auto px-4 sm:px-6 py-12 sm:py-24 selection:bg-primary/20 selection:text-primary">

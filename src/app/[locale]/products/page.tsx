@@ -1,7 +1,7 @@
 // src/app/[locale]/products/page.tsx
 import React, { Suspense } from "react";
 import type { Metadata } from "next";
-import { setRequestLocale } from "next-intl/server";
+import { setRequestLocale, getTranslations } from "next-intl/server";
 
 import {
   getProductsService,
@@ -147,11 +147,16 @@ export default async function ProductsPage({
   const currentLocale = (locale as Locale) || "fa";
   setRequestLocale(currentLocale);
 
+  const tMeta = await getTranslations({
+    locale: currentLocale,
+    namespace: "Metadata",
+  });
+
   return (
     <main className="container mx-auto px-4 sm:px-12 pt-28 sm:pt-36 pb-20 min-h-screen select-none">
       <PageWatermarkHeader
         watermark="COLLECTION"
-        title="Persis Quartz Catalog"
+        title={tMeta("products.title")}
         className="mb-8"
       />
 

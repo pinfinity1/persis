@@ -31,10 +31,14 @@ export default async function ContactPage({ params }: PageProps) {
   const currentLocale = (locale as Locale) || "fa";
   setRequestLocale(currentLocale);
 
-  const [t, seoSettings] = await Promise.all([
+  const [t, tMeta, seoSettings] = await Promise.all([
     getTranslations({
       locale: currentLocale,
       namespace: "ContactPage",
+    }),
+    getTranslations({
+      locale: currentLocale,
+      namespace: "Metadata",
     }),
     getSeoSettingsService(currentLocale),
   ]);
@@ -57,7 +61,7 @@ export default async function ContactPage({ params }: PageProps) {
       <div className="container mx-auto px-4 sm:px-12 space-y-10 sm:space-y-14">
         <PageWatermarkHeader
           watermark="CONTACT"
-          title="Client Services & Global Inquiries"
+          title={seoSettings.pages.contact.title || tMeta("contact.title")}
         />
 
         {/* گرید تقارن‌دار اسپلیت اسکرین */}

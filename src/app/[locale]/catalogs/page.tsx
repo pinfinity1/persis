@@ -30,9 +30,10 @@ export default async function CatalogsPage({ params }: PageProps) {
   const currentLocale = (locale as Locale) || "fa";
   setRequestLocale(currentLocale);
 
-  const [groupedCatalogs, t, seoSettings] = await Promise.all([
+  const [groupedCatalogs, t, tMeta, seoSettings] = await Promise.all([
     getGroupedCatalogsService(currentLocale),
     getTranslations({ locale: currentLocale, namespace: "Catalogs" }),
+    getTranslations({ locale: currentLocale, namespace: "Metadata" }),
     getSeoSettingsService(currentLocale),
   ]);
 
@@ -72,7 +73,7 @@ export default async function CatalogsPage({ params }: PageProps) {
 
       <PageWatermarkHeader
         watermark="PUBLICATIONS"
-        title="Official Catalogs & Tech Specs"
+        title={seoSettings.pages.catalogs.title || tMeta("catalogs.title")}
       />
 
       {years.length > 0 ? (
