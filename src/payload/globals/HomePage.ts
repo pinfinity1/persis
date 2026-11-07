@@ -399,6 +399,109 @@ export const HomePage: GlobalConfig = {
             },
           ],
         },
+
+        // تب ۴: ابزارهای تعاملی (Interactive Tools)
+        {
+          label: "ابزارهای تعاملی (Interactive Tools)",
+          description:
+            "مدیریت تیترها، کارت شبکه نمایندگان و کارت استعلام پروژه در صفحه نخست",
+          fields: [
+            {
+              type: "row",
+              fields: [
+                {
+                  name: "toolsTagline",
+                  type: "text",
+                  label: "برچسب بالای بخش (Tagline)",
+                  localized: true,
+                  defaultValue: "ابزارهای تعاملی",
+                  admin: { width: "50%" },
+                },
+                {
+                  name: "toolsTitle",
+                  type: "text",
+                  label: "تیتر اصلی بخش (Title)",
+                  localized: true,
+                  defaultValue: "شروع یک همکاری و خلق ارزش مشترک",
+                  admin: { width: "50%" },
+                },
+              ],
+            },
+            {
+              type: "row",
+              fields: [
+                {
+                  name: "dealerCardTitle",
+                  type: "text",
+                  label: "عنوان کارت شبکه نمایندگان",
+                  localized: true,
+                  defaultValue: "شبکه نمایندگان و عاملیت‌های مجاز",
+                  admin: { width: "50%" },
+                },
+                {
+                  name: "dealerCardBtnText",
+                  type: "text",
+                  label: "متن دکمه شبکه نمایندگان",
+                  localized: true,
+                  defaultValue: "مشاهده نمایندگی‌ها",
+                  admin: { width: "50%" },
+                },
+              ],
+            },
+            {
+              type: "row",
+              fields: [
+                {
+                  name: "dealerCardBtnLink",
+                  type: "text",
+                  label: "لینک دکمه شبکه نمایندگان",
+                  defaultValue: "/dealers",
+                  admin: { width: "50%" },
+                },
+                {
+                  name: "dealerCardImage",
+                  type: "upload",
+                  relationTo: "media",
+                  label: "تصویر کارت نمایندگان (نقشه)",
+                  admin: {
+                    description:
+                      "در صورت خالی بودن، نقشه پیش‌فرض ایران نمایش داده می‌شود.",
+                    width: "50%",
+                  },
+                },
+              ],
+            },
+            {
+              name: "dealerCardDesc",
+              type: "textarea",
+              label: "توضیحات کارت شبکه نمایندگان",
+              localized: true,
+              defaultValue:
+                "برای مشاهده لیست عاملین فروش، مجریان مجاز و شوروم‌های Persis Quartz در سراسر کشور، به بخش شبکه فروش مراجعه کنید.",
+            },
+            {
+              type: "row",
+              fields: [
+                {
+                  name: "inquiryCardTitle",
+                  type: "text",
+                  label: "عنوان کارت استعلام پروژه",
+                  localized: true,
+                  defaultValue: "درخواست مشاوره یا ثبت پروژه",
+                  admin: { width: "100%" },
+                },
+              ],
+            },
+            {
+              name: "inquiryCardDesc",
+              type: "textarea",
+              label: "توضیحات کارت استعلام پروژه",
+              localized: true,
+              defaultValue:
+                "برای استعلام متراژ، دریافت مشاوره فنی یا ثبت پروژه‌های ساختمانی خود، فرم زیر را تکمیل نمایید.",
+            },
+          ],
+        },
       ],
     },
   ],

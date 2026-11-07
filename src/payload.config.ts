@@ -26,6 +26,7 @@ import { Posts } from "./payload/collections/Posts";
 import { Inspirations } from "./payload/collections/Inspirations";
 import { ProductsOrderSettings } from "./payload/globals/ProductsOrderSettings";
 import { SeoSettings } from "./payload/globals/SeoSettings";
+import { ContactPage } from "./payload/globals/ContactPage";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -64,6 +65,7 @@ export default buildConfig({
     ApplicationsPage,
     ProductsOrderSettings,
     SeoSettings,
+    ContactPage,
   ],
 
   editor: lexicalEditor({}),

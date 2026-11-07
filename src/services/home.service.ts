@@ -43,10 +43,27 @@ export interface InfoCardsSectionDTO {
   cards: DynamicInfoCardDTO[];
 }
 
+export interface InteractiveToolsDTO {
+  tagline: string;
+  title: string;
+  dealerCard: {
+    title: string;
+    description: string;
+    btnText: string;
+    btnLink: string;
+    imageUrl?: string;
+  };
+  inquiryCard: {
+    title: string;
+    description: string;
+  };
+}
+
 export interface HomePageDataDTO {
   hero: HomePageHeroDTO | null;
   brandIntro: BrandIntroDTO;
   infoCardsSection: InfoCardsSectionDTO;
+  interactiveTools: InteractiveToolsDTO;
 }
 
 const extractUrl = (media: unknown): string | undefined => {
@@ -124,6 +141,24 @@ export const getHomePageDataService = (locale: "fa" | "en" | "ar" = "fa") =>
         },
       ];
 
+      const defaultInteractiveTools: InteractiveToolsDTO = {
+        tagline: "ابزارهای تعاملی",
+        title: "شروع یک همکاری و خلق ارزش مشترک",
+        dealerCard: {
+          title: "شبکه نمایندگان و عاملیت‌های مجاز",
+          description:
+            "برای مشاهده لیست عاملین فروش، مجریان مجاز و شوروم‌های Persis Quartz در سراسر کشور، به بخش شبکه فروش مراجعه کنید.",
+          btnText: "مشاهده نمایندگی‌ها",
+          btnLink: "/dealers",
+          imageUrl: "/iran-map.png",
+        },
+        inquiryCard: {
+          title: "درخواست مشاوره یا ثبت پروژه",
+          description:
+            "برای استعلام متراژ، دریافت مشاوره فنی یا ثبت پروژه‌های ساختمانی خود، فرم زیر را تکمیل نمایید.",
+        },
+      };
+
       try {
         const payload = await getPayload({ config: configPromise });
         const res = (await payload.findGlobal({
@@ -141,6 +176,7 @@ export const getHomePageDataService = (locale: "fa" | "en" | "ar" = "fa") =>
               title: "معماری، کیفیت و خدمات Persis Quartz",
               cards: defaultInfoCards,
             },
+            interactiveTools: defaultInteractiveTools,
           };
         }
 
@@ -231,10 +267,42 @@ export const getHomePageDataService = (locale: "fa" | "en" | "ar" = "fa") =>
           cards: mappedCards,
         };
 
+        const interactiveTools: InteractiveToolsDTO = {
+          tagline:
+            (res.toolsTagline as string) || defaultInteractiveTools.tagline,
+          title: (res.toolsTitle as string) || defaultInteractiveTools.title,
+          dealerCard: {
+            title:
+              (res.dealerCardTitle as string) ||
+              defaultInteractiveTools.dealerCard.title,
+            description:
+              (res.dealerCardDesc as string) ||
+              defaultInteractiveTools.dealerCard.description,
+            btnText:
+              (res.dealerCardBtnText as string) ||
+              defaultInteractiveTools.dealerCard.btnText,
+            btnLink:
+              (res.dealerCardBtnLink as string) ||
+              defaultInteractiveTools.dealerCard.btnLink,
+            imageUrl:
+              extractUrl(res.dealerCardImage) ||
+              defaultInteractiveTools.dealerCard.imageUrl,
+          },
+          inquiryCard: {
+            title:
+              (res.inquiryCardTitle as string) ||
+              defaultInteractiveTools.inquiryCard.title,
+            description:
+              (res.inquiryCardDesc as string) ||
+              defaultInteractiveTools.inquiryCard.description,
+          },
+        };
+
         return {
           hero,
           brandIntro,
           infoCardsSection,
+          interactiveTools,
         };
       } catch (error: unknown) {
         console.error("Error fetching HomePage data:", error);
@@ -246,6 +314,7 @@ export const getHomePageDataService = (locale: "fa" | "en" | "ar" = "fa") =>
             title: "معماری، کیفیت و خدمات Persis Quartz",
             cards: defaultInfoCards,
           },
+          interactiveTools: defaultInteractiveTools,
         };
       }
     },

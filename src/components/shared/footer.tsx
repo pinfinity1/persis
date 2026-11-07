@@ -121,7 +121,7 @@ export const Footer: React.FC<FooterProps> = ({ categories = [] }) => {
                 <li>
                   <Link
                     href="/blog"
-                    className="hover:text-white transition-colors block text-primary font-normal"
+                    className="hover:text-white transition-colors block"
                   >
                     {t("blog")}
                   </Link>

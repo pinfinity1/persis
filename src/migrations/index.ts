@@ -10,6 +10,7 @@ import * as migration_20261023_120441_add_content_to_products from './20261023_1
 import * as migration_20261025_135631_update_inspirations_description_to_richtext from './20261025_135631_update_inspirations_description_to_richtext';
 import * as migration_20261026_151135 from './20261026_151135';
 import * as migration_20261026_204912 from './20261026_204912';
+import * as migration_20261107_134947_add_interactive_tools_and_contact_page from './20261107_134947_add_interactive_tools_and_contact_page';
 
 export const migrations = [
   {
@@ -70,6 +71,11 @@ export const migrations = [
   {
     up: migration_20261026_204912.up,
     down: migration_20261026_204912.down,
-    name: '20261026_204912'
+    name: '20261026_204912',
+  },
+  {
+    up: migration_20261107_134947_add_interactive_tools_and_contact_page.up,
+    down: migration_20261107_134947_add_interactive_tools_and_contact_page.down,
+    name: '20261107_134947_add_interactive_tools_and_contact_page'
   },
 ];

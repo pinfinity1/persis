@@ -6,6 +6,7 @@ import { ContactFormClient } from "@/components/contact/contact-form-client";
 import { Phone, Mail, Factory, ArrowUpRight } from "lucide-react";
 import { PageWatermarkHeader } from "@/components/shared/page-watermark-header";
 import { getSeoSettingsService } from "@/services/seo.service";
+import { getContactPageDataService } from "@/services/contact.service";
 import {
   generateStaticPageMetadata,
   getOrganizationSchema,
@@ -31,7 +32,7 @@ export default async function ContactPage({ params }: PageProps) {
   const currentLocale = (locale as Locale) || "fa";
   setRequestLocale(currentLocale);
 
-  const [t, tMeta, seoSettings] = await Promise.all([
+  const [t, tMeta, seoSettings, contactData] = await Promise.all([
     getTranslations({
       locale: currentLocale,
       namespace: "ContactPage",
@@ -41,15 +42,26 @@ export default async function ContactPage({ params }: PageProps) {
       namespace: "Metadata",
     }),
     getSeoSettingsService(currentLocale),
+    getContactPageDataService(currentLocale),
   ]);
 
   const contactSchema = {
     "@context": "https://schema.org",
     "@type": "ContactPage",
-    name: seoSettings.pages.contact.title || "Persis Quartz",
-    description: seoSettings.pages.contact.description || "",
+    name:
+      seoSettings.pages.contact.title ||
+      contactData.title ||
+      "Persis Quartz",
+    description:
+      seoSettings.pages.contact.description ||
+      contactData.infoDesc ||
+      "",
     mainEntity: getOrganizationSchema(),
   };
+
+  const cleanFactoryPhone = (
+    contactData.phoneNumber || "+98 38 3228 1752"
+  ).replace(/\s+/g, "");
 
   return (
     <main className="min-h-screen bg-background pt-28 sm:pt-36 pb-20 select-none">
@@ -60,8 +72,12 @@ export default async function ContactPage({ params }: PageProps) {
 
       <div className="container mx-auto px-4 sm:px-12 space-y-10 sm:space-y-14">
         <PageWatermarkHeader
-          watermark="CONTACT"
-          title={seoSettings.pages.contact.title || tMeta("contact.title")}
+          watermark={contactData.watermark || "CONTACT"}
+          title={
+            contactData.title ||
+            seoSettings.pages.contact.title ||
+            tMeta("contact.title")
+          }
         />
 
         {/* گرید تقارن‌دار اسپلیت اسکرین */}
@@ -70,10 +86,10 @@ export default async function ContactPage({ params }: PageProps) {
           <div className="lg:col-span-4 space-y-6">
             <div className="space-y-2">
               <h2 className="text-xl sm:text-2xl font-light text-foreground">
-                {t("infoTitle")}
+                {contactData.infoTitle || t("infoTitle")}
               </h2>
               <p className="text-xs text-muted-foreground font-light leading-relaxed">
-                {t("infoDesc")}
+                {contactData.infoDesc || t("infoDesc")}
               </p>
             </div>
 
@@ -83,11 +99,11 @@ export default async function ContactPage({ params }: PageProps) {
                 <div className="flex items-center gap-2 text-primary">
                   <Factory className="h-4 w-4 shrink-0" />
                   <span className="text-xs font-medium text-foreground uppercase tracking-wider">
-                    {t("factoryTitle")}
+                    {contactData.factoryTitle || t("factoryTitle")}
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground font-light leading-relaxed">
-                  {t("factoryAddress")}
+                  {contactData.factoryAddress || t("factoryAddress")}
                 </p>
               </div>
 
@@ -97,14 +113,14 @@ export default async function ContactPage({ params }: PageProps) {
                   <Phone className="h-4 w-4 text-primary shrink-0" />
                   <div>
                     <span className="text-[10px] text-muted-foreground uppercase tracking-widest block">
-                      {t("phoneTitle")}
+                      {contactData.phoneTitle || t("phoneTitle")}
                     </span>
                     <a
-                      href="tel:+983832281752"
+                      href={`tel:${cleanFactoryPhone}`}
                       dir="ltr"
                       className="text-xs text-foreground hover:text-primary transition-colors"
                     >
-                      +98 38 3228 1752
+                      {contactData.phoneNumber || "+98 38 3228 1752"}
                     </a>
                   </div>
                 </div>
@@ -117,19 +133,68 @@ export default async function ContactPage({ params }: PageProps) {
                   <Mail className="h-4 w-4 text-primary shrink-0" />
                   <div>
                     <span className="text-[10px] text-muted-foreground uppercase tracking-widest block">
-                      {t("emailTitle")}
+                      {contactData.emailTitle || t("emailTitle")}
                     </span>
                     <a
-                      href="mailto:info@persisquartz.com"
+                      href={`mailto:${contactData.emailAddress || "info@persisquartz.com"}`}
                       dir="ltr"
                       className="text-xs text-foreground hover:text-primary transition-colors"
                     >
-                      info@persisquartz.com
+                      {contactData.emailAddress || "info@persisquartz.com"}
                     </a>
                   </div>
                 </div>
                 <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-40 group-hover:opacity-100 group-hover:text-primary transition-all" />
               </div>
+
+              {/* دفاتر و شعب دیگر در صورت تعریف توسط کارفرما */}
+              {contactData.additionalOffices &&
+                contactData.additionalOffices.length > 0 && (
+                  <div className="space-y-3 pt-3 border-t border-border/40">
+                    {contactData.additionalOffices.map((office) => (
+                      <div
+                        key={office.id}
+                        className="p-4 bg-card border border-border/50 space-y-2 group hover:border-primary/40 transition-colors"
+                      >
+                        <div className="flex items-center gap-2 text-primary">
+                          <Factory className="h-4 w-4 shrink-0" />
+                          <span className="text-xs font-medium text-foreground uppercase tracking-wider">
+                            {office.title}
+                          </span>
+                        </div>
+                        {office.address && (
+                          <p className="text-xs text-muted-foreground font-light leading-relaxed">
+                            {office.address}
+                          </p>
+                        )}
+                        {office.phone && (
+                          <div className="flex items-center gap-2 pt-1 text-xs">
+                            <Phone className="h-3.5 w-3.5 text-primary shrink-0" />
+                            <a
+                              href={`tel:${office.phone.replace(/\s+/g, "")}`}
+                              dir="ltr"
+                              className="text-muted-foreground hover:text-primary transition-colors"
+                            >
+                              {office.phone}
+                            </a>
+                          </div>
+                        )}
+                        {office.email && (
+                          <div className="flex items-center gap-2 pt-0.5 text-xs">
+                            <Mail className="h-3.5 w-3.5 text-primary shrink-0" />
+                            <a
+                              href={`mailto:${office.email}`}
+                              dir="ltr"
+                              className="text-muted-foreground hover:text-primary transition-colors"
+                            >
+                              {office.email}
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
             </div>
           </div>
 
@@ -145,7 +210,7 @@ export default async function ContactPage({ params }: PageProps) {
                 </div>
               }
             >
-              <ContactFormClient />
+              <ContactFormClient formTexts={contactData.formTexts} />
             </Suspense>
           </div>
         </div>

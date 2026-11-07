@@ -13,53 +13,53 @@
  * via the `definition` "supportedTimezones".
  */
 export type SupportedTimezones =
-  | "Pacific/Midway"
-  | "Pacific/Niue"
-  | "Pacific/Honolulu"
-  | "Pacific/Rarotonga"
-  | "America/Anchorage"
-  | "Pacific/Gambier"
-  | "America/Los_Angeles"
-  | "America/Tijuana"
-  | "America/Denver"
-  | "America/Phoenix"
-  | "America/Chicago"
-  | "America/Guatemala"
-  | "America/New_York"
-  | "America/Bogota"
-  | "America/Caracas"
-  | "America/Santiago"
-  | "America/Buenos_Aires"
-  | "America/Sao_Paulo"
-  | "Atlantic/South_Georgia"
-  | "Atlantic/Azores"
-  | "Atlantic/Cape_Verde"
-  | "Europe/London"
-  | "Europe/Berlin"
-  | "Africa/Lagos"
-  | "Europe/Athens"
-  | "Africa/Cairo"
-  | "Europe/Moscow"
-  | "Asia/Riyadh"
-  | "Asia/Dubai"
-  | "Asia/Baku"
-  | "Asia/Karachi"
-  | "Asia/Tashkent"
-  | "Asia/Calcutta"
-  | "Asia/Dhaka"
-  | "Asia/Almaty"
-  | "Asia/Jakarta"
-  | "Asia/Bangkok"
-  | "Asia/Shanghai"
-  | "Asia/Singapore"
-  | "Asia/Tokyo"
-  | "Asia/Seoul"
-  | "Australia/Brisbane"
-  | "Australia/Sydney"
-  | "Pacific/Guam"
-  | "Pacific/Noumea"
-  | "Pacific/Auckland"
-  | "Pacific/Fiji";
+  | 'Pacific/Midway'
+  | 'Pacific/Niue'
+  | 'Pacific/Honolulu'
+  | 'Pacific/Rarotonga'
+  | 'America/Anchorage'
+  | 'Pacific/Gambier'
+  | 'America/Los_Angeles'
+  | 'America/Tijuana'
+  | 'America/Denver'
+  | 'America/Phoenix'
+  | 'America/Chicago'
+  | 'America/Guatemala'
+  | 'America/New_York'
+  | 'America/Bogota'
+  | 'America/Caracas'
+  | 'America/Santiago'
+  | 'America/Buenos_Aires'
+  | 'America/Sao_Paulo'
+  | 'Atlantic/South_Georgia'
+  | 'Atlantic/Azores'
+  | 'Atlantic/Cape_Verde'
+  | 'Europe/London'
+  | 'Europe/Berlin'
+  | 'Africa/Lagos'
+  | 'Europe/Athens'
+  | 'Africa/Cairo'
+  | 'Europe/Moscow'
+  | 'Asia/Riyadh'
+  | 'Asia/Dubai'
+  | 'Asia/Baku'
+  | 'Asia/Karachi'
+  | 'Asia/Tashkent'
+  | 'Asia/Calcutta'
+  | 'Asia/Dhaka'
+  | 'Asia/Almaty'
+  | 'Asia/Jakarta'
+  | 'Asia/Bangkok'
+  | 'Asia/Shanghai'
+  | 'Asia/Singapore'
+  | 'Asia/Tokyo'
+  | 'Asia/Seoul'
+  | 'Australia/Brisbane'
+  | 'Australia/Sydney'
+  | 'Pacific/Guam'
+  | 'Pacific/Noumea'
+  | 'Pacific/Auckland'
+  | 'Pacific/Fiji';
 
 export interface Config {
   auth: {
@@ -71,7 +71,7 @@ export interface Config {
     media: Media;
     categories: Category;
     colors: Color;
-    "vein-patterns": VeinPattern;
+    'vein-patterns': VeinPattern;
     dimensions: Dimension;
     thicknesses: Thickness;
     finishes: Finish;
@@ -81,10 +81,10 @@ export interface Config {
     inquiries: Inquiry;
     posts: Post;
     inspirations: Inspiration;
-    "payload-kv": PayloadKv;
-    "payload-locked-documents": PayloadLockedDocument;
-    "payload-preferences": PayloadPreference;
-    "payload-migrations": PayloadMigration;
+    'payload-kv': PayloadKv;
+    'payload-locked-documents': PayloadLockedDocument;
+    'payload-preferences': PayloadPreference;
+    'payload-migrations': PayloadMigration;
   };
   collectionsJoins: {};
   collectionsSelect: {
@@ -92,7 +92,7 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     colors: ColorsSelect<false> | ColorsSelect<true>;
-    "vein-patterns": VeinPatternsSelect<false> | VeinPatternsSelect<true>;
+    'vein-patterns': VeinPatternsSelect<false> | VeinPatternsSelect<true>;
     dimensions: DimensionsSelect<false> | DimensionsSelect<true>;
     thicknesses: ThicknessesSelect<false> | ThicknessesSelect<true>;
     finishes: FinishesSelect<false> | FinishesSelect<true>;
@@ -102,42 +102,34 @@ export interface Config {
     inquiries: InquiriesSelect<false> | InquiriesSelect<true>;
     posts: PostsSelect<false> | PostsSelect<true>;
     inspirations: InspirationsSelect<false> | InspirationsSelect<true>;
-    "payload-kv": PayloadKvSelect<false> | PayloadKvSelect<true>;
-    "payload-locked-documents":
-      PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
-    "payload-preferences":
-      PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
-    "payload-migrations":
-      PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
+    'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
+    'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
+    'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
+    'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
   };
   db: {
     defaultIDType: number;
   };
-  fallbackLocale:
-    | ("false" | "none" | "null")
-    | false
-    | null
-    | ("fa" | "en" | "ar")
-    | ("fa" | "en" | "ar")[];
+  fallbackLocale: ('false' | 'none' | 'null') | false | null | ('fa' | 'en' | 'ar') | ('fa' | 'en' | 'ar')[];
   globals: {
-    "about-page": AboutPage;
-    "home-page": HomePage;
-    "care-page": CarePage;
-    "applications-page": ApplicationsPage;
-    "products-order-settings": ProductsOrderSetting;
-    "seo-settings": SeoSetting;
+    'about-page': AboutPage;
+    'home-page': HomePage;
+    'care-page': CarePage;
+    'applications-page': ApplicationsPage;
+    'products-order-settings': ProductsOrderSetting;
+    'seo-settings': SeoSetting;
+    'contact-page': ContactPage;
   };
   globalsSelect: {
-    "about-page": AboutPageSelect<false> | AboutPageSelect<true>;
-    "home-page": HomePageSelect<false> | HomePageSelect<true>;
-    "care-page": CarePageSelect<false> | CarePageSelect<true>;
-    "applications-page":
-      ApplicationsPageSelect<false> | ApplicationsPageSelect<true>;
-    "products-order-settings":
-      ProductsOrderSettingsSelect<false> | ProductsOrderSettingsSelect<true>;
-    "seo-settings": SeoSettingsSelect<false> | SeoSettingsSelect<true>;
+    'about-page': AboutPageSelect<false> | AboutPageSelect<true>;
+    'home-page': HomePageSelect<false> | HomePageSelect<true>;
+    'care-page': CarePageSelect<false> | CarePageSelect<true>;
+    'applications-page': ApplicationsPageSelect<false> | ApplicationsPageSelect<true>;
+    'products-order-settings': ProductsOrderSettingsSelect<false> | ProductsOrderSettingsSelect<true>;
+    'seo-settings': SeoSettingsSelect<false> | SeoSettingsSelect<true>;
+    'contact-page': ContactPageSelect<false> | ContactPageSelect<true>;
   };
-  locale: "fa" | "en" | "ar";
+  locale: 'fa' | 'en' | 'ar';
   widgets: {
     collections: CollectionsWidget;
   };
@@ -191,7 +183,7 @@ export interface User {
       }[]
     | null;
   password?: string | null;
-  collection: "users";
+  collection: 'users';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -345,7 +337,7 @@ export interface Product {
   /**
    * وضعیت تولید اسلب در کارخانه
    */
-  is_in_stock?: ("active" | "discontinued") | null;
+  is_in_stock?: ('active' | 'discontinued') | null;
   /**
    * نمایش این محصول در بخش محصولات منتخب (صفحه اصلی)
    */
@@ -389,8 +381,8 @@ export interface Product {
         version: number;
         [k: string]: unknown;
       }[];
-      direction: ("ltr" | "rtl") | null;
-      format: "left" | "start" | "center" | "right" | "end" | "justify" | "";
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
       indent: number;
       version: number;
     };
@@ -422,7 +414,7 @@ export interface Catalog {
    * سال انتشار (مانند 2026 یا 2025)
    */
   year: number;
-  catalog_type: "full_catalog" | "technical" | "collection" | "guide";
+  catalog_type: 'full_catalog' | 'technical' | 'collection' | 'guide';
   description?: string | null;
   cover_image: number | Media;
   pdf_file: number | Media;
@@ -434,7 +426,7 @@ export interface Catalog {
    * تعداد صفحات (اختیاری)
    */
   page_count?: number | null;
-  status?: ("published" | "draft") | null;
+  status?: ('published' | 'draft') | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -446,42 +438,42 @@ export interface Dealer {
   id: number;
   title: string;
   province:
-    | "alborz"
-    | "ardabil"
-    | "azerbaijan-east"
-    | "azerbaijan-west"
-    | "bushehr"
-    | "chaharmahal-and-bakhtiari"
-    | "fars"
-    | "gilan"
-    | "golestan"
-    | "hamadan"
-    | "hormozgan"
-    | "ilam"
-    | "isfahan"
-    | "kerman"
-    | "kermanshah"
-    | "khorasan-north"
-    | "khorasan-razavi"
-    | "khorasan-south"
-    | "khuzestan"
-    | "kohgiluyeh-and-boyer-ahmad"
-    | "kurdistan"
-    | "lorestan"
-    | "markazi"
-    | "mazandaran"
-    | "qazvin"
-    | "qom"
-    | "semnan"
-    | "sistan-and-baluchestan"
-    | "tehran"
-    | "yazd"
-    | "zanjan";
+    | 'alborz'
+    | 'ardabil'
+    | 'azerbaijan-east'
+    | 'azerbaijan-west'
+    | 'bushehr'
+    | 'chaharmahal-and-bakhtiari'
+    | 'fars'
+    | 'gilan'
+    | 'golestan'
+    | 'hamadan'
+    | 'hormozgan'
+    | 'ilam'
+    | 'isfahan'
+    | 'kerman'
+    | 'kermanshah'
+    | 'khorasan-north'
+    | 'khorasan-razavi'
+    | 'khorasan-south'
+    | 'khuzestan'
+    | 'kohgiluyeh-and-boyer-ahmad'
+    | 'kurdistan'
+    | 'lorestan'
+    | 'markazi'
+    | 'mazandaran'
+    | 'qazvin'
+    | 'qom'
+    | 'semnan'
+    | 'sistan-and-baluchestan'
+    | 'tehran'
+    | 'yazd'
+    | 'zanjan';
   city: string;
   address: string;
   phone: string;
   order?: number | null;
-  status?: ("published" | "draft") | null;
+  status?: ('published' | 'draft') | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -491,8 +483,8 @@ export interface Dealer {
  */
 export interface Inquiry {
   id: number;
-  type: "general" | "sample" | "project" | "dealer";
-  status: "new" | "in_progress" | "resolved" | "archived";
+  type: 'general' | 'sample' | 'project' | 'dealer';
+  status: 'new' | 'in_progress' | 'resolved' | 'archived';
   fullName: string;
   email?: string | null;
   phone: string;
@@ -544,14 +536,14 @@ export interface Post {
         version: number;
         [k: string]: unknown;
       }[];
-      direction: ("ltr" | "rtl") | null;
-      format: "left" | "start" | "center" | "right" | "end" | "justify" | "";
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
       indent: number;
       version: number;
     };
     [k: string]: unknown;
   };
-  status?: ("published" | "draft") | null;
+  status?: ('published' | 'draft') | null;
   publishedAt?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -575,11 +567,11 @@ export interface Inspiration {
   /**
    * نوع کاربری سنگ در محیط
    */
-  space_type: "kitchen" | "bathroom" | "commercial" | "furniture";
+  space_type: 'kitchen' | 'bathroom' | 'commercial' | 'furniture';
   /**
    * سبک طراحی معمارانه فضا
    */
-  style: "minimal" | "modern" | "classic" | "industrial";
+  style: 'minimal' | 'modern' | 'classic' | 'industrial';
   /**
    * شرح معمارانه ایده، امکان استفاده از تمام هدینگ‌ها (H1 تا H6) و ابزارهای نگارش متن
    */
@@ -591,8 +583,8 @@ export interface Inspiration {
         version: number;
         [k: string]: unknown;
       }[];
-      direction: ("ltr" | "rtl") | null;
-      format: "left" | "start" | "center" | "right" | "end" | "justify" | "";
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
       indent: number;
       version: number;
     };
@@ -663,52 +655,52 @@ export interface PayloadLockedDocument {
   id: number;
   document?:
     | ({
-        relationTo: "users";
+        relationTo: 'users';
         value: number | User;
       } | null)
     | ({
-        relationTo: "categories";
+        relationTo: 'categories';
         value: number | Category;
       } | null)
     | ({
-        relationTo: "colors";
+        relationTo: 'colors';
         value: number | Color;
       } | null)
     | ({
-        relationTo: "vein-patterns";
+        relationTo: 'vein-patterns';
         value: number | VeinPattern;
       } | null)
     | ({
-        relationTo: "dimensions";
+        relationTo: 'dimensions';
         value: number | Dimension;
       } | null)
     | ({
-        relationTo: "thicknesses";
+        relationTo: 'thicknesses';
         value: number | Thickness;
       } | null)
     | ({
-        relationTo: "finishes";
+        relationTo: 'finishes';
         value: number | Finish;
       } | null)
     | ({
-        relationTo: "products";
+        relationTo: 'products';
         value: number | Product;
       } | null)
     | ({
-        relationTo: "catalogs";
+        relationTo: 'catalogs';
         value: number | Catalog;
       } | null)
     | ({
-        relationTo: "dealers";
+        relationTo: 'dealers';
         value: number | Dealer;
       } | null)
     | ({
-        relationTo: "inquiries";
+        relationTo: 'inquiries';
         value: number | Inquiry;
       } | null);
   globalSlug?: string | null;
   user: {
-    relationTo: "users";
+    relationTo: 'users';
     value: number | User;
   };
   updatedAt: string;
@@ -721,7 +713,7 @@ export interface PayloadLockedDocument {
 export interface PayloadPreference {
   id: number;
   user: {
-    relationTo: "users";
+    relationTo: 'users';
     value: number | User;
   };
   key?: string | null;
@@ -1143,7 +1135,7 @@ export interface HomePage {
    */
   infoCardsList?:
     | {
-        cardType: "standard" | "features";
+        cardType: 'standard' | 'features';
         image?: (number | null) | Media;
         category: string;
         title: string;
@@ -1154,14 +1146,14 @@ export interface HomePage {
         ctaLabel?: string | null;
         linkType?:
           | (
-              | "/care-and-maintenance"
-              | "/catalogs"
-              | "/contact?type=sample"
-              | "/contact?type=project"
-              | "/dealers"
-              | "/products"
-              | "/inspirations"
-              | "custom"
+              | '/care-and-maintenance'
+              | '/catalogs'
+              | '/contact?type=sample'
+              | '/contact?type=project'
+              | '/dealers'
+              | '/products'
+              | '/inspirations'
+              | 'custom'
             )
           | null;
         /**
@@ -1171,6 +1163,18 @@ export interface HomePage {
         id?: string | null;
       }[]
     | null;
+  toolsTagline?: string | null;
+  toolsTitle?: string | null;
+  dealerCardTitle?: string | null;
+  dealerCardBtnText?: string | null;
+  dealerCardBtnLink?: string | null;
+  /**
+   * در صورت خالی بودن، نقشه پیش‌فرض ایران نمایش داده می‌شود.
+   */
+  dealerCardImage?: (number | null) | Media;
+  dealerCardDesc?: string | null;
+  inquiryCardTitle?: string | null;
+  inquiryCardDesc?: string | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -1188,51 +1192,51 @@ export interface CarePage {
         stepNumber?: string | null;
         iconName?:
           | (
-              | "dot"
-              | "droplets"
-              | "checkCheck"
-              | "shieldCheck"
-              | "sparkles"
-              | "spray"
-              | "brush"
-              | "flame"
-              | "heat"
-              | "cookingPot"
-              | "utensils"
-              | "chefHat"
-              | "scratch"
-              | "chemical"
-              | "impact"
-              | "hammer"
-              | "ban"
-              | "balloon"
-              | "bicep"
-              | "bot"
-              | "crown"
-              | "castle"
-              | "drama"
-              | "ghost"
-              | "frown"
-              | "meh"
-              | "laugh"
-              | "smile"
-              | "annoyed"
-              | "smilePlus"
-              | "hand"
-              | "handHelping"
-              | "heart"
-              | "heartCrack"
-              | "heartPulse"
-              | "leaf"
-              | "partyPopper"
-              | "ribbon"
-              | "salad"
-              | "star"
-              | "starHalf"
-              | "starOff"
-              | "thumbsDown"
-              | "thumbsUp"
-              | "waves"
+              | 'dot'
+              | 'droplets'
+              | 'checkCheck'
+              | 'shieldCheck'
+              | 'sparkles'
+              | 'spray'
+              | 'brush'
+              | 'flame'
+              | 'heat'
+              | 'cookingPot'
+              | 'utensils'
+              | 'chefHat'
+              | 'scratch'
+              | 'chemical'
+              | 'impact'
+              | 'hammer'
+              | 'ban'
+              | 'balloon'
+              | 'bicep'
+              | 'bot'
+              | 'crown'
+              | 'castle'
+              | 'drama'
+              | 'ghost'
+              | 'frown'
+              | 'meh'
+              | 'laugh'
+              | 'smile'
+              | 'annoyed'
+              | 'smilePlus'
+              | 'hand'
+              | 'handHelping'
+              | 'heart'
+              | 'heartCrack'
+              | 'heartPulse'
+              | 'leaf'
+              | 'partyPopper'
+              | 'ribbon'
+              | 'salad'
+              | 'star'
+              | 'starHalf'
+              | 'starOff'
+              | 'thumbsDown'
+              | 'thumbsUp'
+              | 'waves'
             )
           | null;
         title: string;
@@ -1245,51 +1249,51 @@ export interface CarePage {
         title: string;
         iconType?:
           | (
-              | "dot"
-              | "droplets"
-              | "checkCheck"
-              | "shieldCheck"
-              | "sparkles"
-              | "spray"
-              | "brush"
-              | "flame"
-              | "heat"
-              | "cookingPot"
-              | "utensils"
-              | "chefHat"
-              | "scratch"
-              | "chemical"
-              | "impact"
-              | "hammer"
-              | "ban"
-              | "balloon"
-              | "bicep"
-              | "bot"
-              | "crown"
-              | "castle"
-              | "drama"
-              | "ghost"
-              | "frown"
-              | "meh"
-              | "laugh"
-              | "smile"
-              | "annoyed"
-              | "smilePlus"
-              | "hand"
-              | "handHelping"
-              | "heart"
-              | "heartCrack"
-              | "heartPulse"
-              | "leaf"
-              | "partyPopper"
-              | "ribbon"
-              | "salad"
-              | "star"
-              | "starHalf"
-              | "starOff"
-              | "thumbsDown"
-              | "thumbsUp"
-              | "waves"
+              | 'dot'
+              | 'droplets'
+              | 'checkCheck'
+              | 'shieldCheck'
+              | 'sparkles'
+              | 'spray'
+              | 'brush'
+              | 'flame'
+              | 'heat'
+              | 'cookingPot'
+              | 'utensils'
+              | 'chefHat'
+              | 'scratch'
+              | 'chemical'
+              | 'impact'
+              | 'hammer'
+              | 'ban'
+              | 'balloon'
+              | 'bicep'
+              | 'bot'
+              | 'crown'
+              | 'castle'
+              | 'drama'
+              | 'ghost'
+              | 'frown'
+              | 'meh'
+              | 'laugh'
+              | 'smile'
+              | 'annoyed'
+              | 'smilePlus'
+              | 'hand'
+              | 'handHelping'
+              | 'heart'
+              | 'heartCrack'
+              | 'heartPulse'
+              | 'leaf'
+              | 'partyPopper'
+              | 'ribbon'
+              | 'salad'
+              | 'star'
+              | 'starHalf'
+              | 'starOff'
+              | 'thumbsDown'
+              | 'thumbsUp'
+              | 'waves'
             )
           | null;
         desc: string;
@@ -1386,6 +1390,43 @@ export interface SeoSetting {
   createdAt?: string | null;
 }
 /**
+ * مدیریت اطلاعات تماس، آدرس کارخانه و دفاتر و متون صفحه تماس
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "contact-page".
+ */
+export interface ContactPage {
+  id: number;
+  watermark?: string | null;
+  title?: string | null;
+  infoTitle?: string | null;
+  infoDesc?: string | null;
+  factoryTitle?: string | null;
+  factoryAddress?: string | null;
+  phoneTitle?: string | null;
+  phoneNumber?: string | null;
+  emailTitle?: string | null;
+  emailAddress?: string | null;
+  additionalOffices?:
+    | {
+        title: string;
+        phone?: string | null;
+        address?: string | null;
+        email?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  tabGeneral?: string | null;
+  tabSample?: string | null;
+  tabProject?: string | null;
+  tabDealer?: string | null;
+  successTitle?: string | null;
+  submitAnotherBtn?: string | null;
+  successMessage?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "about-page_select".
  */
@@ -1444,6 +1485,15 @@ export interface HomePageSelect<T extends boolean = true> {
         customLink?: T;
         id?: T;
       };
+  toolsTagline?: T;
+  toolsTitle?: T;
+  dealerCardTitle?: T;
+  dealerCardBtnText?: T;
+  dealerCardBtnLink?: T;
+  dealerCardImage?: T;
+  dealerCardDesc?: T;
+  inquiryCardTitle?: T;
+  inquiryCardDesc?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
@@ -1554,13 +1604,48 @@ export interface SeoSettingsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "contact-page_select".
+ */
+export interface ContactPageSelect<T extends boolean = true> {
+  watermark?: T;
+  title?: T;
+  infoTitle?: T;
+  infoDesc?: T;
+  factoryTitle?: T;
+  factoryAddress?: T;
+  phoneTitle?: T;
+  phoneNumber?: T;
+  emailTitle?: T;
+  emailAddress?: T;
+  additionalOffices?:
+    | T
+    | {
+        title?: T;
+        phone?: T;
+        address?: T;
+        email?: T;
+        id?: T;
+      };
+  tabGeneral?: T;
+  tabSample?: T;
+  tabProject?: T;
+  tabDealer?: T;
+  successTitle?: T;
+  submitAnotherBtn?: T;
+  successMessage?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "collections_widget".
  */
 export interface CollectionsWidget {
   data?: {
     [k: string]: unknown;
   };
-  width: "full";
+  width: 'full';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1570,6 +1655,7 @@ export interface Auth {
   [k: string]: unknown;
 }
 
-declare module "payload" {
+
+declare module 'payload' {
   export interface GeneratedTypes extends Config {}
 }

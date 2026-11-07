@@ -23,6 +23,7 @@ import {
   Users,
   MessageSquare,
 } from "lucide-react";
+import type { ContactPageFormTextsDTO } from "@/services/contact.service";
 
 type FormType = ContactFormValues["type"];
 
@@ -36,7 +37,11 @@ interface FieldWrapperProps {
   isTextarea?: boolean;
 }
 
-export function ContactFormClient() {
+interface ContactFormClientProps {
+  formTexts?: Partial<ContactPageFormTextsDTO>;
+}
+
+export function ContactFormClient({ formTexts }: ContactFormClientProps = {}) {
   const t = useTranslations("ContactPage");
   const locale = useLocale();
   const isRtl = locale === "fa" || locale === "ar";
@@ -96,10 +101,26 @@ export function ContactFormClient() {
   };
 
   const typeTabs = [
-    { id: "general" as const, label: t("tabGeneral"), icon: MessageSquare },
-    { id: "sample" as const, label: t("tabSample"), icon: Box },
-    { id: "project" as const, label: t("tabProject"), icon: Building2 },
-    { id: "dealer" as const, label: t("tabDealer"), icon: Users },
+    {
+      id: "general" as const,
+      label: formTexts?.tabGeneral || t("tabGeneral"),
+      icon: MessageSquare,
+    },
+    {
+      id: "sample" as const,
+      label: formTexts?.tabSample || t("tabSample"),
+      icon: Box,
+    },
+    {
+      id: "project" as const,
+      label: formTexts?.tabProject || t("tabProject"),
+      icon: Building2,
+    },
+    {
+      id: "dealer" as const,
+      label: formTexts?.tabDealer || t("tabDealer"),
+      icon: Users,
+    },
   ];
 
   if (isSuccess) {
@@ -113,17 +134,17 @@ export function ContactFormClient() {
           <CheckCircle2 className="h-7 w-7 text-primary" />
         </div>
         <h3 className="text-xl font-light text-foreground">
-          {t("successTitle")}
+          {formTexts?.successTitle || t("successTitle")}
         </h3>
         <p className="text-xs sm:text-sm text-muted-foreground font-light max-w-sm mx-auto leading-relaxed">
-          {t("successMessage")}
+          {formTexts?.successMessage || t("successMessage")}
         </p>
         <Button
           variant="outline"
           className="mt-2 rounded-none h-11 px-8 uppercase tracking-wider text-xs border-border"
           onClick={() => setIsSuccess(false)}
         >
-          {t("submitAnother")}
+          {formTexts?.submitAnotherBtn || t("submitAnother")}
         </Button>
       </motion.div>
     );

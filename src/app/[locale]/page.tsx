@@ -57,7 +57,7 @@ export default async function HomePage({ params }: PageProps) {
         <ProductShowcase products={featuredProducts} />
       )}
       <InfoCardsStack data={homeData.infoCardsSection} />
-      <InteractiveTools />
+      <InteractiveTools data={homeData.interactiveTools} />
     </main>
   );
 }
