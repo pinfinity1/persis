@@ -75,7 +75,7 @@ export default function WebmailLoginForm() {
                 <input
                   type="email"
                   required
-                  placeholder="name@persisquartz.com"
+                  placeholder="info@persisquartz.com"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   dir="ltr"

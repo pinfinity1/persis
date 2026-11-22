@@ -27,10 +27,7 @@ export default async function MailPage() {
   // If no mailboxes exist yet, auto-seed standard enterprise mailboxes
   if (mailboxesDocs.length === 0) {
     const defaultBoxes = [
-      { name: "مدیریت ارشد (CEO)", address: "ceo@persisquartz.com", isCatchAll: false },
-      { name: "احسان سامانی", address: "ehsan@persisquartz.com", isCatchAll: false },
-      { name: "فروش و بازرگانی", address: "sales@persisquartz.com", isCatchAll: false },
-      { name: "پشتیبانی و اطلاعات عمومی", address: "info@persisquartz.com", isCatchAll: true },
+      { name: "پرسیس کوارتز", address: "info@persisquartz.com", isCatchAll: true },
     ];
 
     const defaultHashedPassword = await hashPassword("Persis2026!");

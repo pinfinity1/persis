@@ -639,7 +639,7 @@ export interface Inspiration {
   createdAt: string;
 }
 /**
- * مدیریت آدرس‌ها و اینباکس‌های رسمی شرکت (مانند ceo@persisquartz.com)
+ * مدیریت آدرس‌ها و اینباکس‌های رسمی شرکت (مانند info@persisquartz.com)
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "mailboxes".
@@ -647,11 +647,11 @@ export interface Inspiration {
 export interface Mailbox {
   id: number;
   /**
-   * مثال: احسان سامانی (مدیریت)، فروش و بازرگانی
+   * مثال: اطلاعات عمومی و ارتباطات، واحد فروش، مدیریت
    */
   name: string;
   /**
-   * مثال: ehsan@persisquartz.com یا ceo@persisquartz.com
+   * مثال: info@persisquartz.com یا sales@persisquartz.com
    */
   address: string;
   /**

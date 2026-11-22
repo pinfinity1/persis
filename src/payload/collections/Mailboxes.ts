@@ -9,7 +9,7 @@ export const Mailboxes: CollectionConfig = {
     useAsTitle: "address",
     group: "سامانه ایمیل",
     defaultColumns: ["name", "address", "forwardTo", "isActive", "isCatchAll", "updatedAt"],
-    description: "مدیریت آدرس‌ها و اینباکس‌های رسمی شرکت (مانند ceo@persisquartz.com)",
+    description: "مدیریت آدرس‌ها و اینباکس‌های رسمی شرکت (مانند info@persisquartz.com)",
   },
   access: {
     create: ({ req: { user } }) => Boolean(user),
@@ -24,7 +24,7 @@ export const Mailboxes: CollectionConfig = {
       required: true,
       label: "نام نمایشی / عنوان بخش",
       admin: {
-        description: "مثال: احسان سامانی (مدیریت)، فروش و بازرگانی",
+        description: "مثال: اطلاعات عمومی و ارتباطات، واحد فروش، مدیریت",
       },
     },
     {
@@ -35,7 +35,7 @@ export const Mailboxes: CollectionConfig = {
       index: true,
       label: "آدرس ایمیل سازمانی",
       admin: {
-        description: "مثال: ehsan@persisquartz.com یا ceo@persisquartz.com",
+        description: "مثال: info@persisquartz.com یا sales@persisquartz.com",
       },
       hooks: {
         beforeValidate: [
