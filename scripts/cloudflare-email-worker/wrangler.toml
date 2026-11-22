@@ -1,0 +1,7 @@
+name = "persis-email-router"
+main = "worker.js"
+compatibility_date = "2024-09-01"
+
+[vars]
+WEBHOOK_URL = "https://persisquartz.com/api/webhooks/mail-inbound"
+WEBHOOK_SECRET = "persisquartz-email-webhook-secret-change-in-prod"

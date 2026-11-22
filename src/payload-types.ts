@@ -81,6 +81,9 @@ export interface Config {
     inquiries: Inquiry;
     posts: Post;
     inspirations: Inspiration;
+    mailboxes: Mailbox;
+    emails: Email;
+    'email-attachments': EmailAttachment;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -102,6 +105,9 @@ export interface Config {
     inquiries: InquiriesSelect<false> | InquiriesSelect<true>;
     posts: PostsSelect<false> | PostsSelect<true>;
     inspirations: InspirationsSelect<false> | InspirationsSelect<true>;
+    mailboxes: MailboxesSelect<false> | MailboxesSelect<true>;
+    emails: EmailsSelect<false> | EmailsSelect<true>;
+    'email-attachments': EmailAttachmentsSelect<false> | EmailAttachmentsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -119,6 +125,7 @@ export interface Config {
     'products-order-settings': ProductsOrderSetting;
     'seo-settings': SeoSetting;
     'contact-page': ContactPage;
+    'email-settings': EmailSetting;
   };
   globalsSelect: {
     'about-page': AboutPageSelect<false> | AboutPageSelect<true>;
@@ -128,6 +135,7 @@ export interface Config {
     'products-order-settings': ProductsOrderSettingsSelect<false> | ProductsOrderSettingsSelect<true>;
     'seo-settings': SeoSettingsSelect<false> | SeoSettingsSelect<true>;
     'contact-page': ContactPageSelect<false> | ContactPageSelect<true>;
+    'email-settings': EmailSettingsSelect<false> | EmailSettingsSelect<true>;
   };
   locale: 'fa' | 'en' | 'ar';
   widgets: {
@@ -631,6 +639,103 @@ export interface Inspiration {
   createdAt: string;
 }
 /**
+ * مدیریت آدرس‌ها و اینباکس‌های رسمی شرکت (مانند ceo@persisquartz.com)
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "mailboxes".
+ */
+export interface Mailbox {
+  id: number;
+  /**
+   * مثال: احسان سامانی (مدیریت)، فروش و بازرگانی
+   */
+  name: string;
+  /**
+   * مثال: ehsan@persisquartz.com یا ceo@persisquartz.com
+   */
+  address: string;
+  /**
+   * مثال: reza.sales@gmail.com - پیام‌های دریافتی فوراً برای این ایمیل هم ارسال می‌شوند تا روی گوشی نوتیف دریافت کند.
+   */
+  forwardTo?: string | null;
+  /**
+   * رمز اختصاصی جهت لاگین کارشناس به mail.persisquartz.com. در صورت عدم تغییر، دست نخورده باقی بگذارید.
+   */
+  webmailPassword?: string | null;
+  isActive?: boolean | null;
+  /**
+   * در صورت فعال بودن، هر ایمیلی به دامنه‌ای که ثبت نشده به این صندوق هدایت می‌شود.
+   */
+  isCatchAll?: boolean | null;
+  /**
+   * مشخص کنید چه افرادی در پنل اجازه دارند با این آدرس ایمیل ارسال یا ایمیل‌ها را مشاهده کنند.
+   */
+  assignedUsers?: (number | User)[] | null;
+  enableAutoReply?: boolean | null;
+  autoReplySubject?: string | null;
+  autoReplyBody?: string | null;
+  description?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * پیام‌های دریافتی و ارسالی کاربران و دپارتمان‌های مختلف
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "emails".
+ */
+export interface Email {
+  id: number;
+  mailbox: number | Mailbox;
+  direction: 'inbound' | 'outbound';
+  status: 'delivered' | 'sent' | 'pending' | 'failed' | 'draft';
+  subject: string;
+  from: string;
+  fromName?: string | null;
+  to: string;
+  cc?: string | null;
+  bcc?: string | null;
+  replyTo?: string | null;
+  bodyText?: string | null;
+  bodyHtml?: string | null;
+  attachments?: (number | EmailAttachment)[] | null;
+  messageId?: string | null;
+  inReplyTo?: string | null;
+  threadId?: string | null;
+  isRead?: boolean | null;
+  isStarred?: boolean | null;
+  isArchived?: boolean | null;
+  isTrash?: boolean | null;
+  errorMessage?: string | null;
+  sentAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * فایل‌های ضمیمه ارسالی یا دریافتی از طریق سامانه ایمیل سازمانی
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "email-attachments".
+ */
+export interface EmailAttachment {
+  id: number;
+  originalName?: string | null;
+  /**
+   * جهت مپ کردن تصاویر inline ایمیل با تگ cid
+   */
+  contentId?: string | null;
+  prefix?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -697,6 +802,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'inquiries';
         value: number | Inquiry;
+      } | null)
+    | ({
+        relationTo: 'mailboxes';
+        value: number | Mailbox;
+      } | null)
+    | ({
+        relationTo: 'emails';
+        value: number | Email;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -1002,6 +1115,73 @@ export interface InspirationsSelect<T extends boolean = true> {
       };
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "mailboxes_select".
+ */
+export interface MailboxesSelect<T extends boolean = true> {
+  name?: T;
+  address?: T;
+  forwardTo?: T;
+  webmailPassword?: T;
+  isActive?: T;
+  isCatchAll?: T;
+  assignedUsers?: T;
+  enableAutoReply?: T;
+  autoReplySubject?: T;
+  autoReplyBody?: T;
+  description?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "emails_select".
+ */
+export interface EmailsSelect<T extends boolean = true> {
+  mailbox?: T;
+  direction?: T;
+  status?: T;
+  subject?: T;
+  from?: T;
+  fromName?: T;
+  to?: T;
+  cc?: T;
+  bcc?: T;
+  replyTo?: T;
+  bodyText?: T;
+  bodyHtml?: T;
+  attachments?: T;
+  messageId?: T;
+  inReplyTo?: T;
+  threadId?: T;
+  isRead?: T;
+  isStarred?: T;
+  isArchived?: T;
+  isTrash?: T;
+  errorMessage?: T;
+  sentAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "email-attachments_select".
+ */
+export interface EmailAttachmentsSelect<T extends boolean = true> {
+  originalName?: T;
+  contentId?: T;
+  prefix?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1427,6 +1607,38 @@ export interface ContactPage {
   createdAt?: string | null;
 }
 /**
+ * مدیریت قالب‌های پاسخ خودکار به مشتریان و نوتیفیکیشن‌های فرم‌های تماس
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "email-settings".
+ */
+export interface EmailSetting {
+  id: number;
+  enableContactAutoReply?: boolean | null;
+  /**
+   * متغیر مجاز: {name} جهت قرار دادن نام مشتری
+   */
+  contactReplySubject: string;
+  contactReplyHeading: string;
+  /**
+   * می‌توانید متن را آزادانه به هر صورت که مایلید تغییر دهید.
+   */
+  contactReplyMessage: string;
+  contactReplyFooter?: string | null;
+  /**
+   * در صورت فعال بودن، پس از دریافت هر ایمیل، یک پاسخ خودکار تاییدیه برای فرستنده ارسال می‌شود.
+   */
+  enableInboundAutoReply?: boolean | null;
+  inboundReplySubject?: string | null;
+  inboundReplyMessage?: string | null;
+  /**
+   * مثال: ceo@persisquartz.com, sales@persisquartz.com
+   */
+  adminNotificationEmails?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "about-page_select".
  */
@@ -1633,6 +1845,24 @@ export interface ContactPageSelect<T extends boolean = true> {
   successTitle?: T;
   submitAnotherBtn?: T;
   successMessage?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "email-settings_select".
+ */
+export interface EmailSettingsSelect<T extends boolean = true> {
+  enableContactAutoReply?: T;
+  contactReplySubject?: T;
+  contactReplyHeading?: T;
+  contactReplyMessage?: T;
+  contactReplyFooter?: T;
+  enableInboundAutoReply?: T;
+  inboundReplySubject?: T;
+  inboundReplyMessage?: T;
+  adminNotificationEmails?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

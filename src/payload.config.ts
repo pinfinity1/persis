@@ -27,6 +27,10 @@ import { Inspirations } from "./payload/collections/Inspirations";
 import { ProductsOrderSettings } from "./payload/globals/ProductsOrderSettings";
 import { SeoSettings } from "./payload/globals/SeoSettings";
 import { ContactPage } from "./payload/globals/ContactPage";
+import { EmailSettings } from "./payload/globals/EmailSettings";
+import { Mailboxes } from "./payload/collections/Mailboxes";
+import { Emails } from "./payload/collections/Emails";
+import { EmailAttachments } from "./payload/collections/EmailAttachments";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -57,6 +61,9 @@ export default buildConfig({
     Inquiries,
     Posts,
     Inspirations,
+    Mailboxes,
+    Emails,
+    EmailAttachments,
   ],
   globals: [
     AboutPage,
@@ -66,6 +73,7 @@ export default buildConfig({
     ProductsOrderSettings,
     SeoSettings,
     ContactPage,
+    EmailSettings,
   ],
 
   editor: lexicalEditor({}),
@@ -95,6 +103,9 @@ export default buildConfig({
       collections: {
         media: {
           prefix: "media",
+        },
+        "email-attachments": {
+          prefix: "email-attachments",
         },
       },
       bucket: process.env.S3_BUCKET || "persisquartz",

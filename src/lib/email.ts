@@ -3,6 +3,8 @@ import nodemailer from "nodemailer";
 import type { Transporter } from "nodemailer";
 import { escape } from "html-escaper";
 import type { ContactFormValues } from "@/lib/validations/contact";
+import { getPayload } from "payload";
+import configPromise from "@/payload.config";
 
 // Sanitizer to eliminate SMTP Header Injection (strips carriage returns & line feeds)
 function sanitizeHeader(val: string): string {
@@ -10,7 +12,7 @@ function sanitizeHeader(val: string): string {
 }
 
 // Singleton transporter configured with robust connection pooling
-const transporter: Transporter = nodemailer.createTransport({
+export const transporter: Transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || "smtp.gmail.com",
   port: Number(process.env.SMTP_PORT) || 587,
   secure: process.env.SMTP_SECURE === "true",
@@ -47,8 +49,18 @@ export async function sendInquiryEmails(
     errors: [],
   };
 
+  // 1. Fetch dynamic Email Settings from Payload CMS
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let emailSettings: any = null;
+  try {
+    const payload = await getPayload({ config: configPromise });
+    emailSettings = await payload.findGlobal({ slug: "email-settings" });
+  } catch (err) {
+    console.warn("[sendInquiryEmails] Could not load email-settings global:", err);
+  }
+
   const fromEmail =
-    process.env.SMTP_FROM || `"Persis Quartz" <noreply@persisquartz.com>`;
+    process.env.SMTP_FROM || `"Persis Quartz" <info@persisquartz.com>`;
 
   let departmentEmail = process.env.EMAIL_SALES || "sales@persisquartz.com";
   if (data.type === "dealer") {
@@ -61,7 +73,17 @@ export async function sendInquiryEmails(
   const managementRecipients = [
     departmentEmail,
     process.env.EMAIL_ADMIN || "admin@persisquartz.com",
-  ].filter(Boolean);
+  ];
+
+  if (emailSettings?.adminNotificationEmails) {
+    const customRecipients = String(emailSettings.adminNotificationEmails)
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    managementRecipients.push(...customRecipients);
+  }
+
+  const uniqueManagementRecipients = Array.from(new Set(managementRecipients.filter(Boolean)));
 
   // Deep sanitization against XSS in clients and Header Injection
   const safeFullName = escape(data.fullName || "");
@@ -113,7 +135,7 @@ export async function sendInquiryEmails(
 
   const internalHtml = `
     <div style="font-family: Arial, Tahoma, sans-serif; direction: rtl; text-align: right; background-color: #f7f7f7; padding: 24px; color: #1e1e1e;">
-      <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-top: 4px solid #9b0737; padding: 24px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+      <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-top: 4px solid #9b0737; padding: 24px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-radius: 4px;">
         <h2 style="color: #9b0737; margin-top: 0; font-size: 20px;">${TYPE_TITLE_MAP[data.type]}</h2>
         <table style="width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 14px;">
           <tr style="border-bottom: 1px solid #eeeeee;">
@@ -139,7 +161,7 @@ export async function sendInquiryEmails(
           </tr>
           ${extraDetailsHtml}
         </table>
-        <div style="margin-top: 20px; padding: 16px; background-color: #fcfcfc; border: 1px solid #eeeeee;">
+        <div style="margin-top: 20px; padding: 16px; background-color: #fcfcfc; border: 1px solid #eeeeee; border-radius: 4px;">
           <strong style="display: block; margin-bottom: 8px; color: #444;">متن پیام / شرح نیاز:</strong>
           <p style="margin: 0; line-height: 1.6; white-space: pre-wrap;">${safeMessage}</p>
         </div>
@@ -147,28 +169,49 @@ export async function sendInquiryEmails(
     </div>
   `;
 
+  // 2. Dynamic Customer Response Template (from CMS or Fallback)
+  const shouldSendCustomer = emailSettings ? emailSettings.enableContactAutoReply !== false : true;
+  const customerSubject = (
+    emailSettings?.contactReplySubject || "پیام شما در پرسیس کوارتز دریافت شد"
+  ).replace("{name}", safeFullName);
+
+  const customerHeading =
+    emailSettings?.contactReplyHeading || "درخواست شما با موفقیت ثبت شد";
+
+  const customerBodyText = (
+    emailSettings?.contactReplyMessage ||
+    "با سپاس از ارتباط شما با شرکت پرسیس کوارتز. درخواست شما با موفقیت ثبت شد و کارشناسان ما به زودی با شما تماس خواهند گرفت."
+  )
+    .replace("{name}", safeFullName)
+    .replace(/\n/g, "<br />");
+
+  const customerFooterText = (
+    emailSettings?.contactReplyFooter ||
+    "پرسیس کوارتز • تولیدکننده سطوح مهندسی‌شده سنگ کوارتز\nتلفن: ۰۳۸-۳۲۲۸۱۷۵۲ | وب‌سایت: persisquartz.com"
+  ).replace(/\n/g, "<br />");
+
   const customerHtml = `
-    <div style="font-family: Arial, Tahoma, sans-serif; background-color: #f7f7f7; padding: 24px; color: #1e1e1e;">
-      <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-top: 4px solid #9b0737; padding: 24px;">
-        <h2 style="color: #9b0737; margin-top: 0;">Persis Quartz</h2>
-        <p>Dear ${safeFullName},</p>
-        <p>Thank you for reaching out to us regarding <strong>${TYPE_TITLE_MAP[data.type]}</strong>.</p>
-        <p>We have successfully received your message. Our technical and sales representatives are reviewing your requirements and will contact you shortly.</p>
+    <div style="font-family: Arial, Tahoma, sans-serif; direction: rtl; text-align: right; background-color: #f7f7f7; padding: 24px; color: #1e1e1e;">
+      <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-top: 4px solid #9b0737; padding: 28px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-radius: 4px;">
+        <h2 style="color: #9b0737; margin-top: 0; font-size: 20px;">${customerHeading}</h2>
+        <p style="font-size: 15px; font-weight: bold; color: #333;">جناب آقای / سرکار خانم ${safeFullName} گرامی،</p>
+        <p style="font-size: 14px; line-height: 1.8; color: #444;">${customerBodyText}</p>
+        <div style="margin: 20px 0; padding: 12px 16px; background-color: #fafafa; border-right: 3px solid #9b0737; font-size: 13px; color: #555;">
+          <strong>موضوع ثبت‌شده:</strong> ${TYPE_TITLE_MAP[data.type]}
+        </div>
         <hr style="border: none; border-top: 1px solid #eeeeee; margin: 24px 0;" />
-        <p style="font-size: 12px; color: #777;">
-          Persis Quartz • Engineered Stone Surfaces<br />
-          Industrial Zone 3, Shahrekord, Iran<br />
-          Tel: +98 38 3228 1752 | Web: persisquartz.com
+        <p style="font-size: 12px; color: #777; line-height: 1.6;">
+          ${customerFooterText}
         </p>
       </div>
     </div>
   `;
 
-  // Explicit tracking of internal vs external notifications
+  // Dispatch internal alert
   try {
     await transporter.sendMail({
       from: fromEmail,
-      to: managementRecipients,
+      to: uniqueManagementRecipients,
       replyTo: safeEmail || undefined,
       subject: `[Persis Portal] ${TYPE_TITLE_MAP[data.type]} - ${safeHeaderName}`,
       html: internalHtml,
@@ -179,12 +222,13 @@ export async function sendInquiryEmails(
     result.errors.push(`Internal notification error: ${errorMsg}`);
   }
 
-  if (safeEmail) {
+  // Dispatch customer acknowledgement if enabled and email provided
+  if (safeEmail && shouldSendCustomer) {
     try {
       await transporter.sendMail({
         from: fromEmail,
         to: safeEmail,
-        subject: "We received your inquiry | Persis Quartz",
+        subject: customerSubject,
         html: customerHtml,
       });
       result.customerSent = true;

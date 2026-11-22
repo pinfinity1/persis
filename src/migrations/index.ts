@@ -11,6 +11,9 @@ import * as migration_20261025_135631_update_inspirations_description_to_richtex
 import * as migration_20261026_151135 from './20261026_151135';
 import * as migration_20261026_204912 from './20261026_204912';
 import * as migration_20261107_134947_add_interactive_tools_and_contact_page from './20261107_134947_add_interactive_tools_and_contact_page';
+import * as migration_20261120_115510_add_mail_system from './20261120_115510_add_mail_system';
+import * as migration_20261120_122606_add_email_settings_and_auto_reply from './20261120_122606_add_email_settings_and_auto_reply';
+import * as migration_20261121_190500_add_mailbox_webmail_password from './20261121_190500_add_mailbox_webmail_password';
 
 export const migrations = [
   {
@@ -76,6 +79,21 @@ export const migrations = [
   {
     up: migration_20261107_134947_add_interactive_tools_and_contact_page.up,
     down: migration_20261107_134947_add_interactive_tools_and_contact_page.down,
-    name: '20261107_134947_add_interactive_tools_and_contact_page'
+    name: '20261107_134947_add_interactive_tools_and_contact_page',
+  },
+  {
+    up: migration_20261120_115510_add_mail_system.up,
+    down: migration_20261120_115510_add_mail_system.down,
+    name: '20261120_115510_add_mail_system',
+  },
+  {
+    up: migration_20261120_122606_add_email_settings_and_auto_reply.up,
+    down: migration_20261120_122606_add_email_settings_and_auto_reply.down,
+    name: '20261120_122606_add_email_settings_and_auto_reply'
+  },
+  {
+    up: migration_20261121_190500_add_mailbox_webmail_password.up,
+    down: migration_20261121_190500_add_mailbox_webmail_password.down,
+    name: '20261121_190500_add_mailbox_webmail_password'
   },
 ];

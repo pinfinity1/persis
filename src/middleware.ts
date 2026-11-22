@@ -18,6 +18,22 @@ export default function middleware(request: NextRequest) {
     return NextResponse.redirect(targetUrl.toString(), 301);
   }
 
+  // مدیریت ساب‌دامین اختصاصی وب‌میل (mail.persisquartz.com)
+  if (host.startsWith("mail.persisquartz.com") || host.startsWith("mail.localhost")) {
+    const url = request.nextUrl.clone();
+    if (url.pathname === "/" || url.pathname === "") {
+      url.pathname = "/mail";
+    } else if (!url.pathname.startsWith("/mail") && !url.pathname.startsWith("/api")) {
+      url.pathname = `/mail${url.pathname}`;
+    }
+    return NextResponse.rewrite(url);
+  }
+
+  // اگر مستقیماً به روت وب‌میل دسترسی داشته باشند، میدل‌ور چندزبانه اجرا نشود
+  if (request.nextUrl.pathname.startsWith("/mail")) {
+    return NextResponse.next();
+  }
+
   return intlMiddleware(request);
 }
 
