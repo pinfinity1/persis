@@ -63,7 +63,7 @@ export function ProductConfigurator({
       <div className="space-y-7">
         {/* ۱. کد محصول و دکمه اشتراک‌گذاری هوشمند */}
         <div className="flex items-center justify-between gap-4 pb-4 border-b border-border/30">
-          <span className="text-sm font-semibold tracking-wider text-primary font-mono">
+          <span className="text-sm font-semibold tracking-wider text-primary">
             {t("codePrefix")} {product.code}
           </span>
 

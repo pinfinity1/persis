@@ -173,19 +173,51 @@ export function parseAndCleanMime(raw: string, contentTypeHeader?: string): Pars
 }
 
 /**
- * Strips raw MIME headers, boundary markers, and technical protocols from plain text.
+ * Strips raw MIME headers, boundary markers, residual HTML tags, and technical protocols from plain text.
  */
 export function stripMimeHeadersAndDelimiters(content: string): string {
   if (!content) return "";
-  return content
+  
+  let cleaned = content
     .replace(/^>*[\t ]*--[a-zA-Z0-9'()+_,-./:=?]{6,}(?:--)?[\t ]*$/gm, "") // Strip boundary markers (including quoted > --)
     .replace(/^>*[\t ]*Content-Type:.*$/gim, "")                          // Strip Content-Type lines
     .replace(/^>*[\t ]*Content-Transfer-Encoding:.*$/gim, "")             // Strip Content-Transfer-Encoding
     .replace(/^>*[\t ]*Content-Disposition:.*$/gim, "")                   // Strip Content-Disposition
     .replace(/^>*[\t ]*Content-ID:.*$/gim, "")                            // Strip Content-ID
     .replace(/^>*[\t ]*charset=.*$/gim, "")                               // Strip loose charset tokens
-    .replace(/^\s*[\r\n]{3,}/gm, "\n\n")                                  // Collapse redundant blank lines
     .trim();
+
+  // If there are raw residual HTML tags in plain text (e.g. <div dir="ltr">...</div> or <p>...</p>)
+  if (/<[a-z][\s\S]*>/i.test(cleaned)) {
+    cleaned = cleaned
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<\/p>/gi, "\n\n")
+      .replace(/<\/div>/gi, "\n")
+      .replace(/<[^>]+>/g, ""); // Strip any remaining HTML tags
+  }
+
+  // Deduplicate identical consecutive lines/blocks (e.g. when text & HTML had identical content)
+  const rawLines = cleaned.split("\n");
+  const filteredLines: string[] = [];
+
+  for (let i = 0; i < rawLines.length; i++) {
+    const current = rawLines[i].trim();
+    const prev = filteredLines.length > 0 ? filteredLines[filteredLines.length - 1].trim() : "";
+
+    // If current line is non-empty, identical to previous, and not a quote/divider
+    if (current && current === prev && !current.startsWith(">") && !current.startsWith("---")) {
+      continue;
+    }
+
+    filteredLines.push(rawLines[i]);
+  }
+
+  cleaned = filteredLines.join("\n");
+
+  // Normalize multiple empty lines to at most two
+  cleaned = cleaned.replace(/\n{3,}/g, "\n\n").trim();
+
+  return cleaned;
 }
 
 /**

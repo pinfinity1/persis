@@ -47,7 +47,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       {/* اطلاعات محصول */}
       <div className="p-3 sm:p-4 flex items-center justify-between gap-2 border-t border-border/30 flex-1 bg-card">
         <div className="space-y-0.5 min-w-0">
-          <span className="text-[10px] sm:text-xs text-muted-foreground tracking-wider block font-mono">
+          <span className="text-[10px] sm:text-xs text-muted-foreground tracking-wider block">
             {product.code}
           </span>
           <h4 className="text-xs sm:text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors duration-200">

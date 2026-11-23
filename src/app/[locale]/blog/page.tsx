@@ -104,7 +104,7 @@ export default async function BlogPage({
                     className="object-cover transition-transform duration-1000 ease-out group-hover:scale-105"
                   />
                 ) : (
-                  <div className="flex items-center justify-center h-full text-[10px] text-muted-foreground/30 font-mono tracking-[0.3em]">
+                  <div className="flex items-center justify-center h-full text-[10px] text-muted-foreground/30 tracking-[0.3em]">
                     PERSIS QUARTZ
                   </div>
                 )}

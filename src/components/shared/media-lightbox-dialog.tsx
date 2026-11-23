@@ -141,7 +141,7 @@ export const MediaLightboxDialog: React.FC<MediaLightboxDialogProps> = ({
               {isGallery && (
                 <span
                   dir="ltr"
-                  className="text-xs tracking-widest text-primary border border-primary/40 px-2 py-0.5 font-mono"
+                  className="text-xs tracking-widest text-primary border border-primary/40 px-2 py-0.5"
                 >
                   {String(currentIndex + 1).padStart(2, "0")} /{" "}
                   {String(total).padStart(2, "0")}

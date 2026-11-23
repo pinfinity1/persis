@@ -25,6 +25,8 @@ import {
   Shield,
   Clock,
   ArrowUpRight,
+  ArrowRight,
+  Menu,
 } from "lucide-react";
 import {
   sendEmailAction,
@@ -96,26 +98,34 @@ export default function WebmailClient({
   const [mailboxes] = useState<MailboxItem[]>(initialMailboxes);
   const [emails, setEmails] = useState<EmailItem[]>(initialEmails);
   const [selectedMailboxId, setSelectedMailboxId] = useState<number | null>(
-    session.role !== "admin" ? session.mailboxId : null
+    session.role !== "admin" ? session.mailboxId : null,
   );
-  const [currentFolder, setCurrentFolder] = useState<"inbox" | "sent" | "starred" | "trash">("inbox");
+  const [currentFolder, setCurrentFolder] = useState<
+    "inbox" | "sent" | "starred" | "trash"
+  >("inbox");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedEmailId, setSelectedEmailId] = useState<number | null>(
-    initialEmails.length > 0 ? initialEmails[0].id : null
+    initialEmails.length > 0 ? initialEmails[0].id : null,
   );
+
+  // Mobile Drill-down and Drawer Navigation States
+  const [mobileView, setMobileView] = useState<"list" | "detail">("list");
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   const [isPending, startTransition] = useTransition();
 
   // Compose Modal State
   const [isComposeOpen, setIsComposeOpen] = useState(false);
   const [composeFromId, setComposeFromId] = useState<number>(
-    mailboxes.length > 0 ? mailboxes[0].id : 1
+    mailboxes.length > 0 ? mailboxes[0].id : 1,
   );
   const [composeTo, setComposeTo] = useState("");
   const [composeCc, setComposeCc] = useState("");
   const [composeSubject, setComposeSubject] = useState("");
   const [composeBody, setComposeBody] = useState("");
-  const [replyingToId, setReplyingToId] = useState<number | undefined>(undefined);
+  const [replyingToId, setReplyingToId] = useState<number | undefined>(
+    undefined,
+  );
   const [composeStatus, setComposeStatus] = useState<{
     type: "idle" | "loading" | "success" | "error";
     message?: string;
@@ -145,7 +155,10 @@ export default function WebmailClient({
       // 3. Search Query
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase().trim();
-        const cleanSnippet = extractCleanSnippet(item.bodyText || item.bodyHtml, 300).toLowerCase();
+        const cleanSnippet = extractCleanSnippet(
+          item.bodyText || item.bodyHtml,
+          300,
+        ).toLowerCase();
         const matchSubject = item.subject?.toLowerCase().includes(query);
         const matchFrom = item.from?.toLowerCase().includes(query);
         const matchTo = item.to?.toLowerCase().includes(query);
@@ -166,7 +179,7 @@ export default function WebmailClient({
   const resolvedContent = useMemo(() => {
     if (!selectedEmail) return { html: null, text: "" };
 
-    // 1. If it's an outbound email, it's clean plain text created in our composer
+    // 1. If it's an outbound email, it's clean plain text authored in our composer
     if (selectedEmail.direction === "outbound") {
       return {
         html: null,
@@ -199,7 +212,7 @@ export default function WebmailClient({
   // Refresh Emails from Server
   const handleRefresh = (
     targetFolder: "inbox" | "sent" | "starred" | "trash" = currentFolder,
-    targetMailboxId: number | null = selectedMailboxId
+    targetMailboxId: number | null = selectedMailboxId,
   ) => {
     startTransition(async () => {
       const res = await getEmailsAction({
@@ -210,7 +223,9 @@ export default function WebmailClient({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         setEmails(res.docs as any);
         if (res.docs.length > 0) {
-          const currentStillExists = res.docs.some((e: { id: number }) => e.id === selectedEmailId);
+          const currentStillExists = res.docs.some(
+            (e: { id: number }) => e.id === selectedEmailId,
+          );
           if (!currentStillExists) {
             setSelectedEmailId(res.docs[0].id);
           }
@@ -222,8 +237,12 @@ export default function WebmailClient({
   };
 
   // Folder Select Handler
-  const handleFolderSelect = (folder: "inbox" | "sent" | "starred" | "trash") => {
+  const handleFolderSelect = (
+    folder: "inbox" | "sent" | "starred" | "trash",
+  ) => {
     setCurrentFolder(folder);
+    setIsMobileSidebarOpen(false);
+    setMobileView("list");
     handleRefresh(folder, selectedMailboxId);
   };
 
@@ -237,7 +256,7 @@ export default function WebmailClient({
   const handleToggleStar = async (emailId: number, currentStar: boolean) => {
     const nextStar = !currentStar;
     setEmails((prev) =>
-      prev.map((e) => (e.id === emailId ? { ...e, isStarred: nextStar } : e))
+      prev.map((e) => (e.id === emailId ? { ...e, isStarred: nextStar } : e)),
     );
     await toggleStarAction(emailId, nextStar);
   };
@@ -245,11 +264,14 @@ export default function WebmailClient({
   // Move to Trash
   const handleTrash = async (emailId: number) => {
     setEmails((prev) =>
-      prev.map((e) => (e.id === emailId ? { ...e, isTrash: true } : e))
+      prev.map((e) => (e.id === emailId ? { ...e, isTrash: true } : e)),
     );
     if (selectedEmailId === emailId) {
       const remaining = filteredEmails.filter((e) => e.id !== emailId);
       setSelectedEmailId(remaining.length > 0 ? remaining[0].id : null);
+      if (remaining.length === 0) {
+        setMobileView("list");
+      }
     }
     await moveToTrashAction(emailId);
   };
@@ -257,7 +279,7 @@ export default function WebmailClient({
   // Restore from Trash
   const handleRestore = async (emailId: number) => {
     setEmails((prev) =>
-      prev.map((e) => (e.id === emailId ? { ...e, isTrash: false } : e))
+      prev.map((e) => (e.id === emailId ? { ...e, isTrash: false } : e)),
     );
     await restoreEmailAction(emailId);
   };
@@ -267,30 +289,50 @@ export default function WebmailClient({
     setEmails((prev) => prev.filter((e) => e.id !== emailId));
     if (selectedEmailId === emailId) {
       setSelectedEmailId(null);
+      setMobileView("list");
     }
     await deletePermanentlyAction(emailId);
   };
 
-  // Open Reply with Clean Quotation
+  // Open Reply with Clean Quotation & Persian Formatted Date
   const handleReply = (email: EmailItem) => {
     setReplyingToId(email.id);
-    const mId = typeof email.mailbox === "object" ? email.mailbox.id : email.mailbox;
+    const mId =
+      typeof email.mailbox === "object" ? email.mailbox.id : email.mailbox;
     if (mId) setComposeFromId(mId);
 
     const target = email.direction === "inbound" ? email.from : email.to;
     setComposeTo(target);
     setComposeSubject(
-      email.subject.startsWith("Re:") ? email.subject : `Re: ${email.subject}`
+      email.subject.startsWith("Re:") ? email.subject : `Re: ${email.subject}`,
     );
 
-    // Clean body for reply quote (strip all MIME boundaries)
+    // Clean body for reply quote (strip all MIME noise & residual HTML)
     const rawQuote = isRawMimeMultipart(email.bodyText || "")
       ? parseAndCleanMime(email.bodyText || "").text
       : email.bodyText || "";
     const cleanQuote = stripMimeHeadersAndDelimiters(rawQuote);
 
+    // Friendly Persian Datetime formatting
+    let persianDate = "";
+    try {
+      const d = new Date(email.sentAt || email.createdAt);
+      if (!isNaN(d.getTime())) {
+        persianDate = d.toLocaleDateString("fa-IR", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }
+    } catch {
+      persianDate = email.createdAt;
+    }
+
     setComposeBody(
-      `\n\n--- در تاریخ ${email.sentAt ? new Date(email.sentAt).toLocaleString("fa-IR") : email.createdAt}، ${email.from} نوشت: ---\n> ${cleanQuote.replace(/\n/g, "\n> ")}`
+      `\n\n--- در تاریخ ${persianDate || email.createdAt}، ${email.from} نوشت: ---\n> ${cleanQuote.replace(/\n/g, "\n> ")}`,
     );
     setIsComposeOpen(true);
   };
@@ -343,238 +385,332 @@ export default function WebmailClient({
 
   // Unread Count
   const unreadCount = useMemo(() => {
-    return emails.filter((e) => e.direction === "inbound" && !e.isRead && !e.isTrash).length;
+    return emails.filter(
+      (e) => e.direction === "inbound" && !e.isRead && !e.isTrash,
+    ).length;
   }, [emails]);
+
+  // Folder Title Mapping
+  const folderTitle = useMemo(() => {
+    switch (currentFolder) {
+      case "inbox":
+        return "صندوق ورودی";
+      case "sent":
+        return "پیام‌های ارسال‌شده";
+      case "starred":
+        return "پیام‌های نشان‌شده";
+      case "trash":
+        return "سطل زباله";
+    }
+  }, [currentFolder]);
+
+  // Shared Sidebar Content (Rendered both in desktop column and mobile drawer)
+  const renderSidebarContent = (isMobile = false) => (
+    <div className="flex h-full flex-col">
+      {/* Brand Header */}
+      <div className="flex h-16 items-center justify-between border-b border-border/70 px-5 shrink-0">
+        <Link
+          href="/"
+          title="بازگشت به سایت پرسیس کوارتز"
+          className="flex items-center gap-2.5 transition-opacity hover:opacity-85"
+        >
+          <Image
+            src="/PersisQuartz-Red.png"
+            alt="Persis Quartz"
+            width={130}
+            height={32}
+            priority
+            className="h-7 w-auto object-contain"
+          />
+        </Link>
+        <div className="flex items-center gap-2">
+          <span className="rounded-md border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+            وب‌میل
+          </span>
+          {isMobile && (
+            <button
+              onClick={() => setIsMobileSidebarOpen(false)}
+              aria-label="بستن منو"
+              className="p-1 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Compose Button */}
+      <div className="p-4 shrink-0">
+        <button
+          onClick={() => {
+            setReplyingToId(undefined);
+            setComposeTo("");
+            setComposeCc("");
+            setComposeSubject("");
+            setComposeBody("");
+            setIsComposeOpen(true);
+            if (isMobile) setIsMobileSidebarOpen(false);
+          }}
+          aria-label="نگارش پیام جدید"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs sm:text-sm font-semibold text-primary-foreground shadow-sm shadow-primary/30 transition-all duration-200 hover:bg-primary/90 hover:shadow-md active:scale-[0.98]"
+        >
+          <Plus className="h-4 w-4 stroke-[2.5]" />
+          <span>نگارش پیام جدید</span>
+        </button>
+      </div>
+
+      {/* Mailbox Selector */}
+      <div className="px-4 pb-3 shrink-0">
+        <label
+          htmlFor={isMobile ? "mailbox-select-mobile" : "mailbox-select"}
+          className="mb-1.5 block text-[11px] font-semibold tracking-wide text-muted-foreground select-none"
+        >
+          صندوق ایمیل فعال:
+        </label>
+        {session.role === "admin" ? (
+          <div className="relative">
+            <select
+              id={isMobile ? "mailbox-select-mobile" : "mailbox-select"}
+              value={selectedMailboxId || ""}
+              onChange={(e) => {
+                const val = e.target.value;
+                handleMailboxSelect(val ? Number(val) : null);
+              }}
+              className="w-full appearance-none rounded-xl border border-input bg-background/80 py-2 ps-3 pe-8 text-xs font-medium text-foreground outline-none transition focus:border-primary focus:ring-1 focus:ring-primary font-sans"
+            >
+              <option value="">همه صندوق‌ها ({mailboxes.length} صندوق)</option>
+              {mailboxes.map((mb) => (
+                <option key={mb.id} value={mb.id}>
+                  {mb.name} ({mb.address})
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute end-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+          </div>
+        ) : (
+          <div className="rounded-xl border border-border/80 bg-background/60 p-2.5 flex items-center justify-between">
+            <div className="truncate text-xs">
+              <div className="font-semibold text-foreground truncate">
+                {session.name}
+              </div>
+              <div
+                className="text-muted-foreground truncate text-[11px]"
+                dir="ltr"
+              >
+                {session.address}
+              </div>
+            </div>
+            <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary shrink-0">
+              اختصاصی
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Navigation Folders */}
+      <nav
+        aria-label="پوشه‌های وب‌میل"
+        className="flex-1 overflow-y-auto space-y-1 px-3 py-2 text-xs font-medium"
+      >
+        <button
+          onClick={() => handleFolderSelect("inbox")}
+          className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 transition duration-150 ${
+            currentFolder === "inbox"
+              ? "bg-primary/10 text-primary font-semibold border-s-2 border-primary"
+              : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+          }`}
+        >
+          <div className="flex items-center gap-2.5">
+            <Inbox className="h-4 w-4" />
+            <span>صندوق ورودی</span>
+          </div>
+          {unreadCount > 0 && (
+            <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-primary-foreground shadow-sm shadow-primary/30">
+              {unreadCount}
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={() => handleFolderSelect("sent")}
+          className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 transition duration-150 ${
+            currentFolder === "sent"
+              ? "bg-primary/10 text-primary font-semibold border-s-2 border-primary"
+              : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+          }`}
+        >
+          <div className="flex items-center gap-2.5">
+            <Send className="h-4 w-4" />
+            <span>پیام‌های ارسال‌شده</span>
+          </div>
+        </button>
+
+        <button
+          onClick={() => handleFolderSelect("starred")}
+          className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 transition duration-150 ${
+            currentFolder === "starred"
+              ? "bg-primary/10 text-primary font-semibold border-s-2 border-primary"
+              : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+          }`}
+        >
+          <div className="flex items-center gap-2.5">
+            <Star className="h-4 w-4" />
+            <span>پیام‌های نشان‌شده</span>
+          </div>
+        </button>
+
+        <button
+          onClick={() => handleFolderSelect("trash")}
+          className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 transition duration-150 ${
+            currentFolder === "trash"
+              ? "bg-primary/10 text-primary font-semibold border-s-2 border-primary"
+              : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+          }`}
+        >
+          <div className="flex items-center gap-2.5">
+            <Trash2 className="h-4 w-4" />
+            <span>سطل زباله</span>
+          </div>
+        </button>
+      </nav>
+
+      {/* Sidebar Footer: Profile & Logout */}
+      <div className="border-t border-border/70 p-3 space-y-2 shrink-0">
+        <div className="flex items-center justify-between rounded-xl bg-muted/40 p-2.5 text-xs border border-border/50">
+          <div className="flex items-center gap-2.5 truncate">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15 text-primary shrink-0 font-bold">
+              {session.role === "admin" ? (
+                <Shield className="h-4 w-4" />
+              ) : (
+                <User className="h-4 w-4" />
+              )}
+            </div>
+            <div className="truncate">
+              <div className="font-semibold text-foreground truncate">
+                {session.name}
+              </div>
+              <div
+                className="text-[11px] text-muted-foreground truncate"
+                dir="ltr"
+              >
+                {session.address}
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={async () => {
+              await webmailLogoutAction();
+              window.location.reload();
+            }}
+            title="خروج از حساب وب‌میل"
+            aria-label="خروج از حساب"
+            className="p-1.5 text-muted-foreground hover:text-destructive transition-colors rounded-lg hover:bg-background/80"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
+        </div>
+
+        {session.role === "admin" && (
+          <a
+            href="/persis-cp"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center justify-between rounded-lg px-2.5 py-1.5 text-[11px] text-muted-foreground transition hover:bg-muted/60 hover:text-foreground font-medium"
+          >
+            <span>پنل مدیریت ادمین</span>
+            <ExternalLink className="h-3 w-3" />
+          </a>
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <div
       dir="rtl"
-      className="flex h-screen w-screen overflow-hidden bg-background font-sans text-foreground antialiased selection:bg-primary/25 selection:text-primary-foreground"
+      className="flex h-[100dvh] w-screen overflow-hidden bg-background font-sans text-foreground antialiased selection:bg-primary/25 selection:text-primary-foreground"
     >
       {/* =========================================================================
-          1. NAVIGATION SIDEBAR (Caesarstone / Breton Luxury Minimalist)
+          MOBILE SLIDE-OVER DRAWER (Sidebar on mobile screens)
          ========================================================================= */}
-      <aside className="flex w-64 flex-col border-e border-border/80 bg-card/90 backdrop-blur-md shrink-0">
-        {/* Brand Header */}
-        <div className="flex h-16 items-center justify-between border-b border-border/70 px-5">
-          <Link
-            href="/"
-            title="بازگشت به سایت پرسیس کوارتز"
-            className="flex items-center gap-2.5 transition-opacity hover:opacity-85"
-          >
-            <Image
-              src="/PersisQuartz-Red.png"
-              alt="Persis Quartz"
-              width={130}
-              height={32}
-              priority
-              className="h-7 w-auto object-contain"
-            />
-          </Link>
-          <span className="rounded-md border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
-            وب‌میل
-          </span>
-        </div>
+      {isMobileSidebarOpen && (
+        <div className="fixed inset-0 z-50 md:hidden flex">
+          {/* Backdrop */}
+          <div
+            onClick={() => setIsMobileSidebarOpen(false)}
+            aria-hidden="true"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+          />
 
-        {/* Compose Button */}
-        <div className="p-4">
-          <button
-            onClick={() => {
-              setReplyingToId(undefined);
-              setComposeTo("");
-              setComposeCc("");
-              setComposeSubject("");
-              setComposeBody("");
-              setIsComposeOpen(true);
-            }}
-            aria-label="نگارش پیام جدید"
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs sm:text-sm font-semibold text-primary-foreground shadow-sm shadow-primary/30 transition-all duration-200 hover:bg-primary/90 hover:shadow-md active:scale-[0.98]"
-          >
-            <Plus className="h-4 w-4 stroke-[2.5]" />
-            <span>نگارش پیام جدید</span>
-          </button>
-        </div>
-
-        {/* Mailbox Selector */}
-        <div className="px-4 pb-3">
-          <label 
-            htmlFor="mailbox-select" 
-            className="mb-1.5 block text-[11px] font-semibold tracking-wide text-muted-foreground select-none"
-          >
-            صندوق ایمیل فعال:
-          </label>
-          {session.role === "admin" ? (
-            <div className="relative">
-              <select
-                id="mailbox-select"
-                value={selectedMailboxId || ""}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  handleMailboxSelect(val ? Number(val) : null);
-                }}
-                className="w-full appearance-none rounded-xl border border-input bg-background/80 py-2 ps-3 pe-8 text-xs font-medium text-foreground outline-none transition focus:border-primary focus:ring-1 focus:ring-primary font-sans"
-              >
-                <option value="">همه صندوق‌ها ({mailboxes.length} صندوق)</option>
-                {mailboxes.map((mb) => (
-                  <option key={mb.id} value={mb.id}>
-                    {mb.name} ({mb.address})
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="pointer-events-none absolute end-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-            </div>
-          ) : (
-            <div className="rounded-xl border border-border/80 bg-background/60 p-2.5 flex items-center justify-between">
-              <div className="truncate text-xs">
-                <div className="font-semibold text-foreground truncate">{session.name}</div>
-                <div className="text-muted-foreground truncate text-[11px]" dir="ltr">
-                  {session.address}
-                </div>
-              </div>
-              <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary shrink-0">
-                اختصاصی
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Navigation Folders */}
-        <nav aria-label="پوشه‌های وب‌میل" className="flex-1 space-y-1 px-3 py-2 text-xs font-medium">
-          <button
-            onClick={() => handleFolderSelect("inbox")}
-            className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 transition duration-150 ${
-              currentFolder === "inbox"
-                ? "bg-primary/10 text-primary font-semibold border-s-2 border-primary"
-                : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-            }`}
-          >
-            <div className="flex items-center gap-2.5">
-              <Inbox className="h-4 w-4" />
-              <span>صندوق ورودی</span>
-            </div>
-            {unreadCount > 0 && (
-              <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-primary-foreground shadow-sm shadow-primary/30">
-                {unreadCount}
-              </span>
-            )}
-          </button>
-
-          <button
-            onClick={() => handleFolderSelect("sent")}
-            className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 transition duration-150 ${
-              currentFolder === "sent"
-                ? "bg-primary/10 text-primary font-semibold border-s-2 border-primary"
-                : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-            }`}
-          >
-            <div className="flex items-center gap-2.5">
-              <Send className="h-4 w-4" />
-              <span>پیام‌های ارسال‌شده</span>
-            </div>
-          </button>
-
-          <button
-            onClick={() => handleFolderSelect("starred")}
-            className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 transition duration-150 ${
-              currentFolder === "starred"
-                ? "bg-primary/10 text-primary font-semibold border-s-2 border-primary"
-                : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-            }`}
-          >
-            <div className="flex items-center gap-2.5">
-              <Star className="h-4 w-4" />
-              <span>پیام‌های نشان‌شده</span>
-            </div>
-          </button>
-
-          <button
-            onClick={() => handleFolderSelect("trash")}
-            className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 transition duration-150 ${
-              currentFolder === "trash"
-                ? "bg-primary/10 text-primary font-semibold border-s-2 border-primary"
-                : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-            }`}
-          >
-            <div className="flex items-center gap-2.5">
-              <Trash2 className="h-4 w-4" />
-              <span>سطل زباله</span>
-            </div>
-          </button>
-        </nav>
-
-        {/* Sidebar Footer: Profile & Logout */}
-        <div className="border-t border-border/70 p-3 space-y-2">
-          {/* User Profile Info Card */}
-          <div className="flex items-center justify-between rounded-xl bg-muted/40 p-2.5 text-xs border border-border/50">
-            <div className="flex items-center gap-2.5 truncate">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15 text-primary shrink-0 font-bold">
-                {session.role === "admin" ? (
-                  <Shield className="h-4 w-4" />
-                ) : (
-                  <User className="h-4 w-4" />
-                )}
-              </div>
-              <div className="truncate">
-                <div className="font-semibold text-foreground truncate">{session.name}</div>
-                <div className="text-[11px] text-muted-foreground truncate" dir="ltr">
-                  {session.address}
-                </div>
-              </div>
-            </div>
-
-            <button
-              onClick={async () => {
-                await webmailLogoutAction();
-                window.location.reload();
-              }}
-              title="خروج از حساب وب‌میل"
-              aria-label="خروج از حساب"
-              className="p-1.5 text-muted-foreground hover:text-destructive transition-colors rounded-lg hover:bg-background/80"
-            >
-              <LogOut className="h-4 w-4" />
-            </button>
+          {/* Drawer Panel */}
+          <div className="relative z-10 w-72 max-w-[85vw] h-full bg-card border-e border-border/80 shadow-2xl flex flex-col animate-in slide-in-from-right duration-200">
+            {renderSidebarContent(true)}
           </div>
-
-          {session.role === "admin" && (
-            <a
-              href="/persis-cp"
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center justify-between rounded-lg px-2.5 py-1.5 text-[11px] text-muted-foreground transition hover:bg-muted/60 hover:text-foreground font-medium"
-            >
-              <span>پنل مدیریت ادمین</span>
-              <ExternalLink className="h-3 w-3" />
-            </a>
-          )}
         </div>
+      )}
+
+      {/* =========================================================================
+          1. DESKTOP PERMANENT SIDEBAR (w-64 on md+)
+         ========================================================================= */}
+      <aside className="hidden md:flex w-64 flex-col border-e border-border/80 bg-card/90 backdrop-blur-md shrink-0">
+        {renderSidebarContent(false)}
       </aside>
 
       {/* =========================================================================
-          2. MIDDLE COLUMN: Message Feed & Search
+          2. MESSAGE FEED & SEARCH (Full-width on mobile when mobileView == "list")
          ========================================================================= */}
-      <section className="flex w-96 flex-col border-e border-border/80 bg-card/40 shrink-0">
-        {/* Search & Refresh Bar */}
-        <div className="flex h-16 items-center gap-2 border-b border-border/70 px-4">
+      <section
+        className={`flex flex-col border-e border-border/80 bg-card/40 shrink-0 ${
+          mobileView === "list"
+            ? "w-full flex-1"
+            : "hidden md:flex md:w-80 lg:w-96"
+        }`}
+      >
+        {/* Top Navbar Header */}
+        <div className="flex h-16 items-center gap-2 border-b border-border/70 px-4 shrink-0">
+          {/* Mobile Hamburger Menu Toggle */}
+          <button
+            onClick={() => setIsMobileSidebarOpen(true)}
+            aria-label="باز کردن منو"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-input bg-card text-muted-foreground md:hidden shrink-0"
+          >
+            <Menu className="h-4 w-4" />
+          </button>
+
+          {/* Search Box */}
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute start-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <input
               type="text"
               id="webmail-search"
               aria-label="جستجو در پیام‌ها"
-              placeholder="جستجو در نام فرستنده، موضوع یا متن..."
+              placeholder="جستجو در پیام‌ها..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full rounded-xl border border-input bg-background/90 py-2 ps-9 pe-3 text-xs text-foreground placeholder:text-muted-foreground outline-none transition focus:border-primary focus:ring-1 focus:ring-primary font-sans"
             />
           </div>
+
+          {/* Refresh Button */}
           <button
             onClick={() => handleRefresh(currentFolder, selectedMailboxId)}
             title="بروزرسانی صندوق پیام‌ها"
             aria-label="بروزرسانی صندوق پیام‌ها"
             className="flex h-9 w-9 items-center justify-center rounded-xl border border-input bg-card text-muted-foreground transition hover:bg-muted hover:text-foreground active:scale-95 shrink-0"
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${isPending ? "animate-spin text-primary" : ""}`} />
+            <RefreshCw
+              className={`h-3.5 w-3.5 ${isPending ? "animate-spin text-primary" : ""}`}
+            />
           </button>
+        </div>
+
+        {/* Current Folder Badge on Mobile */}
+        <div className="flex items-center justify-between px-4 py-2 bg-muted/30 border-b border-border/50 text-xs font-semibold md:hidden">
+          <span className="text-foreground">{folderTitle}</span>
+          <span className="text-muted-foreground text-[11px]">
+            {filteredEmails.length} پیام
+          </span>
         </div>
 
         {/* Email Items List */}
@@ -582,9 +718,12 @@ export default function WebmailClient({
           {filteredEmails.length === 0 ? (
             <div className="flex h-64 flex-col items-center justify-center p-6 text-center text-muted-foreground">
               <Mail className="mb-3 h-8 w-8 opacity-30 text-muted-foreground" />
-              <div className="text-xs font-semibold text-foreground">هیچ پیامی در این پوشه وجود ندارد</div>
+              <div className="text-xs font-semibold text-foreground">
+                هیچ پیامی در این پوشه وجود ندارد
+              </div>
               <p className="mt-1 text-[11px] text-muted-foreground/80 max-w-[200px]">
-                پیام‌های جدید ارسال‌شده یا دریافتی به صورت خودکار در این بخش نمایش داده می‌شوند.
+                پیام‌های جدید ارسال‌شده یا دریافتی به صورت خودکار در این بخش
+                نمایش داده می‌شوند.
               </p>
             </div>
           ) : (
@@ -599,17 +738,23 @@ export default function WebmailClient({
                   })
                 : "";
 
-              // Clean snippet for preview (guaranteed free of MIME noise)
-              const cleanSnippet = extractCleanSnippet(item.bodyText || item.bodyHtml, 110);
+              // Clean snippet for preview (guaranteed free of MIME noise & residual HTML)
+              const cleanSnippet = extractCleanSnippet(
+                item.bodyText || item.bodyHtml,
+                110,
+              );
 
               return (
                 <div
                   key={item.id}
                   onClick={() => {
                     setSelectedEmailId(item.id);
+                    setMobileView("detail"); // Switch to detail view on mobile
                     if (!item.isRead) {
                       setEmails((prev) =>
-                        prev.map((e) => (e.id === item.id ? { ...e, isRead: true } : e))
+                        prev.map((e) =>
+                          e.id === item.id ? { ...e, isRead: true } : e,
+                        ),
                       );
                     }
                   }}
@@ -630,17 +775,23 @@ export default function WebmailClient({
                       {!item.isRead && item.direction === "inbound" && (
                         <div className="h-2 w-2 rounded-full bg-primary shrink-0" />
                       )}
-                      <span className={`truncate text-xs ${!item.isRead ? "font-bold text-foreground" : "font-medium text-foreground/90"}`}>
-                        {item.fromName || item.from.split("<")[0].replace(/"/g, "").trim() || item.from}
+                      <span
+                        className={`truncate text-xs ${!item.isRead ? "font-bold text-foreground" : "font-medium text-foreground/90"}`}
+                      >
+                        {item.fromName ||
+                          item.from.split("<")[0].replace(/"/g, "").trim() ||
+                          item.from}
                       </span>
                     </div>
-                    <span className="shrink-0 text-[10px] text-muted-foreground font-mono">
+                    <span className="shrink-0 text-[10px] text-muted-foreground">
                       {formattedDate}
                     </span>
                   </div>
 
                   {/* Subject Line */}
-                  <div className={`truncate text-xs ${!item.isRead ? "font-semibold text-foreground" : "text-foreground/80"}`}>
+                  <div
+                    className={`truncate text-xs ${!item.isRead ? "font-semibold text-foreground" : "text-foreground/80"}`}
+                  >
                     {item.subject || "(بدون موضوع)"}
                   </div>
 
@@ -657,12 +808,13 @@ export default function WebmailClient({
                           ارسالی
                         </span>
                       )}
-                      {Array.isArray(item.attachments) && item.attachments.length > 0 && (
-                        <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
-                          <Paperclip className="h-3 w-3" />
-                          <span>{item.attachments.length}</span>
-                        </span>
-                      )}
+                      {Array.isArray(item.attachments) &&
+                        item.attachments.length > 0 && (
+                          <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                            <Paperclip className="h-3 w-3" />
+                            <span>{item.attachments.length}</span>
+                          </span>
+                        )}
                     </div>
 
                     <button
@@ -670,7 +822,9 @@ export default function WebmailClient({
                         e.stopPropagation();
                         handleToggleStar(item.id, Boolean(item.isStarred));
                       }}
-                      aria-label={item.isStarred ? "حذف نشان پیام" : "نشان کردن پیام"}
+                      aria-label={
+                        item.isStarred ? "حذف نشان پیام" : "نشان کردن پیام"
+                      }
                       className="text-muted-foreground transition hover:text-amber-400 p-1"
                     >
                       <Star
@@ -688,108 +842,157 @@ export default function WebmailClient({
       </section>
 
       {/* =========================================================================
-          3. MAIN READING PANE: Detailed Message View (High Fidelity)
+          3. MAIN READING PANE: Detailed Message View (Full-width on mobile when mobileView == "detail")
          ========================================================================= */}
-      <main className="flex flex-1 flex-col overflow-hidden bg-background">
+      <main
+        className={`flex-col overflow-hidden bg-background ${
+          mobileView === "detail"
+            ? "flex flex-1 w-full"
+            : "hidden md:flex md:flex-1"
+        }`}
+      >
         {selectedEmail ? (
           <div className="flex h-full flex-col">
             {/* Action Bar Header */}
-            <div className="flex h-16 items-center justify-between border-b border-border/70 px-6">
+            <div className="flex h-16 items-center justify-between border-b border-border/70 px-4 sm:px-6 shrink-0 gap-2">
               <div className="flex items-center gap-2">
+                {/* Mobile Back Button (Returns to Message List) */}
+                <button
+                  onClick={() => setMobileView("list")}
+                  aria-label="بازگشت به لیست پیام‌ها"
+                  className="flex items-center gap-1.5 rounded-xl border border-input bg-card px-3 py-1.5 text-xs font-semibold text-foreground md:hidden shadow-sm hover:bg-muted"
+                >
+                  <ArrowRight className="h-3.5 w-3.5 text-primary" />
+                  <span>لیست پیام‌ها</span>
+                </button>
+
                 <button
                   onClick={() => handleReply(selectedEmail)}
                   className="flex items-center gap-1.5 rounded-xl border border-input bg-card px-3.5 py-1.5 text-xs font-semibold text-foreground transition duration-150 hover:bg-muted hover:border-primary/40 shadow-sm"
                 >
                   <Reply className="h-3.5 w-3.5 text-primary" />
-                  <span>پاسخ به پیام</span>
+                  <span className="hidden sm:inline">پاسخ به پیام</span>
+                  <span className="sm:hidden">پاسخ</span>
                 </button>
 
                 <button
-                  onClick={() => handleToggleStar(selectedEmail.id, Boolean(selectedEmail.isStarred))}
-                  className="flex items-center gap-1.5 rounded-xl border border-input bg-card px-3.5 py-1.5 text-xs font-semibold text-foreground transition duration-150 hover:bg-muted shadow-sm"
+                  onClick={() =>
+                    handleToggleStar(
+                      selectedEmail.id,
+                      Boolean(selectedEmail.isStarred),
+                    )
+                  }
+                  className="flex items-center gap-1.5 rounded-xl border border-input bg-card px-3 py-1.5 text-xs font-semibold text-foreground transition duration-150 hover:bg-muted shadow-sm"
                 >
                   <Star
                     className={`h-3.5 w-3.5 ${
-                      selectedEmail.isStarred ? "fill-amber-400 text-amber-400" : ""
+                      selectedEmail.isStarred
+                        ? "fill-amber-400 text-amber-400"
+                        : ""
                     }`}
                   />
-                  <span>{selectedEmail.isStarred ? "نشان‌شده" : "نشان کردن"}</span>
+                  <span className="hidden sm:inline">
+                    {selectedEmail.isStarred ? "نشان‌شده" : "نشان کردن"}
+                  </span>
                 </button>
 
                 {selectedEmail.isTrash ? (
                   <>
                     <button
                       onClick={() => handleRestore(selectedEmail.id)}
-                      className="rounded-xl border border-border bg-card px-3.5 py-1.5 text-xs font-semibold text-emerald-500 transition hover:bg-muted shadow-sm"
+                      className="rounded-xl border border-border bg-card px-3 py-1.5 text-xs font-semibold text-emerald-500 transition hover:bg-muted shadow-sm"
                     >
-                      بازگردانی به اینباکس
+                      بازگردانی
                     </button>
                     <button
                       onClick={() => handleDeletePermanently(selectedEmail.id)}
-                      className="rounded-xl border border-destructive/40 bg-destructive/10 px-3.5 py-1.5 text-xs font-semibold text-destructive transition hover:bg-destructive/20 shadow-sm"
+                      className="rounded-xl border border-destructive/40 bg-destructive/10 px-3 py-1.5 text-xs font-semibold text-destructive transition hover:bg-destructive/20 shadow-sm"
                     >
-                      حذف دائمی
+                      حذف دائم
                     </button>
                   </>
                 ) : (
                   <button
                     onClick={() => handleTrash(selectedEmail.id)}
-                    className="flex items-center gap-1.5 rounded-xl border border-input bg-card px-3.5 py-1.5 text-xs font-semibold text-muted-foreground transition duration-150 hover:bg-muted hover:text-destructive shadow-sm"
+                    className="flex items-center gap-1.5 rounded-xl border border-input bg-card px-3 py-1.5 text-xs font-semibold text-muted-foreground transition duration-150 hover:bg-muted hover:text-destructive shadow-sm"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
-                    <span>انتقال به سطل زباله</span>
+                    <span className="hidden sm:inline">
+                      انتقال به سطل زباله
+                    </span>
                   </button>
                 )}
               </div>
 
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-mono">
-                <Clock className="h-3.5 w-3.5" />
-                <span>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground  shrink-0">
+                <Clock className="h-3.5 w-3.5 hidden sm:inline" />
+                <span className="text-[11px] sm:text-xs">
                   {selectedEmail.sentAt
                     ? new Date(selectedEmail.sentAt).toLocaleString("fa-IR", {
                         dateStyle: "medium",
                         timeStyle: "short",
                       })
-                    : new Date(selectedEmail.createdAt).toLocaleString("fa-IR", {
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                      })}
+                    : new Date(selectedEmail.createdAt).toLocaleString(
+                        "fa-IR",
+                        {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                        },
+                      )}
                 </span>
               </div>
             </div>
 
             {/* Email Metadata Card */}
-            <div className="border-b border-border/70 p-6 bg-card/30">
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground font-heading mb-4">
+            <div className="border-b border-border/70 p-4 sm:p-6 bg-card/30 shrink-0">
+              <h1 className="text-lg sm:text-2xl font-bold tracking-tight text-foreground font-heading mb-3 sm:mb-4">
                 {selectedEmail.subject || "(بدون موضوع)"}
               </h1>
 
               <div className="flex items-start justify-between gap-4">
-                <div className="flex items-start gap-3">
+                <div className="flex items-start gap-3 truncate">
                   {/* Sender Avatar */}
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary font-bold text-sm shrink-0 border border-primary/20">
-                    {(selectedEmail.fromName || selectedEmail.from).slice(0, 1).toUpperCase()}
+                  <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-primary/10 text-primary font-bold text-sm shrink-0 border border-primary/20">
+                    {(selectedEmail.fromName || selectedEmail.from)
+                      .slice(0, 1)
+                      .toUpperCase()}
                   </div>
 
-                  <div className="space-y-1 text-xs">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-foreground text-sm">
-                        {selectedEmail.fromName || selectedEmail.from.split("<")[0].replace(/"/g, "").trim() || "فرستنده"}
+                  <div className="space-y-1 text-xs truncate">
+                    <div className="flex items-center gap-2 truncate">
+                      <span className="font-semibold text-foreground text-xs sm:text-sm truncate">
+                        {selectedEmail.fromName ||
+                          selectedEmail.from
+                            .split("<")[0]
+                            .replace(/"/g, "")
+                            .trim() ||
+                          "فرستنده"}
                       </span>
-                      <span className="text-muted-foreground font-mono text-[11px]" dir="ltr">
-                        {selectedEmail.from.includes("<") ? selectedEmail.from.match(/<([^>]+)>/)?.[1] : selectedEmail.from}
+                      <span
+                        className="text-muted-foreground  text-[10px] sm:text-[11px] truncate"
+                        dir="ltr"
+                      >
+                        {selectedEmail.from.includes("<")
+                          ? selectedEmail.from.match(/<([^>]+)>/)?.[1]
+                          : selectedEmail.from}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
+                    <div className="flex items-center gap-2 text-muted-foreground truncate">
                       <span className="font-medium">به:</span>
-                      <span className="font-mono text-foreground/80 text-[11px]" dir="ltr">
+                      <span
+                        className=" text-foreground/80 text-[10px] sm:text-[11px] truncate"
+                        dir="ltr"
+                      >
                         {selectedEmail.to}
                       </span>
                     </div>
                     {selectedEmail.cc && (
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <span className="font-medium">رونوشت (CC):</span>
-                        <span className="font-mono text-muted-foreground text-[11px]" dir="ltr">
+                      <div className="flex items-center gap-2 text-muted-foreground truncate">
+                        <span className="font-medium">رونوشت:</span>
+                        <span
+                          className=" text-muted-foreground text-[10px] sm:text-[11px] truncate"
+                          dir="ltr"
+                        >
                           {selectedEmail.cc}
                         </span>
                       </div>
@@ -799,40 +1002,47 @@ export default function WebmailClient({
               </div>
 
               {/* Attachments Section */}
-              {Array.isArray(selectedEmail.attachments) && selectedEmail.attachments.length > 0 && (
-                <div className="mt-5 pt-4 border-t border-border/60">
-                  <div className="text-xs font-semibold text-foreground mb-2 flex items-center gap-1.5">
-                    <Paperclip className="h-3.5 w-3.5 text-primary" />
-                    <span>فایل‌های پیوست ({selectedEmail.attachments.length} فایل):</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2.5">
-                    {selectedEmail.attachments.map((att: AttachmentItem) => (
-                      <a
-                        key={att.id}
-                        href={att.url || "#"}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-center gap-2 rounded-xl border border-border/80 bg-card px-3.5 py-2 text-xs text-foreground transition hover:border-primary hover:bg-muted/50 shadow-sm"
-                      >
-                        <Paperclip className="h-3.5 w-3.5 text-primary shrink-0" />
-                        <span className="truncate max-w-[220px] font-mono text-[11px]" dir="ltr">
-                          {att.originalName || att.filename || "فایل پیوست"}
-                        </span>
-                        {att.filesize && (
-                          <span className="text-[10px] text-muted-foreground shrink-0">
-                            ({Math.round(att.filesize / 1024)} KB)
+              {Array.isArray(selectedEmail.attachments) &&
+                selectedEmail.attachments.length > 0 && (
+                  <div className="mt-4 pt-3 border-t border-border/60">
+                    <div className="text-xs font-semibold text-foreground mb-2 flex items-center gap-1.5">
+                      <Paperclip className="h-3.5 w-3.5 text-primary" />
+                      <span>
+                        فایل‌های پیوست ({selectedEmail.attachments.length}{" "}
+                        فایل):
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedEmail.attachments.map((att: AttachmentItem) => (
+                        <a
+                          key={att.id}
+                          href={att.url || "#"}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-2 rounded-xl border border-border/80 bg-card px-3 py-1.5 text-xs text-foreground transition hover:border-primary hover:bg-muted/50 shadow-sm"
+                        >
+                          <Paperclip className="h-3.5 w-3.5 text-primary shrink-0" />
+                          <span
+                            className="truncate max-w-[180px] sm:max-w-[220px]  text-[11px]"
+                            dir="ltr"
+                          >
+                            {att.originalName || att.filename || "فایل پیوست"}
                           </span>
-                        )}
-                        <ArrowUpRight className="h-3 w-3 text-muted-foreground" />
-                      </a>
-                    ))}
+                          {att.filesize && (
+                            <span className="text-[10px] text-muted-foreground shrink-0">
+                              ({Math.round(att.filesize / 1024)} KB)
+                            </span>
+                          )}
+                          <ArrowUpRight className="h-3 w-3 text-muted-foreground" />
+                        </a>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </div>
 
-            {/* Email Body Content - Rendered on Crisp Luxury White Paper Canvas */}
-            <div className="flex-1 overflow-auto p-6 bg-background">
+            {/* Email Body Content - Rendered on Crisp Luxury White Paper Canvas with Deep Dark Slate Text */}
+            <div className="flex-1 overflow-auto p-3 sm:p-6 bg-background">
               {resolvedContent.html ? (
                 <iframe
                   title="محتوای ایمیل"
@@ -878,7 +1088,7 @@ export default function WebmailClient({
                           font-family: 'Vazirmatn', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                           line-height: 1.8;
                           font-size: 15px;
-                          padding: 24px;
+                          padding: 20px;
                           margin: 0;
                           word-break: break-word;
                         }
@@ -910,7 +1120,7 @@ export default function WebmailClient({
               ) : (
                 <div
                   dir="auto"
-                  className="rounded-2xl border border-border/80 bg-white p-6 sm:p-8 text-[15px] leading-relaxed text-slate-900 whitespace-pre-wrap font-sans shadow-sm"
+                  className="min-h-full rounded-2xl border border-border/80 bg-white p-5 sm:p-8 text-[14.5px] sm:text-[15px] leading-relaxed text-slate-900 whitespace-pre-wrap font-sans shadow-sm"
                 >
                   {resolvedContent.text || "(این ایمیل حاوی متنی نیست)"}
                 </div>
@@ -922,172 +1132,206 @@ export default function WebmailClient({
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted/60 mb-4 border border-border/60">
               <Mail className="h-7 w-7 opacity-40 text-muted-foreground" />
             </div>
-            <h2 className="text-sm font-semibold text-foreground">یک پیام را جهت مشاهده انتخاب نمایید</h2>
+            <h2 className="text-sm font-semibold text-foreground">
+              یک پیام را جهت مشاهده انتخاب نمایید
+            </h2>
             <p className="mt-1 text-xs text-muted-foreground max-w-sm leading-relaxed">
-              تمامی مکاتبات سازمانی دریافت شده یا ارسال شده در این درگاه امن قابل مدیریت و پیگیری می‌باشند.
+              تمامی مکاتبات سازمانی دریافت شده یا ارسال شده در این درگاه امن
+              قابل مدیریت و پیگیری می‌باشند.
             </p>
           </div>
         )}
       </main>
 
       {/* =========================================================================
-          4. MODAL: Modern Compose / Reply Email Window (Luxury Dialog)
+          4. MODAL: Modern Compose / Reply Email Window (Responsive Full-screen on Mobile)
          ========================================================================= */}
       {isComposeOpen && (
         <div
           role="dialog"
           aria-modal="true"
           aria-labelledby="compose-dialog-title"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4 animate-in fade-in duration-200"
         >
-          <div className="relative w-full max-w-2xl rounded-2xl border border-border/80 bg-card p-6 shadow-2xl">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-border/70 pb-4">
-              <h2 id="compose-dialog-title" className="text-base font-bold text-foreground font-heading">
-                {replyingToId ? "پاسخ به پیام" : "نگارش پیام جدید"}
-              </h2>
-              <button
-                onClick={() => setIsComposeOpen(false)}
-                aria-label="بستن پنجره نگارش پیام"
-                className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          <div className="relative w-full max-w-2xl h-full sm:h-auto sm:max-h-[90vh] overflow-y-auto rounded-none sm:rounded-2xl border border-border/80 bg-card p-5 sm:p-6 shadow-2xl flex flex-col justify-between">
+            <div>
+              {/* Modal Header */}
+              <div className="flex items-center justify-between border-b border-border/70 pb-4">
+                <h2
+                  id="compose-dialog-title"
+                  className="text-base font-bold text-foreground font-heading"
+                >
+                  {replyingToId ? "پاسخ به پیام" : "نگارش پیام جدید"}
+                </h2>
+                <button
+                  onClick={() => setIsComposeOpen(false)}
+                  aria-label="بستن پنجره نگارش پیام"
+                  className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Status Alert */}
+              {composeStatus.message && (
+                <div
+                  role="alert"
+                  className={`mt-4 flex items-center gap-2 rounded-xl p-3 text-xs font-semibold ${
+                    composeStatus.type === "error"
+                      ? "border border-destructive/30 bg-destructive/10 text-destructive"
+                      : composeStatus.type === "success"
+                        ? "border border-emerald-500/30 bg-emerald-500/10 text-emerald-500"
+                        : "border border-primary/30 bg-primary/10 text-primary"
+                  }`}
+                >
+                  {composeStatus.type === "error" && (
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                  )}
+                  {composeStatus.type === "success" && (
+                    <CheckCircle2 className="h-4 w-4 shrink-0" />
+                  )}
+                  {composeStatus.type === "loading" && (
+                    <RefreshCw className="h-4 w-4 animate-spin shrink-0" />
+                  )}
+                  <span>{composeStatus.message}</span>
+                </div>
+              )}
+
+              {/* Compose Form */}
+              <form
+                id="compose-email-form"
+                onSubmit={handleSendEmail}
+                className="mt-4 space-y-4"
               >
-                <X className="h-5 w-5" />
-              </button>
+                {/* Sender Select */}
+                <div className="space-y-1.5">
+                  <label
+                    htmlFor="compose-from-select"
+                    className="block text-xs font-semibold text-muted-foreground"
+                  >
+                    ارسال از طرف:
+                  </label>
+                  {session.role === "admin" ? (
+                    <select
+                      id="compose-from-select"
+                      value={composeFromId}
+                      onChange={(e) => setComposeFromId(Number(e.target.value))}
+                      className="w-full rounded-xl border border-input bg-background/80 py-2 px-3 text-xs text-foreground outline-none transition focus:border-primary font-sans"
+                    >
+                      {mailboxes.map((mb) => (
+                        <option key={mb.id} value={mb.id}>
+                          {mb.name} &lt;{mb.address}&gt;
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      disabled
+                      value={`${session.name} <${session.address}>`}
+                      className="w-full rounded-xl border border-input bg-muted/40 py-2 px-3 text-xs text-muted-foreground outline-none font-sans"
+                    />
+                  )}
+                </div>
+
+                {/* Recipient */}
+                <div className="space-y-1.5">
+                  <label
+                    htmlFor="compose-to-input"
+                    className="block text-xs font-semibold text-muted-foreground"
+                  >
+                    گیرنده (To):
+                  </label>
+                  <input
+                    id="compose-to-input"
+                    type="email"
+                    required
+                    placeholder="recipient@example.com"
+                    value={composeTo}
+                    onChange={(e) => setComposeTo(e.target.value)}
+                    dir="ltr"
+                    className="w-full rounded-xl border border-input bg-background/80 py-2 px-3 text-xs text-foreground placeholder:text-muted-foreground outline-none transition focus:border-primary font-sans"
+                  />
+                </div>
+
+                {/* CC */}
+                <div className="space-y-1.5">
+                  <label
+                    htmlFor="compose-cc-input"
+                    className="block text-xs font-semibold text-muted-foreground"
+                  >
+                    رونوشت (CC - اختیاری):
+                  </label>
+                  <input
+                    id="compose-cc-input"
+                    type="text"
+                    placeholder="cc@example.com"
+                    value={composeCc}
+                    onChange={(e) => setComposeCc(e.target.value)}
+                    dir="ltr"
+                    className="w-full rounded-xl border border-input bg-background/80 py-2 px-3 text-xs text-foreground placeholder:text-muted-foreground outline-none transition focus:border-primary font-sans"
+                  />
+                </div>
+
+                {/* Subject */}
+                <div className="space-y-1.5">
+                  <label
+                    htmlFor="compose-subject-input"
+                    className="block text-xs font-semibold text-muted-foreground"
+                  >
+                    موضوع پیام:
+                  </label>
+                  <input
+                    id="compose-subject-input"
+                    type="text"
+                    required
+                    placeholder="موضوع نامه..."
+                    value={composeSubject}
+                    onChange={(e) => setComposeSubject(e.target.value)}
+                    className="w-full rounded-xl border border-input bg-background/80 py-2 px-3 text-xs text-foreground placeholder:text-muted-foreground outline-none transition focus:border-primary font-sans"
+                  />
+                </div>
+
+                {/* Body */}
+                <div className="space-y-1.5">
+                  <label
+                    htmlFor="compose-body-textarea"
+                    className="block text-xs font-semibold text-muted-foreground"
+                  >
+                    متن پیام:
+                  </label>
+                  <textarea
+                    id="compose-body-textarea"
+                    rows={7}
+                    required
+                    placeholder="متن پیام خود را بنویسید..."
+                    value={composeBody}
+                    onChange={(e) => setComposeBody(e.target.value)}
+                    className="w-full rounded-xl border border-input bg-background/80 p-3 text-xs text-foreground placeholder:text-muted-foreground outline-none transition focus:border-primary font-sans leading-relaxed resize-none"
+                  />
+                </div>
+              </form>
             </div>
 
-            {/* Status Alert */}
-            {composeStatus.message && (
-              <div
-                role="alert"
-                className={`mt-4 flex items-center gap-2 rounded-xl p-3 text-xs font-semibold ${
-                  composeStatus.type === "error"
-                    ? "border border-destructive/30 bg-destructive/10 text-destructive"
-                    : composeStatus.type === "success"
-                    ? "border border-emerald-500/30 bg-emerald-500/10 text-emerald-500"
-                    : "border border-primary/30 bg-primary/10 text-primary"
-                }`}
+            {/* Actions Toolbar */}
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-border/70 mt-4">
+              <button
+                type="button"
+                onClick={() => setIsComposeOpen(false)}
+                className="rounded-xl border border-input bg-background px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted transition-colors"
               >
-                {composeStatus.type === "error" && <AlertCircle className="h-4 w-4 shrink-0" />}
-                {composeStatus.type === "success" && <CheckCircle2 className="h-4 w-4 shrink-0" />}
-                {composeStatus.type === "loading" && <RefreshCw className="h-4 w-4 animate-spin shrink-0" />}
-                <span>{composeStatus.message}</span>
-              </div>
-            )}
-
-            {/* Compose Form */}
-            <form onSubmit={handleSendEmail} className="mt-4 space-y-4">
-              {/* Sender Select */}
-              <div className="space-y-1.5">
-                <label htmlFor="compose-from-select" className="block text-xs font-semibold text-muted-foreground">
-                  ارسال از طرف:
-                </label>
-                {session.role === "admin" ? (
-                  <select
-                    id="compose-from-select"
-                    value={composeFromId}
-                    onChange={(e) => setComposeFromId(Number(e.target.value))}
-                    className="w-full rounded-xl border border-input bg-background/80 py-2.5 px-3 text-xs text-foreground outline-none transition focus:border-primary font-sans"
-                  >
-                    {mailboxes.map((mb) => (
-                      <option key={mb.id} value={mb.id}>
-                        {mb.name} &lt;{mb.address}&gt;
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    type="text"
-                    disabled
-                    value={`${session.name} <${session.address}>`}
-                    className="w-full rounded-xl border border-input bg-muted/40 py-2.5 px-3 text-xs text-muted-foreground outline-none font-sans"
-                  />
-                )}
-              </div>
-
-              {/* Recipient */}
-              <div className="space-y-1.5">
-                <label htmlFor="compose-to-input" className="block text-xs font-semibold text-muted-foreground">
-                  گیرنده (To):
-                </label>
-                <input
-                  id="compose-to-input"
-                  type="email"
-                  required
-                  placeholder="recipient@example.com"
-                  value={composeTo}
-                  onChange={(e) => setComposeTo(e.target.value)}
-                  dir="ltr"
-                  className="w-full rounded-xl border border-input bg-background/80 py-2.5 px-3 text-xs text-foreground placeholder:text-muted-foreground outline-none transition focus:border-primary font-sans"
-                />
-              </div>
-
-              {/* CC */}
-              <div className="space-y-1.5">
-                <label htmlFor="compose-cc-input" className="block text-xs font-semibold text-muted-foreground">
-                  رونوشت (CC - اختیاری):
-                </label>
-                <input
-                  id="compose-cc-input"
-                  type="text"
-                  placeholder="cc@example.com"
-                  value={composeCc}
-                  onChange={(e) => setComposeCc(e.target.value)}
-                  dir="ltr"
-                  className="w-full rounded-xl border border-input bg-background/80 py-2.5 px-3 text-xs text-foreground placeholder:text-muted-foreground outline-none transition focus:border-primary font-sans"
-                />
-              </div>
-
-              {/* Subject */}
-              <div className="space-y-1.5">
-                <label htmlFor="compose-subject-input" className="block text-xs font-semibold text-muted-foreground">
-                  موضوع پیام:
-                </label>
-                <input
-                  id="compose-subject-input"
-                  type="text"
-                  required
-                  placeholder="موضوع نامه..."
-                  value={composeSubject}
-                  onChange={(e) => setComposeSubject(e.target.value)}
-                  className="w-full rounded-xl border border-input bg-background/80 py-2.5 px-3 text-xs text-foreground placeholder:text-muted-foreground outline-none transition focus:border-primary font-sans"
-                />
-              </div>
-
-              {/* Body */}
-              <div className="space-y-1.5">
-                <label htmlFor="compose-body-textarea" className="block text-xs font-semibold text-muted-foreground">
-                  متن پیام:
-                </label>
-                <textarea
-                  id="compose-body-textarea"
-                  rows={8}
-                  required
-                  placeholder="متن پیام خود را بنویسید..."
-                  value={composeBody}
-                  onChange={(e) => setComposeBody(e.target.value)}
-                  className="w-full rounded-xl border border-input bg-background/80 p-3 text-xs text-foreground placeholder:text-muted-foreground outline-none transition focus:border-primary font-sans leading-relaxed resize-none"
-                />
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-border/70">
-                <button
-                  type="button"
-                  onClick={() => setIsComposeOpen(false)}
-                  className="rounded-xl border border-input bg-background px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted transition-colors"
-                >
-                  انصراف
-                </button>
-                <button
-                  type="submit"
-                  disabled={composeStatus.type === "loading"}
-                  className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2 text-xs font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-50"
-                >
-                  <Send className="h-3.5 w-3.5" />
-                  <span>ارسال پیام</span>
-                </button>
-              </div>
-            </form>
+                انصراف
+              </button>
+              <button
+                type="submit"
+                form="compose-email-form"
+                disabled={composeStatus.type === "loading"}
+                className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2 text-xs font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-50"
+              >
+                <Send className="h-3.5 w-3.5" />
+                <span>ارسال پیام</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -226,7 +226,7 @@ export const InspirationCard: React.FC<{ item: InspirationItemDTO }> = ({
                               {spot.productTitle}
                             </h4>
                             {spot.productCode && (
-                              <span className="text-[10px] text-primary font-mono tracking-wider bg-primary/10 px-1.5 py-0.5 border border-primary/30 shrink-0">
+                              <span className="text-[10px] text-primary tracking-wider bg-primary/10 px-1.5 py-0.5 border border-primary/30 shrink-0">
                                 {spot.productCode}
                               </span>
                             )}
