@@ -178,13 +178,13 @@ export function parseAndCleanMime(raw: string, contentTypeHeader?: string): Pars
 export function stripMimeHeadersAndDelimiters(content: string): string {
   if (!content) return "";
   return content
-    .replace(/^--[a-zA-Z0-9'()+_,-./:=?]{6,}(?:--)?$/gm, "") // Strip boundary markers
-    .replace(/^Content-Type:.*$/gim, "")                     // Strip Content-Type lines
-    .replace(/^Content-Transfer-Encoding:.*$/gim, "")        // Strip Content-Transfer-Encoding
-    .replace(/^Content-Disposition:.*$/gim, "")             // Strip Content-Disposition
-    .replace(/^Content-ID:.*$/gim, "")                      // Strip Content-ID
-    .replace(/^charset=.*$/gim, "")                          // Strip loose charset tokens
-    .replace(/^\s*[\r\n]/gm, "\n")                           // Collapse redundant blank lines
+    .replace(/^>*[\t ]*--[a-zA-Z0-9'()+_,-./:=?]{6,}(?:--)?[\t ]*$/gm, "") // Strip boundary markers (including quoted > --)
+    .replace(/^>*[\t ]*Content-Type:.*$/gim, "")                          // Strip Content-Type lines
+    .replace(/^>*[\t ]*Content-Transfer-Encoding:.*$/gim, "")             // Strip Content-Transfer-Encoding
+    .replace(/^>*[\t ]*Content-Disposition:.*$/gim, "")                   // Strip Content-Disposition
+    .replace(/^>*[\t ]*Content-ID:.*$/gim, "")                            // Strip Content-ID
+    .replace(/^>*[\t ]*charset=.*$/gim, "")                               // Strip loose charset tokens
+    .replace(/^\s*[\r\n]{3,}/gm, "\n\n")                                  // Collapse redundant blank lines
     .trim();
 }
 

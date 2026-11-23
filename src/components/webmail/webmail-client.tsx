@@ -166,22 +166,30 @@ export default function WebmailClient({
   const resolvedContent = useMemo(() => {
     if (!selectedEmail) return { html: null, text: "" };
 
-    // 1. If clean HTML exists, use it
+    // 1. If it's an outbound email, it's clean plain text created in our composer
+    if (selectedEmail.direction === "outbound") {
+      return {
+        html: null,
+        text: stripMimeHeadersAndDelimiters(selectedEmail.bodyText || ""),
+      };
+    }
+
+    // 2. If clean HTML exists, use it
     if (selectedEmail.bodyHtml && selectedEmail.bodyHtml.trim()) {
       return { html: selectedEmail.bodyHtml, text: "" };
     }
 
-    // 2. If bodyText contains raw MIME boundaries, unpack dynamically
+    // 3. If bodyText contains raw MIME boundaries, unpack dynamically
     const rawText = selectedEmail.bodyText || "";
     if (isRawMimeMultipart(rawText)) {
       const parsed = parseAndCleanMime(rawText);
       if (parsed.html) {
         return { html: parsed.html, text: "" };
       }
-      return { html: null, text: parsed.text };
+      return { html: null, text: stripMimeHeadersAndDelimiters(parsed.text) };
     }
 
-    // 3. Normal clean text
+    // 4. Normal clean text
     return {
       html: null,
       text: stripMimeHeadersAndDelimiters(rawText),
@@ -823,7 +831,7 @@ export default function WebmailClient({
               )}
             </div>
 
-            {/* Email Body Content - Rendered with High-Security Isolation */}
+            {/* Email Body Content - Rendered on Crisp Luxury White Paper Canvas */}
             <div className="flex-1 overflow-auto p-6 bg-background">
               {resolvedContent.html ? (
                 <iframe
@@ -864,38 +872,45 @@ export default function WebmailClient({
                           font-style: normal;
                           font-display: swap;
                         }
-                        body {
+                        html, body {
+                          background-color: #ffffff !important;
+                          color: #0f172a !important;
                           font-family: 'Vazirmatn', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                          color: #f1f3f7;
-                          background: transparent;
                           line-height: 1.8;
-                          font-size: 14.5px;
-                          padding: 20px;
+                          font-size: 15px;
+                          padding: 24px;
                           margin: 0;
                           word-break: break-word;
                         }
-                        a { color: #f43f5e; text-decoration: underline; }
+                        p, div, span, td, th, li {
+                          color: inherit;
+                        }
+                        a { color: #9b0737 !important; text-decoration: underline; }
                         img { max-width: 100%; height: auto; border-radius: 8px; }
                         blockquote {
-                          border-inline-start: 3px solid rgba(155, 7, 55, 0.5);
+                          border-inline-start: 3px solid #cbd5e1;
                           padding-inline-start: 14px;
                           margin-inline-start: 0;
-                          opacity: 0.85;
+                          color: #475569 !important;
+                          background-color: #f8fafc;
+                          padding-top: 6px;
+                          padding-bottom: 6px;
+                          border-radius: 0 4px 4px 0;
                         }
                         p { margin-top: 0; margin-bottom: 1em; }
                         table { border-collapse: collapse; max-width: 100%; }
-                        td, th { padding: 8px 12px; border: 1px solid rgba(255,255,255,0.1); }
+                        td, th { padding: 8px 12px; border: 1px solid #e2e8f0; }
                       </style>
                     </head>
                     <body>${resolvedContent.html}</body>
                     </html>
                   `}
-                  className="h-full w-full rounded-2xl border border-border/80 bg-card/60 shadow-inner"
+                  className="h-full w-full rounded-2xl border border-border/80 bg-white shadow-sm"
                 />
               ) : (
                 <div
                   dir="auto"
-                  className="rounded-2xl border border-border/80 bg-card/60 p-6 text-sm leading-relaxed text-foreground whitespace-pre-wrap font-sans"
+                  className="rounded-2xl border border-border/80 bg-white p-6 sm:p-8 text-[15px] leading-relaxed text-slate-900 whitespace-pre-wrap font-sans shadow-sm"
                 >
                   {resolvedContent.text || "(این ایمیل حاوی متنی نیست)"}
                 </div>
