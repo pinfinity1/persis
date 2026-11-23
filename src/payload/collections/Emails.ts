@@ -2,9 +2,13 @@ import type { CollectionConfig } from "payload";
 
 export const Emails: CollectionConfig = {
   slug: "emails",
+  labels: {
+    singular: "Email Message",
+    plural: "Email Messages",
+  },
   admin: {
     useAsTitle: "subject",
-    group: "سامانه ایمیل",
+    group: "Communications",
     defaultColumns: [
       "subject",
       "from",
@@ -15,7 +19,7 @@ export const Emails: CollectionConfig = {
       "isRead",
       "createdAt",
     ],
-    description: "پیام‌های دریافتی و ارسالی کاربران و دپارتمان‌های مختلف",
+    description: "Inbound and outbound corporate email messages and audit log",
   },
   access: {
     create: () => true, // Allowed for webhook and server actions

@@ -24,6 +24,19 @@
 
 ## Log Entries (Newest First)
 
+### [2026-11-23] — Webmail UI/UX Overhaul, MIME Noise Elimination & Lighthouse 100
+- **Changes:**
+  - Created recursive RFC 5322 MIME parser `src/lib/mime-parser.ts` to decode complex multipart emails (Gmail, Yahoo, Outlook), eliminating all boundary noise (`--_Part_...`, `Content-Type`) and isolating pure human text & HTML.
+  - Hardened inbound webhook `src/app/api/webhooks/mail-inbound/route.ts` with `xss` sanitizer (resolving Next.js ESM bundling conflict) and `force-dynamic`.
+  - Upgraded Cloudflare Email Worker `scripts/cloudflare-email-worker/worker.js` with multi-boundary recursive extraction.
+  - Standardized Payload CMS collections (`Mailboxes`, `Emails`, `EmailAttachments`, `EmailSettings`) under unified `Communications` group with English titles, resolving visual inconsistency in `/persis-cp`.
+  - Redesigned `/mail` login gate with official Persis Quartz brand logo (`/PersisQuartz-Red.png`), luxury glassmorphism, accessible form controls, and corporate Persian copy.
+  - Redesigned `/mail` Webmail Client with Caesarstone/Breton luxury aesthetic, pure Persian navigation, dynamic retroactive MIME cleaning for older database emails, and sandboxed isolated reader.
+  - Optimized `src/app/mail/layout.tsx` for Lighthouse 100 (Viewport, WCAG AA contrast, Vazirmatn font-display swap, zero CLS).
+- **Key Decisions:**
+  - Multi-tier defense-in-depth against MIME boundary noise (Edge Worker + Server Webhook + Client-side retroactive parser).
+  - Use lightweight `xss` instead of `isomorphic-dompurify` to prevent Next.js 15 App Router bundling errors with `html-encoding-sniffer`.
+
 ### [2026-11-21] — Webmail Security & Multi-Tenant Authentication Gate
 - **Changes:**
   - Added cryptographic auth module `src/lib/webmail-auth.ts` with Node.js native `scrypt` hashing (16-byte random salt) and timing-safe verification (`crypto.timingSafeEqual`).

@@ -5,11 +5,15 @@ import { escape } from "html-escaper";
 
 export const Mailboxes: CollectionConfig = {
   slug: "mailboxes",
+  labels: {
+    singular: "Corporate Mailbox",
+    plural: "Corporate Mailboxes",
+  },
   admin: {
     useAsTitle: "address",
-    group: "سامانه ایمیل",
+    group: "Communications",
     defaultColumns: ["name", "address", "forwardTo", "isActive", "isCatchAll", "updatedAt"],
-    description: "مدیریت آدرس‌ها و اینباکس‌های رسمی شرکت (مانند info@persisquartz.com)",
+    description: "Enterprise mailboxes and official company routing (e.g. info@persisquartz.com)",
   },
   access: {
     create: ({ req: { user } }) => Boolean(user),

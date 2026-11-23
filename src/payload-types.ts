@@ -639,7 +639,7 @@ export interface Inspiration {
   createdAt: string;
 }
 /**
- * مدیریت آدرس‌ها و اینباکس‌های رسمی شرکت (مانند info@persisquartz.com)
+ * Enterprise mailboxes and official company routing (e.g. info@persisquartz.com)
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "mailboxes".
@@ -679,7 +679,7 @@ export interface Mailbox {
   createdAt: string;
 }
 /**
- * پیام‌های دریافتی و ارسالی کاربران و دپارتمان‌های مختلف
+ * Inbound and outbound corporate email messages and audit log
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "emails".
@@ -712,7 +712,7 @@ export interface Email {
   createdAt: string;
 }
 /**
- * فایل‌های ضمیمه ارسالی یا دریافتی از طریق سامانه ایمیل سازمانی
+ * Inbound and outbound email attachments stored in S3 object storage
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "email-attachments".
@@ -1607,7 +1607,7 @@ export interface ContactPage {
   createdAt?: string | null;
 }
 /**
- * مدیریت قالب‌های پاسخ خودکار به مشتریان و نوتیفیکیشن‌های فرم‌های تماس
+ * Global email dispatch configuration, customer auto-replies, and notification templates
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "email-settings".

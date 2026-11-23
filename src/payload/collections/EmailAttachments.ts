@@ -9,11 +9,15 @@ export const EmailAttachments: CollectionConfig = {
     update: ({ req: { user } }) => Boolean(user),
     delete: ({ req: { user } }) => Boolean(user),
   },
+  labels: {
+    singular: "Email Attachment",
+    plural: "Email Attachments",
+  },
   admin: {
     useAsTitle: "filename",
-    group: "سامانه ایمیل",
+    group: "Communications",
     defaultColumns: ["filename", "mimeType", "filesize", "createdAt"],
-    description: "فایل‌های ضمیمه ارسالی یا دریافتی از طریق سامانه ایمیل سازمانی",
+    description: "Inbound and outbound email attachments stored in S3 object storage",
   },
   upload: {
     crop: false,

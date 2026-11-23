@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
-import DOMPurify from "isomorphic-dompurify";
+import xss from "xss";
 import { getPayload } from "payload";
 import configPromise from "@/payload.config";
 import { transporter } from "@/lib/email";
 import { escape } from "html-escaper";
+import {
+  parseAndCleanMime,
+  isRawMimeMultipart,
+  stripMimeHeadersAndDelimiters,
+} from "@/lib/mime-parser";
+
+export const dynamic = "force-dynamic";
 
 interface InboundAttachmentPayload {
   filename: string;
@@ -177,13 +184,24 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 4. Sanitize HTML (DOMPurify protection against XSS)
+    // 4. Robust MIME Parsing & Extraction (Eliminates raw MIME boundaries)
+    let cleanText = data.text || "";
+    let cleanHtml = data.html || "";
+
+    if (isRawMimeMultipart(cleanText) || (!cleanHtml && cleanText.includes("Content-Type:"))) {
+      const parsed = parseAndCleanMime(cleanText);
+      if (parsed.text) cleanText = parsed.text;
+      if (parsed.html && !cleanHtml) cleanHtml = parsed.html;
+    }
+
+    cleanText = stripMimeHeadersAndDelimiters(cleanText);
+
+    // Sanitize HTML against XSS
     let sanitizedHtml: string | undefined = undefined;
-    if (data.html) {
-      sanitizedHtml = DOMPurify.sanitize(data.html, {
-        FORBID_TAGS: ["script", "iframe", "object", "embed", "applet", "base"],
-        FORBID_ATTR: ["onerror", "onload", "onclick", "onmouseover", "onfocus", "onblur"],
-        ALLOW_DATA_ATTR: false,
+    if (cleanHtml) {
+      sanitizedHtml = xss(cleanHtml, {
+        stripIgnoreTag: true,
+        stripIgnoreTagBody: ["script", "iframe", "object", "embed", "applet", "base"],
       });
     }
 
@@ -201,7 +219,7 @@ export async function POST(req: NextRequest) {
         cc: data.cc || undefined,
         bcc: data.bcc || undefined,
         replyTo: data.replyTo || undefined,
-        bodyText: data.text || "",
+        bodyText: cleanText,
         bodyHtml: sanitizedHtml || undefined,
         messageId: data.messageId || `<${Date.now()}.${crypto.randomBytes(6).toString("hex")}@persisquartz.com>`,
         inReplyTo: data.inReplyTo || undefined,
@@ -220,7 +238,7 @@ export async function POST(req: NextRequest) {
       try {
         const personalEmail = matchedMailbox.forwardTo.trim();
         const safeSubject = escape(data.subject || "(بدون موضوع)");
-        const safeSnippet = escape((data.text || "").slice(0, 350));
+        const safeSnippet = escape(cleanText.slice(0, 350));
 
         await transporter.sendMail({
           from: process.env.SMTP_FROM || `"Persis Quartz Mail" <info@persisquartz.com>`,

@@ -3,10 +3,10 @@ import type { GlobalConfig } from "payload";
 
 export const EmailSettings: GlobalConfig = {
   slug: "email-settings",
-  label: "تنظیمات و قالب‌های ایمیل",
+  label: "Email Settings",
   admin: {
-    group: "سامانه ایمیل",
-    description: "مدیریت قالب‌های پاسخ خودکار به مشتریان و نوتیفیکیشن‌های فرم‌های تماس",
+    group: "Communications",
+    description: "Global email dispatch configuration, customer auto-replies, and notification templates",
   },
   access: {
     read: () => true,

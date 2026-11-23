@@ -3,11 +3,13 @@
  * Standalone Cloudflare Email Worker for Persis Quartz (Zero-Dependency)
  * 
  * Works 100% natively in the Cloudflare Dashboard web editor without any npm packages.
+ * High-performance, RFC 5322 recursive MIME parser for Gmail, Yahoo, Outlook & Apple Mail.
  */
 
 function decodeBase64Utf8(b64) {
   try {
-    const binary = atob(b64.replace(/\s/g, ""));
+    const cleanB64 = b64.replace(/[\r\n\s]/g, "");
+    const binary = atob(cleanB64);
     const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
     return new TextDecoder("utf-8").decode(bytes);
   } catch {
@@ -48,60 +50,101 @@ function decodeMimeWord(str) {
   });
 }
 
+function stripMimeNoise(str) {
+  if (!str) return "";
+  return str
+    .replace(/^--[a-zA-Z0-9'()+_,-./:=?]{6,}(?:--)?$/gm, "")
+    .replace(/^Content-Type:.*$/gim, "")
+    .replace(/^Content-Transfer-Encoding:.*$/gim, "")
+    .replace(/^Content-Disposition:.*$/gim, "")
+    .replace(/^charset=.*$/gim, "")
+    .replace(/^\s*[\r\n]/gm, "\n")
+    .trim();
+}
+
 function parseMimeBody(rawText, contentTypeHeader) {
   let text = "";
   let html = "";
   const attachments = [];
 
-  const boundaryMatch = contentTypeHeader?.match(/boundary="?([^";\s]+)"?/i);
+  // Find boundaries from header and auto-detect from body lines
+  const boundaries = [];
+  const headerMatch = contentTypeHeader?.match(/boundary="?([^";\s\r\n]+)"?/i);
+  if (headerMatch && headerMatch[1]) {
+    boundaries.push(headerMatch[1].trim());
+  }
 
-  if (boundaryMatch) {
-    const boundary = boundaryMatch[1];
-    const parts = rawText.split(new RegExp(`--${boundary}(?:--)?`));
-
-    for (const part of parts) {
-      const trimmed = part.trim();
-      if (!trimmed || trimmed === "--") continue;
-
-      const delimiter = trimmed.includes("\r\n\r\n") ? "\r\n\r\n" : "\n\n";
-      const splitIdx = trimmed.indexOf(delimiter);
-      if (splitIdx === -1) continue;
-
-      const partHeaders = trimmed.substring(0, splitIdx);
-      let partBody = trimmed.substring(splitIdx + delimiter.length);
-
-      const partContentType = (partHeaders.match(/Content-Type:\s*([^;\r\n]+)/i) || [])[1]?.toLowerCase() || "";
-      const transferEncoding = (partHeaders.match(/Content-Transfer-Encoding:\s*([^\r\n]+)/i) || [])[1]?.toLowerCase().trim();
-      const disposition = (partHeaders.match(/Content-Disposition:\s*([^\r\n]+)/i) || [])[1]?.toLowerCase() || "";
-      const filenameMatch = partHeaders.match(/filename="?([^";\r\n]+)"?/i) || partHeaders.match(/name="?([^";\r\n]+)"?/i);
-
-      if (disposition.includes("attachment") || filenameMatch) {
-        const filename = filenameMatch ? decodeMimeWord(filenameMatch[1]) : "attachment";
-        const contentBase64 = transferEncoding === "base64" ? partBody.replace(/\s/g, "") : btoa(partBody);
-        attachments.push({
-          filename,
-          mimeType: partContentType || "application/octet-stream",
-          contentBase64,
-        });
-      } else if (partContentType.includes("text/html")) {
-        if (transferEncoding === "base64") {
-          html = decodeBase64Utf8(partBody);
-        } else if (transferEncoding === "quoted-printable") {
-          html = decodeQuotedPrintable(partBody);
-        } else {
-          html = partBody;
-        }
-      } else if (partContentType.includes("text/plain")) {
-        if (transferEncoding === "base64") {
-          text = decodeBase64Utf8(partBody);
-        } else if (transferEncoding === "quoted-printable") {
-          text = decodeQuotedPrintable(partBody);
-        } else {
-          text = partBody;
-        }
+  const detectedLines = rawText.match(/^--([a-zA-Z0-9'()+_,-./:=?]{8,})(?:--)?$/gm);
+  if (detectedLines) {
+    for (const line of detectedLines) {
+      const bToken = line.replace(/^--/, "").replace(/--$/, "").trim();
+      if (bToken && !boundaries.includes(bToken)) {
+        boundaries.push(bToken);
       }
     }
-  } else {
+  }
+
+  if (boundaries.length > 0) {
+    for (const boundary of boundaries) {
+      const escaped = boundary.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const parts = rawText.split(new RegExp(`--${escaped}(?:--)?`));
+
+      for (const part of parts) {
+        const trimmed = part.trim();
+        if (!trimmed || trimmed === "--") continue;
+
+        const delimiter = trimmed.includes("\r\n\r\n") ? "\r\n\r\n" : "\n\n";
+        const splitIdx = trimmed.indexOf(delimiter);
+
+        let partHeaders = "";
+        let partBody = trimmed;
+
+        if (splitIdx !== -1) {
+          partHeaders = trimmed.substring(0, splitIdx);
+          partBody = trimmed.substring(splitIdx + delimiter.length);
+        }
+
+        const partContentType = (partHeaders.match(/Content-Type:\s*([^;\r\n]+)/i) || [])[1]?.toLowerCase() || "";
+        const transferEncoding = (partHeaders.match(/Content-Transfer-Encoding:\s*([^\r\n]+)/i) || [])[1]?.toLowerCase().trim();
+        const disposition = (partHeaders.match(/Content-Disposition:\s*([^\r\n]+)/i) || [])[1]?.toLowerCase() || "";
+        const filenameMatch = partHeaders.match(/filename="?([^";\r\n]+)"?/i) || partHeaders.match(/name="?([^";\r\n]+)"?/i);
+
+        // Check if this part itself is a nested multipart (e.g. multipart/alternative inside multipart/mixed)
+        if (partContentType.includes("multipart/")) {
+          const nested = parseMimeBody(partBody, partHeaders);
+          if (nested.text && !text) text = nested.text;
+          if (nested.html && !html) html = nested.html;
+          if (nested.attachments?.length) attachments.push(...nested.attachments);
+          continue;
+        }
+
+        if (disposition.includes("attachment") || filenameMatch) {
+          const filename = filenameMatch ? decodeMimeWord(filenameMatch[1]) : "attachment";
+          const contentBase64 = transferEncoding === "base64" ? partBody.replace(/\s/g, "") : btoa(partBody);
+          attachments.push({
+            filename,
+            mimeType: partContentType || "application/octet-stream",
+            contentBase64,
+          });
+        } else if (partContentType.includes("text/html")) {
+          let decoded = partBody;
+          if (transferEncoding === "base64") decoded = decodeBase64Utf8(partBody);
+          else if (transferEncoding === "quoted-printable") decoded = decodeQuotedPrintable(partBody);
+          if (!html) html = decoded;
+        } else if (partContentType.includes("text/plain")) {
+          let decoded = partBody;
+          if (transferEncoding === "base64") decoded = decodeBase64Utf8(partBody);
+          else if (transferEncoding === "quoted-printable") decoded = decodeQuotedPrintable(partBody);
+          if (!text) text = decoded;
+        }
+      }
+
+      if (text || html) break;
+    }
+  }
+
+  // Fallback for non-multipart bodies
+  if (!text && !html) {
     const transferEncoding = (contentTypeHeader?.match(/Content-Transfer-Encoding:\s*([^\r\n]+)/i) || [])[1]?.toLowerCase().trim();
     if (contentTypeHeader?.includes("text/html")) {
       html = transferEncoding === "base64" ? decodeBase64Utf8(rawText) : transferEncoding === "quoted-printable" ? decodeQuotedPrintable(rawText) : rawText;
@@ -110,7 +153,11 @@ function parseMimeBody(rawText, contentTypeHeader) {
     }
   }
 
-  return { text: text.trim(), html: html.trim(), attachments };
+  return {
+    text: stripMimeNoise(text),
+    html: html.trim(),
+    attachments,
+  };
 }
 
 async function generateHmac(message, secret) {
@@ -123,60 +170,68 @@ async function generateHmac(message, secret) {
     ["sign"]
   );
   const signature = await crypto.subtle.sign("HMAC", key, enc.encode(message));
-  return Array.from(new Uint8Array(signature))
+  const hex = Array.from(new Uint8Array(signature))
     .map(b => b.toString(16).padStart(2, "0"))
     .join("");
+  return hex;
 }
 
-const worker = {
+const emailWorker = {
   async email(message, env) {
     try {
-      const rawText = await new Response(message.raw).text();
-      const delimiter = rawText.includes("\r\n\r\n") ? "\r\n\r\n" : "\n\n";
-      const splitIdx = rawText.indexOf(delimiter);
-      const headerPart = splitIdx !== -1 ? rawText.substring(0, splitIdx) : "";
-      const bodyPart = splitIdx !== -1 ? rawText.substring(splitIdx + delimiter.length) : rawText;
+      const webhookUrl = env.WEBHOOK_URL || "https://persisquartz.com/api/webhooks/mail-inbound";
+      const webhookSecret = env.EMAIL_WEBHOOK_SECRET || "persisquartz-email-webhook-secret-change-in-prod";
 
-      const contentTypeHeader = (headerPart.match(/Content-Type:\s*([^\r\n]+)/i) || [])[1] || "";
-      const { text, html, attachments } = parseMimeBody(bodyPart, contentTypeHeader);
+      const rawStream = message.raw;
+      const rawBuffer = await new Response(rawStream).arrayBuffer();
+      const rawBytes = new Uint8Array(rawBuffer);
+      const rawText = new TextDecoder("utf-8").decode(rawBytes);
+
+      const headers = message.headers;
+      const contentTypeHeader = headers.get("content-type") || "";
+
+      const parsed = parseMimeBody(rawText, contentTypeHeader);
 
       const payload = {
-        messageId: message.headers.get("message-id") || `<${Date.now()}@persisquartz.com>`,
+        messageId: headers.get("message-id") || `<${Date.now()}@cloudflare.worker>`,
         from: message.from,
-        fromName: decodeMimeWord((message.headers.get("from")?.match(/^"?([^"<]+)"?\s*</) || [])[1]?.trim()),
+        fromName: decodeMimeWord(headers.get("from")?.split("<")[0]?.trim() || ""),
         to: message.to,
-        cc: message.headers.get("cc") || undefined,
-        subject: decodeMimeWord(message.headers.get("subject") || "(بدون موضوع)"),
-        date: message.headers.get("date") || new Date().toISOString(),
-        text: text || "(پیام متنی موجود نیست)",
-        html: html || undefined,
-        inReplyTo: message.headers.get("in-reply-to") || undefined,
-        references: message.headers.get("references") || undefined,
-        attachments,
+        cc: headers.get("cc") || undefined,
+        bcc: headers.get("bcc") || undefined,
+        replyTo: headers.get("reply-to") || undefined,
+        subject: decodeMimeWord(headers.get("subject") || ""),
+        date: headers.get("date") || new Date().toISOString(),
+        text: parsed.text,
+        html: parsed.html,
+        inReplyTo: headers.get("in-reply-to") || undefined,
+        references: headers.get("references") || undefined,
+        attachments: parsed.attachments,
       };
 
-      const payloadJson = JSON.stringify(payload);
-      const secret = env.WEBHOOK_SECRET || "persisquartz-email-webhook-secret-change-in-prod";
-      const signature = await generateHmac(payloadJson, secret);
+      const payloadString = JSON.stringify(payload);
+      const signature = await generateHmac(payloadString, webhookSecret);
 
-      const targetUrl = env.WEBHOOK_URL || "https://persisquartz.com/api/webhooks/mail-inbound";
-
-      const res = await fetch(targetUrl, {
+      const response = await fetch(webhookUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Email-Signature": signature,
+          "x-email-signature": signature,
+          "User-Agent": "Cloudflare-Email-Worker/2.0",
         },
-        body: payloadJson,
+        body: payloadString,
       });
 
-      if (!res.ok) {
-        console.error(`[Email Worker] Webhook rejected: ${res.status}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[Persis Mail Worker] Webhook failed (${response.status}):`, errorText);
+      } else {
+        console.log(`[Persis Mail Worker] Successfully routed email to ${message.to}`);
       }
     } catch (err) {
-      console.error("[Email Worker] Fatal error processing email:", err);
+      console.error("[Persis Mail Worker] Fatal unhandled error processing email:", err);
     }
   },
 };
 
-export default worker;
+export default emailWorker;
