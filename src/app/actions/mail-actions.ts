@@ -123,6 +123,36 @@ export async function sendEmailAction(input: SendEmailInput) {
   }
 }
 
+export async function markAsReadAction(emailId: number) {
+  try {
+    const session = await getWebmailSession();
+    if (!session) {
+      return { success: false, error: "نشست شما منقضی شده است." };
+    }
+    await WebmailService.markAsRead(emailId);
+    revalidatePath("/mail");
+    return { success: true };
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "خطا در ثبت وضعیت خوانده شده";
+    return { success: false, error: msg };
+  }
+}
+
+export async function toggleReadAction(emailId: number, isRead: boolean) {
+  try {
+    const session = await getWebmailSession();
+    if (!session) {
+      return { success: false, error: "نشست شما منقضی شده است." };
+    }
+    await WebmailService.toggleRead(emailId, isRead);
+    revalidatePath("/mail");
+    return { success: true };
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "خطا در تغییر وضعیت خوانده شده";
+    return { success: false, error: msg };
+  }
+}
+
 export async function toggleStarAction(emailId: number, isStarred: boolean) {
   try {
     await WebmailService.toggleStar(emailId, isStarred);

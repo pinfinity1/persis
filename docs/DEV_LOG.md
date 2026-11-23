@@ -24,6 +24,19 @@
 
 ## Log Entries (Newest First)
 
+### [2026-11-24] — Webmail PostgreSQL State Persistence, Deep Search Engine & High-Performance Nginx Hardening
+- **Changes:**
+  - **Payload Local API Access Control:** Added `overrideAccess: true` to all `WebmailService` operations (`toggleStar`, `markAsRead`, `toggleRead`, `moveToTrash`, `restoreFromTrash`, `deletePermanently`). Resolved the issue where Payload 3.x rejected updates from Webmail cookie sessions that lack a CMS admin user, causing stars and read indicators to revert on page refresh.
+  - **Accurate Database Unread Count & Badge:** Added initial unread counting via `payload.count` directly from PostgreSQL in `src/app/mail/page.tsx` and tied it to a reactive state in `WebmailClient`. Unread badges on "صندوق ورودی" now remain accurate across folder switches.
+  - **Auto Mark as Read & Manual Toggle:** Automatically marks incoming emails as read in PostgreSQL upon selection using a ref gate (`prevSelectedIdRef`) to avoid unintended resets. Added a dedicated "خوانده‌نشده / خوانده‌شده" toggle button with `Mail` and `MailOpen` icons in the reader action toolbar.
+  - **Full-Text Deep Multilingual Search:** Built `normalizeSearchString` and `matchesSearchQuery` in `src/lib/mime-parser.ts` to normalize Persian/Arabic characters (ی/ي, ک/ك, آ/ا, ZWNJ, Harakat) and search across subject, sender name, email address, recipients, and the full un-truncated body text.
+  - **Aggressive MIME Header & Boundary Sanitization:** Enhanced `stripMimeHeadersAndDelimiters` to strip hexadecimal boundary identifiers (e.g. `00000000000024aede...`), single-newline headers, and duplicate body content.
+  - **Nginx & DNS High-Performance Recipe:** Provided the complete, production-grade Nginx configuration with HTTP/2, Gzip compression, static asset caching, and SSL certbot setup for `mail.persisquartz.com`.
+- **Key Decisions:**
+  - `prevSelectedIdRef` ensures automatic read-marking only triggers on distinct email selection transitions, preserving the user's manual "خوانده‌نشده" toggle.
+  - `overrideAccess: true` is strictly required in Payload Local API when invoked from public or session-based Server Actions.
+
+
 ### [2026-11-23] — Webmail UI/UX Overhaul, MIME Noise Elimination & Lighthouse 100
 - **Changes:**
   - Created recursive RFC 5322 MIME parser `src/lib/mime-parser.ts` to decode complex multipart emails (Gmail, Yahoo, Outlook), eliminating all boundary noise (`--_Part_...`, `Content-Type`) and isolating pure human text & HTML.

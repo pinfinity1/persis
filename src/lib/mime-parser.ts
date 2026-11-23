@@ -129,6 +129,13 @@ export function parseAndCleanMime(raw: string, contentTypeHeader?: string): Pars
       if (splitIdx !== -1) {
         headers = trimmed.substring(0, splitIdx);
         body = trimmed.substring(splitIdx + delimiter.length);
+      } else {
+        // Headers might be separated by single \n if standard empty line was stripped
+        const matchHeaders = trimmed.match(/^((?:(?:Content-[a-zA-Z-]+|charset)[^\n]*\n?)+)([\s\S]*)$/i);
+        if (matchHeaders) {
+          headers = matchHeaders[1];
+          body = matchHeaders[2];
+        }
       }
 
       const partContentType = (headers.match(/Content-Type:\s*([^;\r\n]+)/i) || [])[1]?.toLowerCase() || "";
@@ -179,12 +186,24 @@ export function stripMimeHeadersAndDelimiters(content: string): string {
   if (!content) return "";
   
   let cleaned = content
-    .replace(/^>*[\t ]*--[a-zA-Z0-9'()+_,-./:=?]{6,}(?:--)?[\t ]*$/gm, "") // Strip boundary markers (including quoted > --)
-    .replace(/^>*[\t ]*Content-Type:.*$/gim, "")                          // Strip Content-Type lines
-    .replace(/^>*[\t ]*Content-Transfer-Encoding:.*$/gim, "")             // Strip Content-Transfer-Encoding
-    .replace(/^>*[\t ]*Content-Disposition:.*$/gim, "")                   // Strip Content-Disposition
-    .replace(/^>*[\t ]*Content-ID:.*$/gim, "")                            // Strip Content-ID
-    .replace(/^>*[\t ]*charset=.*$/gim, "")                               // Strip loose charset tokens
+    // Strip boundary with attached header on same line e.g. 00000000000024aede0660f1433c Content-Type: ...
+    .replace(/^>*[\t ]*-{0,4}[a-zA-Z0-9'()+_,-./:=?]{14,}-{0,4}[\t ]+Content-Type:.*$/gim, "")
+    // Strip standalone long boundary markers with or without dashes, with optional quotes (>): e.g. --00000000000024aede0660f1433c-- or 00000000000024aede0660f1433c
+    .replace(/^>*[\t ]*-{0,4}[a-zA-Z0-9'()+_,-./:=?]{14,}-{0,4}[\t ]*$/gm, "")
+    // Strip boundary markers (including quoted > --)
+    .replace(/^>*[\t ]*--[a-zA-Z0-9'()+_,-./:=?]{6,}(?:--)?[\t ]*$/gm, "")
+    // Strip Content-Type lines and any attached params
+    .replace(/^>*[\t ]*Content-Type:.*$/gim, "")
+    // Strip Content-Transfer-Encoding
+    .replace(/^>*[\t ]*Content-Transfer-Encoding:.*$/gim, "")
+    // Strip Content-Disposition
+    .replace(/^>*[\t ]*Content-Disposition:.*$/gim, "")
+    // Strip Content-ID
+    .replace(/^>*[\t ]*Content-ID:.*$/gim, "")
+    // Strip boundary= parameter lines
+    .replace(/^>*[\t ]*boundary="?[^"\r\n]+"?[\t ]*$/gim, "")
+    // Strip loose charset tokens
+    .replace(/^>*[\t ]*charset="?[^"\r\n]+"?[\t ]*$/gim, "")
     .trim();
 
   // If there are raw residual HTML tags in plain text (e.g. <div dir="ltr">...</div> or <p>...</p>)
@@ -247,4 +266,62 @@ export function extractCleanSnippet(textOrHtml: string | null | undefined, maxLe
   if (!clean) return "(بدون متن)";
   if (clean.length <= maxLength) return clean;
   return clean.slice(0, maxLength) + "…";
+}
+
+/**
+ * Normalizes Persian, Arabic and Latin text for accurate, high-performance search:
+ * - Unifies Persian/Arabic letters (ی/ي, ک/ك, آ/ا)
+ * - Strips zero-width non-joiners (نیم‌فاصله) and Harakat/diacritics
+ * - Lowercases Latin characters
+ * - Strips redundant punctuation and whitespace
+ */
+export function normalizeSearchString(text: string | null | undefined): string {
+  if (!text) return "";
+  return text
+    .toLowerCase()
+    .replace(/[\u064B-\u065F\u0670]/g, "") // Remove Harakat / Tashdeed / Tanween
+    .replace(/\u064A/g, "\u06CC")          // Arabic Yeh (ي) -> Persian Yeh (ی)
+    .replace(/\u0643/g, "\u06A9")          // Arabic Kaf (ك) -> Persian Kaf (ک)
+    .replace(/\u0626/g, "\u06CC")          // Yeh with Hamza (ئ) -> Yeh (ی)
+    .replace(/\u0623|\u0625|\u0622/g, "\u0627") // Alef with Hamza/Madda (أ، إ، آ) -> Alef (ا)
+    .replace(/\u0629/g, "\u0647")          // Teh Marbuta (ة) -> Heh (ه)
+    .replace(/\u200C/g, " ")               // Zero-width non-joiner -> space
+    .replace(/[^a-z0-9\u0600-\u06FF\s@._-]/gi, " ") // Clean punctuation except email symbols
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * Matches an email against search queries across all fields:
+ * - Subject
+ * - Sender (from and fromName)
+ * - Recipient (to and cc)
+ * - Full body text (plain text and stripped HTML)
+ * Supports multi-term queries: every term must exist anywhere in the email.
+ */
+export function matchesSearchQuery(
+  email: {
+    subject?: string | null;
+    from?: string | null;
+    fromName?: string | null;
+    to?: string | null;
+    cc?: string | null;
+    bodyText?: string | null;
+    bodyHtml?: string | null;
+  },
+  searchQuery: string
+): boolean {
+  const normalizedQuery = normalizeSearchString(searchQuery);
+  if (!normalizedQuery) return true;
+
+  const terms = normalizedQuery.split(/\s+/).filter(Boolean);
+  if (terms.length === 0) return true;
+
+  // Build a single comprehensive searchable corpus of the email
+  const fullBody = (email.bodyText || "") + " " + (email.bodyHtml ? email.bodyHtml.replace(/<[^>]+>/g, " ") : "");
+  const corpus = normalizeSearchString(
+    `${email.subject || ""} ${email.from || ""} ${email.fromName || ""} ${email.to || ""} ${email.cc || ""} ${fullBody}`
+  );
+
+  return terms.every((term) => corpus.includes(term));
 }

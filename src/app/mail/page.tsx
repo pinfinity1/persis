@@ -89,11 +89,28 @@ export default async function MailPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const emails: EmailItem[] = (emailsResult.docs as any[]) || [];
 
+  // 4. Calculate accurate initial unread count directly from database
+  const unreadCountResult = await payload.count({
+    collection: "emails",
+    where: {
+      and: [
+        ...(session.role !== "admin" && session.mailboxId
+          ? [{ mailbox: { equals: session.mailboxId } }]
+          : []),
+        { direction: { equals: "inbound" } },
+        { isRead: { not_equals: true } },
+        { isTrash: { not_equals: true } },
+      ],
+    },
+    overrideAccess: true,
+  });
+
   return (
     <WebmailClient
       initialMailboxes={mailboxes}
       initialEmails={emails}
       session={session}
+      initialUnreadCount={unreadCountResult.totalDocs}
     />
   );
 }

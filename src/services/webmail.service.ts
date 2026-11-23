@@ -46,6 +46,7 @@ export class WebmailService {
       },
       sort: "address",
       limit: 100,
+      overrideAccess: true,
     });
     return result.docs;
   }
@@ -108,9 +109,36 @@ export class WebmailService {
       page,
       limit,
       depth: 2,
+      overrideAccess: true,
     });
 
     return result;
+  }
+
+  /**
+   * Mark email as read in PostgreSQL
+   */
+  static async markAsRead(id: number) {
+    const payload = await getPayload({ config: configPromise });
+    return payload.update({
+      collection: "emails",
+      id,
+      data: { isRead: true },
+      overrideAccess: true,
+    });
+  }
+
+  /**
+   * Toggle email read / unread status
+   */
+  static async toggleRead(id: number, isRead: boolean) {
+    const payload = await getPayload({ config: configPromise });
+    return payload.update({
+      collection: "emails",
+      id,
+      data: { isRead },
+      overrideAccess: true,
+    });
   }
 
   /**
@@ -122,6 +150,7 @@ export class WebmailService {
       collection: "emails",
       id,
       depth: 2,
+      overrideAccess: true,
     });
 
     if (email && !email.isRead) {
@@ -129,6 +158,7 @@ export class WebmailService {
         collection: "emails",
         id,
         data: { isRead: true },
+        overrideAccess: true,
       });
       email.isRead = true;
     }
@@ -256,6 +286,7 @@ export class WebmailService {
       collection: "emails",
       id: emailId,
       data: { isStarred },
+      overrideAccess: true,
     });
   }
 
@@ -268,6 +299,7 @@ export class WebmailService {
       collection: "emails",
       id: emailId,
       data: { isTrash: true },
+      overrideAccess: true,
     });
   }
 
@@ -280,6 +312,7 @@ export class WebmailService {
       collection: "emails",
       id: emailId,
       data: { isTrash: false },
+      overrideAccess: true,
     });
   }
 
@@ -291,6 +324,7 @@ export class WebmailService {
     return payload.delete({
       collection: "emails",
       id: emailId,
+      overrideAccess: true,
     });
   }
 }

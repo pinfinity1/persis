@@ -10,6 +10,7 @@ import {
   Star,
   Trash2,
   Mail,
+  MailOpen,
   Search,
   Plus,
   RefreshCw,
@@ -30,6 +31,8 @@ import {
 } from "lucide-react";
 import {
   sendEmailAction,
+  markAsReadAction,
+  toggleReadAction,
   toggleStarAction,
   moveToTrashAction,
   restoreEmailAction,
@@ -43,6 +46,7 @@ import {
   isRawMimeMultipart,
   stripMimeHeadersAndDelimiters,
   extractCleanSnippet,
+  matchesSearchQuery,
 } from "@/lib/mime-parser";
 
 export interface MailboxItem {
@@ -88,12 +92,14 @@ interface WebmailClientProps {
   initialMailboxes: MailboxItem[];
   initialEmails: EmailItem[];
   session: WebmailSessionPayload;
+  initialUnreadCount?: number;
 }
 
 export default function WebmailClient({
   initialMailboxes,
   initialEmails,
   session,
+  initialUnreadCount,
 }: WebmailClientProps) {
   const [mailboxes] = useState<MailboxItem[]>(initialMailboxes);
   const [emails, setEmails] = useState<EmailItem[]>(initialEmails);
@@ -111,6 +117,16 @@ export default function WebmailClient({
   // Mobile Drill-down and Drawer Navigation States
   const [mobileView, setMobileView] = useState<"list" | "detail">("list");
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  // Accurate Inbound Unread Count State (Persisted across folder views)
+  const [unreadCount, setUnreadCount] = useState<number>(() => {
+    if (typeof initialUnreadCount === "number") return initialUnreadCount;
+    return initialEmails.filter(
+      (e) => e.direction === "inbound" && !e.isRead && !e.isTrash,
+    ).length;
+  });
+
+  const prevSelectedIdRef = React.useRef<number | null>(null);
 
   const [isPending, startTransition] = useTransition();
 
@@ -152,23 +168,29 @@ export default function WebmailClient({
         if (!item.isTrash) return false;
       }
 
-      // 3. Search Query
+      // 3. Deep Multilingual Search (Subject, Sender, Recipient, Full Body)
       if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase().trim();
-        const cleanSnippet = extractCleanSnippet(
-          item.bodyText || item.bodyHtml,
-          300,
-        ).toLowerCase();
-        const matchSubject = item.subject?.toLowerCase().includes(query);
-        const matchFrom = item.from?.toLowerCase().includes(query);
-        const matchTo = item.to?.toLowerCase().includes(query);
-        const matchBody = cleanSnippet.includes(query);
-        if (!matchSubject && !matchFrom && !matchTo && !matchBody) return false;
+        if (!matchesSearchQuery(item, searchQuery)) return false;
       }
 
       return true;
     });
   }, [emails, selectedMailboxId, currentFolder, searchQuery]);
+
+  // Auto-mark selected email as read in PostgreSQL when navigating to an email
+  React.useEffect(() => {
+    if (selectedEmailId && selectedEmailId !== prevSelectedIdRef.current) {
+      prevSelectedIdRef.current = selectedEmailId;
+      const email = emails.find((e) => e.id === selectedEmailId);
+      if (email && !email.isRead && email.direction === "inbound") {
+        setEmails((prev) =>
+          prev.map((e) => (e.id === selectedEmailId ? { ...e, isRead: true } : e))
+        );
+        setUnreadCount((c) => Math.max(0, c - 1));
+        markAsReadAction(selectedEmailId);
+      }
+    }
+  }, [selectedEmailId, emails]);
 
   // Selected Email
   const selectedEmail = useMemo(() => {
@@ -222,6 +244,13 @@ export default function WebmailClient({
       if (res.success && res.docs) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         setEmails(res.docs as any);
+        if (targetFolder === "inbox") {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const freshUnread = (res.docs as any[]).filter(
+            (e) => e.direction === "inbound" && !e.isRead && !e.isTrash,
+          ).length;
+          setUnreadCount(freshUnread);
+        }
         if (res.docs.length > 0) {
           const currentStillExists = res.docs.some(
             (e: { id: number }) => e.id === selectedEmailId,
@@ -252,13 +281,43 @@ export default function WebmailClient({
     handleRefresh(currentFolder, mbId);
   };
 
-  // Toggle Star
+  // Toggle Star with optimistic update and server persistence
   const handleToggleStar = async (emailId: number, currentStar: boolean) => {
     const nextStar = !currentStar;
     setEmails((prev) =>
       prev.map((e) => (e.id === emailId ? { ...e, isStarred: nextStar } : e)),
     );
-    await toggleStarAction(emailId, nextStar);
+    const res = await toggleStarAction(emailId, nextStar);
+    if (!res.success) {
+      setEmails((prev) =>
+        prev.map((e) => (e.id === emailId ? { ...e, isStarred: currentStar } : e)),
+      );
+    }
+  };
+
+  // Toggle Read status with optimistic update and server persistence
+  const handleToggleRead = async (emailId: number, currentRead: boolean) => {
+    const nextRead = !currentRead;
+    setEmails((prev) =>
+      prev.map((e) => (e.id === emailId ? { ...e, isRead: nextRead } : e)),
+    );
+    if (nextRead) {
+      setUnreadCount((c) => Math.max(0, c - 1));
+    } else {
+      setUnreadCount((c) => c + 1);
+    }
+    const res = await toggleReadAction(emailId, nextRead);
+    if (!res.success) {
+      // Rollback on failure
+      setEmails((prev) =>
+        prev.map((e) => (e.id === emailId ? { ...e, isRead: currentRead } : e)),
+      );
+      if (nextRead) {
+        setUnreadCount((c) => c + 1);
+      } else {
+        setUnreadCount((c) => Math.max(0, c - 1));
+      }
+    }
   };
 
   // Move to Trash
@@ -383,12 +442,6 @@ export default function WebmailClient({
     }
   };
 
-  // Unread Count
-  const unreadCount = useMemo(() => {
-    return emails.filter(
-      (e) => e.direction === "inbound" && !e.isRead && !e.isTrash,
-    ).length;
-  }, [emails]);
 
   // Folder Title Mapping
   const folderTitle = useMemo(() => {
@@ -756,6 +809,10 @@ export default function WebmailClient({
                           e.id === item.id ? { ...e, isRead: true } : e,
                         ),
                       );
+                      if (item.direction === "inbound") {
+                        setUnreadCount((c) => Math.max(0, c - 1));
+                      }
+                      markAsReadAction(item.id);
                     }
                   }}
                   className={`group relative flex cursor-pointer flex-col gap-1.5 p-4 transition duration-150 ${
@@ -894,6 +951,38 @@ export default function WebmailClient({
                   <span className="hidden sm:inline">
                     {selectedEmail.isStarred ? "نشان‌شده" : "نشان کردن"}
                   </span>
+                </button>
+
+                <button
+                  onClick={() =>
+                    handleToggleRead(
+                      selectedEmail.id,
+                      Boolean(selectedEmail.isRead),
+                    )
+                  }
+                  aria-label={
+                    selectedEmail.isRead
+                      ? "علامت‌گذاری به‌عنوان خوانده‌نشده"
+                      : "علامت‌گذاری به‌عنوان خوانده‌شده"
+                  }
+                  title={
+                    selectedEmail.isRead
+                      ? "علامت‌گذاری به‌عنوان خوانده‌نشده"
+                      : "علامت‌گذاری به‌عنوان خوانده‌شده"
+                  }
+                  className="flex items-center gap-1.5 rounded-xl border border-input bg-card px-3 py-1.5 text-xs font-semibold text-foreground transition duration-150 hover:bg-muted shadow-sm"
+                >
+                  {selectedEmail.isRead ? (
+                    <>
+                      <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="hidden sm:inline">خوانده‌نشده</span>
+                    </>
+                  ) : (
+                    <>
+                      <MailOpen className="h-3.5 w-3.5 text-emerald-500" />
+                      <span className="hidden sm:inline">خوانده‌شده</span>
+                    </>
+                  )}
                 </button>
 
                 {selectedEmail.isTrash ? (
