@@ -1,11 +1,13 @@
 // src/app/[locale]/catalogs/page.tsx
 import React from "react";
 import type { Metadata } from "next";
-import { getGroupedCatalogsService } from "@/services/catalog.service";
+import { getGroupedCatalogsService, type CatalogItem } from "@/services/catalog.service";
 import { getSeoSettingsService } from "@/services/seo.service";
-import { CatalogCard } from "@/components/catalogs/catalog-card";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { PageWatermarkHeader } from "@/components/shared/page-watermark-header";
+import { CatalogHeroFeatured } from "@/components/catalogs/catalog-hero-featured";
+import { CatalogsDirectoryClient } from "@/components/catalogs/catalogs-directory-client";
+import { buildFallbackCatalogItem } from "@/lib/catalog-lookbook-data";
 import {
   generateStaticPageMetadata,
   safeJsonLdReplacer,
@@ -30,24 +32,30 @@ export default async function CatalogsPage({ params }: PageProps) {
   const currentLocale = (locale as Locale) || "fa";
   setRequestLocale(currentLocale);
 
-  const [groupedCatalogs, t, tMeta, seoSettings] = await Promise.all([
+  const [groupedCatalogs, tMeta, seoSettings] = await Promise.all([
     getGroupedCatalogsService(currentLocale),
-    getTranslations({ locale: currentLocale, namespace: "Catalogs" }),
     getTranslations({ locale: currentLocale, namespace: "Metadata" }),
     getSeoSettingsService(currentLocale),
   ]);
 
-  const years = Object.keys(groupedCatalogs)
-    .map(Number)
-    .sort((a, b) => b - a);
+  // ایجاد لیست مسطح تمام کاتالوگ‌ها
+  const dbCatalogs: CatalogItem[] = Object.values(groupedCatalogs).flat();
 
-  // ایجاد لیست تمام کاتالوگ‌ها جهت ساخت Schema
-  const allCatalogs = Object.values(groupedCatalogs).flat();
+  // در صورت خالی بودن دیتابیس، از کاتالوگ جامع استاندارد برند استفاده می‌شود
+  const allCatalogs: CatalogItem[] =
+    dbCatalogs.length > 0
+      ? dbCatalogs
+      : [buildFallbackCatalogItem(currentLocale)];
+
+  // انتخاب کاتالوگ پرچم‌دار جهت نمایش در هیرو سکشن
+  const flagshipCatalog =
+    allCatalogs.find((c) => c.catalog_type === "full_catalog") ||
+    allCatalogs[0];
 
   const catalogsSchema = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    name: seoSettings.pages.catalogs.title || "Persis Quartz",
+    name: seoSettings.pages.catalogs.title || "Persis Quartz Publications",
     description: seoSettings.pages.catalogs.description || "",
     mainEntity: {
       "@type": "ItemList",
@@ -65,45 +73,23 @@ export default async function CatalogsPage({ params }: PageProps) {
   };
 
   return (
-    <main className="container mx-auto px-4 sm:px-12 pt-28 sm:pt-36 pb-20 min-h-screen space-y-12 select-none">
+    <main className="container mx-auto px-4 sm:px-12 pt-28 sm:pt-36 pb-24 min-h-screen space-y-12 sm:space-y-16 select-none">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLdReplacer(catalogsSchema) }}
       />
 
+      {/* عنوان و واترمارک لوکس بالای صفحه */}
       <PageWatermarkHeader
-        watermark="PUBLICATIONS"
+        watermark="LOOKBOOK"
         title={seoSettings.pages.catalogs.title || tMeta("catalogs.title")}
       />
 
-      {years.length > 0 ? (
-        <div className="space-y-12 sm:space-y-20">
-          {years.map((year) => (
-            <section key={year} className="space-y-4 sm:space-y-6">
-              <div className="flex items-center gap-3 pb-2">
-                <span className="text-xl sm:text-3xl font-light text-primary">
-                  {year}
-                </span>
-                <span className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-widest pt-1">
-                  Collection & Manuals
-                </span>
-              </div>
+      {/* کاتالوگ شاخص سال (Featured Master Lookbook Showcase) */}
+      <CatalogHeroFeatured flagshipCatalog={flagshipCatalog} />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                {groupedCatalogs[year].map((catalog) => (
-                  <CatalogCard key={catalog.id} catalog={catalog} />
-                ))}
-              </div>
-            </section>
-          ))}
-        </div>
-      ) : (
-        <div className="p-12 sm:p-20 text-center bg-card border border-border/40">
-          <p className="text-sm font-light text-muted-foreground">
-            {t("noCatalogsFound")}
-          </p>
-        </div>
-      )}
+      {/* آرشیو و دایرکتوری انتشارات با فیلتر آنی */}
+      <CatalogsDirectoryClient initialCatalogs={allCatalogs} />
     </main>
   );
 }
