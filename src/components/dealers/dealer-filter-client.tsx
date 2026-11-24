@@ -25,9 +25,16 @@ export const DealerFilterClient: React.FC<DealerFilterProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const currentProvinceSlug = searchParams.get("province") || "all";
+  const currentProvinceSlug = searchParams.get("province")
+    ? decodeURIComponent(searchParams.get("province")!)
+    : "all";
+
   const selectedProvince = provinces.find(
-    (p) => p.slug === currentProvinceSlug,
+    (p) =>
+      p.slug === currentProvinceSlug.toLowerCase() ||
+      p.fa === currentProvinceSlug ||
+      p.label === currentProvinceSlug ||
+      p.center === currentProvinceSlug,
   );
 
   useEffect(() => {
@@ -52,22 +59,32 @@ export const DealerFilterClient: React.FC<DealerFilterProps> = ({
     }
 
     startTransition(() => {
-      router.push(`${pathname}?${params.toString()}`);
+      const query = params.toString();
+      router.push(query ? `${pathname}?${query}` : pathname);
     });
     setIsOpen(false);
     setSearchQuery("");
   };
 
-  // جستجوی پیشرفته: سرچ همزمان در لیبل جاری، کلمه فارسی، کلمه انگلیسی و اسلاگ
+  // جستجوی پیشرفته: سرچ همزمان در لیبل جاری، کلمه فارسی، کلمه انگلیسی، اسلاگ و مرکز استان (شهر)
   const filteredProvinces = provinces.filter((p) => {
     const query = searchQuery.toLowerCase().trim();
     return (
       p.label.toLowerCase().includes(query) ||
       p.fa.includes(query) ||
       p.en.toLowerCase().includes(query) ||
-      p.slug.toLowerCase().includes(query)
+      p.slug.toLowerCase().includes(query) ||
+      (p.center && p.center.includes(query))
     );
   });
+
+  const displaySelectedText = selectedProvince
+    ? selectedProvince.center && selectedProvince.center !== selectedProvince.label
+      ? `${selectedProvince.label} (${selectedProvince.center})`
+      : selectedProvince.label
+    : currentProvinceSlug === "all"
+      ? t("allProvinces")
+      : currentProvinceSlug;
 
   return (
     <div
@@ -82,9 +99,7 @@ export const DealerFilterClient: React.FC<DealerFilterProps> = ({
         <div className="flex items-center gap-2 overflow-hidden">
           <MapPin className="h-4 w-4 text-primary shrink-0 transition-transform group-hover:-translate-y-0.5" />
           <span className="text-sm font-light text-foreground truncate">
-            {currentProvinceSlug === "all"
-              ? t("allProvinces")
-              : selectedProvince?.label || currentProvinceSlug}
+            {displaySelectedText}
           </span>
         </div>
         <ChevronDown
@@ -127,22 +142,29 @@ export const DealerFilterClient: React.FC<DealerFilterProps> = ({
                 {t("noResults")}
               </li>
             ) : (
-              filteredProvinces.map((prov) => (
-                <li
-                  key={prov.slug}
-                  onClick={() => handleSelect(prov.slug)}
-                  className={`px-4 py-3 text-xs cursor-pointer flex items-center justify-between transition-colors ${
-                    currentProvinceSlug === prov.slug
-                      ? "bg-primary/5 text-primary font-medium"
-                      : "hover:bg-muted text-foreground"
-                  }`}
-                >
-                  <span>{prov.label}</span>
-                  {currentProvinceSlug === prov.slug && (
-                    <Check className="h-3.5 w-3.5" />
-                  )}
-                </li>
-              ))
+              filteredProvinces.map((prov) => {
+                const itemLabel =
+                  prov.center && prov.center !== prov.label
+                    ? `${prov.label} (${prov.center})`
+                    : prov.label;
+
+                return (
+                  <li
+                    key={prov.slug}
+                    onClick={() => handleSelect(prov.slug)}
+                    className={`px-4 py-3 text-xs cursor-pointer flex items-center justify-between transition-colors ${
+                      currentProvinceSlug === prov.slug
+                        ? "bg-primary/5 text-primary font-medium"
+                        : "hover:bg-muted text-foreground"
+                    }`}
+                  >
+                    <span>{itemLabel}</span>
+                    {currentProvinceSlug === prov.slug && (
+                      <Check className="h-3.5 w-3.5" />
+                    )}
+                  </li>
+                );
+              })
             )}
           </ul>
         </div>

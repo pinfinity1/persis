@@ -7,8 +7,7 @@ import {
   getActiveProvincesService,
 } from "@/services/dealer.service";
 import { getSeoSettingsService } from "@/services/seo.service";
-import { DealerFilterClient } from "@/components/dealers/dealer-filter-client";
-import { DealerCard } from "@/components/dealers/dealer-card";
+import { DealersDirectoryClient } from "@/components/dealers/dealers-directory-client";
 import SkeletonLoader from "@/components/products/skeleton-loader";
 import { PageWatermarkHeader } from "@/components/shared/page-watermark-header";
 import {
@@ -44,11 +43,12 @@ async function DealersDataWrapper({
   const sParams = await searchParamsPromise;
   const selectedProvince =
     typeof sParams.province === "string" ? sParams.province : undefined;
+  const initialSearch =
+    typeof sParams.q === "string" ? sParams.q : undefined;
 
-  const [dealers, provinces, t, seoSettings] = await Promise.all([
-    getDealersService({ locale, province: selectedProvince }),
+  const [allDealers, provinces, seoSettings] = await Promise.all([
+    getDealersService({ locale, province: "all" }),
     getActiveProvincesService(locale),
-    getTranslations({ locale, namespace: "Dealers" }),
     getSeoSettingsService(locale),
   ]);
 
@@ -60,7 +60,7 @@ async function DealersDataWrapper({
     mainEntity: {
       "@type": "Organization",
       name: "Persis Quartz",
-      department: dealers.map((d) => ({
+      department: allDealers.map((d) => ({
         "@type": "LocalBusiness",
         name: d.title,
         telephone: d.phone,
@@ -82,26 +82,12 @@ async function DealersDataWrapper({
         dangerouslySetInnerHTML={{ __html: safeJsonLdReplacer(jsonLdPayload) }}
       />
 
-      <div className="flex items-center justify-between gap-4 flex-wrap pb-2 border-b border-border/20">
-        <span className="text-xs uppercase tracking-widest text-primary block">
-          {t("filterTag")}
-        </span>
-        {provinces.length > 0 && <DealerFilterClient provinces={provinces} />}
-      </div>
-
-      {dealers.length > 0 ? (
-        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {dealers.map((dealer) => (
-            <DealerCard key={dealer.id} dealer={dealer} />
-          ))}
-        </section>
-      ) : (
-        <div className="p-12 text-center bg-card border border-border/40 space-y-2">
-          <p className="text-sm text-foreground font-medium">
-            {t("noDealersFound")}
-          </p>
-        </div>
-      )}
+      <DealersDirectoryClient
+        initialDealers={allDealers}
+        provinces={provinces}
+        initialProvince={selectedProvince}
+        initialSearch={initialSearch}
+      />
     </>
   );
 }

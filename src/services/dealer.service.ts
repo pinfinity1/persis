@@ -11,6 +11,8 @@ export interface ProvinceOption {
   label: string;
   fa: string;
   en: string;
+  center?: string;
+  dealerCount?: number;
 }
 
 export interface DealerItem {
@@ -33,7 +35,9 @@ export async function getDealersService({
   locale = "fa",
   province,
 }: GetDealersParams): Promise<DealerItem[]> {
-  const safeProvince = province && province !== "all" ? province : "all";
+  const rawProvince = province && province !== "all" ? province : "all";
+  const safeProvince =
+    rawProvince !== "all" ? decodeURIComponent(rawProvince).trim() : "all";
 
   return unstable_cache(
     async (): Promise<DealerItem[]> => {
@@ -45,23 +49,31 @@ export async function getDealersService({
         };
 
         if (safeProvince !== "all") {
+          const lower = safeProvince.toLowerCase();
           const match = IRAN_PROVINCES.find(
-            (p) => p.slug === safeProvince || p.fa === safeProvince,
+            (p) =>
+              p.slug === lower ||
+              p.fa === safeProvince ||
+              p.en.toLowerCase() === lower ||
+              p.ar === safeProvince ||
+              p.center === safeProvince ||
+              p.centerEn.toLowerCase() === lower ||
+              p.centerAr === safeProvince,
           );
+
           if (match) {
-            whereClause.or = [
-              { province: { equals: match.slug } },
-              { province: { equals: match.fa } },
-            ];
+            // انطباق دقیق با نوع دیتابیسی ENUM (فقط اسلاگ انگلیسی در ستون enum_dealers_province معتبر است)
+            whereClause.province = { equals: match.slug };
           } else {
-            whereClause.province = { equals: safeProvince };
+            // اگر ورودی با هیچ اسلاگ یا شهری همخوانی نداشت، برای جلوگیری از خطای دیتابیس آرایه خالی برمی‌گردانیم
+            return [];
           }
         }
 
         const response = await payload.find({
           collection: "dealers",
           locale: (locale as "fa" | "en" | "ar") || "fa",
-          limit: 100,
+          limit: 200,
           where: whereClause,
           sort: "order",
           depth: 0,
@@ -73,7 +85,7 @@ export async function getDealersService({
         return [];
       }
     },
-    ["dealers-list-cache", locale, safeProvince],
+    ["dealers-list-cache-v3", locale, safeProvince],
     {
       revalidate: 86400,
       tags: ["dealers"],
@@ -90,31 +102,48 @@ export async function getActiveProvincesService(
         const payload = await getPayload({ config: configPromise });
         const response = await payload.find({
           collection: "dealers",
-          limit: 200,
+          limit: 300,
           where: { status: { equals: "published" } },
           depth: 0,
         });
 
-        const rawSlugs = response.docs
-          .map((doc) => doc.province)
-          .filter(Boolean);
-        const uniqueSlugs = Array.from(new Set(rawSlugs));
+        // محاسبه تعداد نمایندگی‌های فعال به تفکیک استان
+        const countMap = new Map<string, number>();
+        for (const doc of response.docs) {
+          if (doc.province) {
+            countMap.set(doc.province, (countMap.get(doc.province) || 0) + 1);
+          }
+        }
 
         const provinceMap = new Map<string, ProvinceOption>();
 
-        uniqueSlugs.forEach((slug) => {
+        countMap.forEach((count, slug) => {
+          const lower = slug.toLowerCase();
           const match = IRAN_PROVINCES.find(
-            (p) => p.slug === slug || p.fa === slug,
+            (p) =>
+              p.slug === lower ||
+              p.fa === slug ||
+              p.en.toLowerCase() === lower ||
+              p.center === slug,
           );
+
           if (match) {
             provinceMap.set(match.slug, {
               slug: match.slug,
               label: match[locale] || match.fa,
               fa: match.fa,
               en: match.en,
+              center: match.center,
+              dealerCount: count,
             });
           } else {
-            provinceMap.set(slug, { slug, label: slug, fa: slug, en: slug });
+            provinceMap.set(slug, {
+              slug,
+              label: slug,
+              fa: slug,
+              en: slug,
+              dealerCount: count,
+            });
           }
         });
 
@@ -124,7 +153,7 @@ export async function getActiveProvincesService(
         return [];
       }
     },
-    ["active-provinces-cache", locale],
+    ["active-provinces-cache-v3", locale],
     {
       revalidate: 86400,
       tags: ["dealers"],

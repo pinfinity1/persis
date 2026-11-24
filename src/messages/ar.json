@@ -272,12 +272,16 @@
   "Dealers": {
     "metaTitle": "الوكلاء والموزعون المعتمدون | Persis Quartz",
     "metaDescription": "دليل صالات العرض وشبكة الموزعين المعتمدين لأسطح برسیس كوارتز.",
-    "filterTag": "تحديد المنطقة / المحافظة",
-    "allProvinces": "جميع المناطق",
-    "searchProvince": "البحث عن محافظة...",
+    "filterTag": "تحديد المنطقة / المدينة",
+    "allProvinces": "جميع المناطق والمدن",
+    "searchProvince": "البحث عن محافظة أو مدينة...",
+    "searchPlaceholder": "البحث عن مدينة أو وكيل...",
     "noResults": "لم يتم العثور على نتائج.",
     "viewOnMap": "الموقع على الخريطة",
-    "noDealersFound": "لم يتم العثور على وكلاء نشطين."
+    "noDealersFound": "لم يتم العثور على وكلاء نشطين يطابقون بحثك.",
+    "resetFilters": "عرض جميع صالات العرض",
+    "activeDealersCount": "{count} وكيل معتمد",
+    "clearFilter": "إزالة الفلتر"
   },
   "ContactPage": {
     "metaTitle": "اتصل بنا | Persis Quartz",

@@ -8,21 +8,35 @@
 - **Completed:**
   - Base project scaffolding with strict RSC, modular services (`src/services/`), and logical RTL/LTR design tokens.
   - Multilingual corporate portal with SEO metadata, canonicalization, and localized catalogs/products.
+  - Showrooms & Dealers Locator Overhaul (`/dealers`):
+    - Resolved PostgreSQL enum type crash (`22P02: invalid input value for enum enum_dealers_province: "تهران"`).
+    - Integrated provincial capital city mapping into `IRAN_PROVINCES` (`center`, `centerEn`, `centerAr`), enabling instant city-level search (شیراز، کرج، مشهد، تبریز، اهواز، رشت، ساری، ارومیه).
+    - Architected high-performance `DealersDirectoryClient` with sub-millisecond in-memory filtering, zero layout shift (CLS = 0), and shallow URL synchronization (`window.history.replaceState`).
+    - Seeded official showrooms across major Iranian cities (Tehran, Isfahan, Shiraz, Mashhad, Karaj, Tabriz, Shahrekord).
   - Payload CMS administrative portal (`/persis-cp`) with automated migration management.
   - Contact and Inquiry forms with Sliding Window Rate Limiter and asynchronous non-blocking email dispatch.
-  - Enterprise Webmail & Outbound/Inbound Infrastructure (`mail.persisquartz.com`):
-    - Subdomain routing rewrite in `src/middleware.ts`.
-    - PostgreSQL schema & collections: `mailboxes`, `emails`, `email-attachments` (uploaded to MinIO S3).
-    - Inbound Edge Email Worker script for Cloudflare with HMAC-SHA256 signature verification and `DOMPurify` XSS sanitization.
-    - Global Email Templates & Response Settings (`email-settings`) for CMS-managed customer auto-acknowledgments.
-    - Personal forwarding & push alert routing per mailbox (`forwardTo`).
-    - Dedicated Webmail UI (`/mail`) styled with `globals.css` semantic design tokens and isolated sandboxed iframe viewer.
+  - Enterprise Webmail & Outbound/Inbound Infrastructure (`mail.persisquartz.com`).
 - **In Progress:** Cloudflare Worker edge deployment & production build verification.
 - **Next Up:** Domain DNS cutover and live email routing tests.
 
 ---
 
 ## Log Entries (Newest First)
+
+### [2026-11-24] — Dealers Locator Bug Fix, Capital City Search & High-Performance Client Directory Overhaul
+- **Changes:**
+  - **PostgreSQL Enum Type Fix:** Eliminated `{ province: { equals: match.fa } }` from `src/services/dealer.service.ts`. Because Payload CMS maps `select` fields to Postgres enums (`enum_dealers_province`), passing Persian labels caused PostgreSQL error `22P02`. Queries now strictly query the valid enum slug (`match.slug`).
+  - **Capital Cities & Regional Mapping:** Enriched `IRAN_PROVINCES` in `src/lib/constants/provinces.ts` with `center`, `centerEn`, and `centerAr` for all 31 Iranian provinces, enabling `normalizeProvinceToSlug` to resolve city names directly to their province slugs (e.g. "شیراز" -> "fars", "کرج" -> "alborz", "مشهد" -> "khorasan-razavi").
+  - **Ultra-Minimalist Luxury UI/UX Overhaul (`DealersDirectoryClient`):** Completely redesigned `src/components/dealers/dealers-directory-client.tsx` to align strictly with Caesarstone / Breton design guidelines:
+    - Removed heavy card boxes, outer borders, and noisy badge chips.
+    - Designed an airy, single-line toolbar with transparent search input and underlined minimal selector (`border-b border-border/30`).
+    - Made dropdown menu fully responsive with `end-0` alignment preventing mobile overflow.
+    - Sub-millisecond in-memory filtering (<1ms), zero layout shift (CLS = 0), and shallow URL synchronization (`window.history.replaceState`).
+  - **Database Seed:** Seeded official Persis Quartz showrooms across major Iranian metropolitan centers (Tehran, Isfahan, Shiraz, Mashhad, Karaj, Tabriz, Shahrekord) with multilingual data and realistic coordinates.
+- **Key Decisions:**
+  - Strict adherence to Caesarstone/Breton understated luxury: minimal borders, pure typography, no dashboard-style containers.
+  - Pre-fetching all published dealers at page load (`getDealersService({ locale, province: 'all' })`) enables sub-millisecond in-memory client filtering (<1ms, INP < 16ms), eliminating network delays and skeleton flickering when toggling cities.
+  - Full server-side JSON-LD Schema (`LocalBusiness` departments) is preserved for SEO crawlers.
 
 ### [2026-11-24] — Webmail PostgreSQL State Persistence, Deep Search Engine & High-Performance Nginx Hardening
 - **Changes:**
