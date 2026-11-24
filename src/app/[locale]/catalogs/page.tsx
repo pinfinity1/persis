@@ -5,9 +5,7 @@ import { getGroupedCatalogsService, type CatalogItem } from "@/services/catalog.
 import { getSeoSettingsService } from "@/services/seo.service";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { PageWatermarkHeader } from "@/components/shared/page-watermark-header";
-import { CatalogHeroFeatured } from "@/components/catalogs/catalog-hero-featured";
 import { CatalogsDirectoryClient } from "@/components/catalogs/catalogs-directory-client";
-import { buildFallbackCatalogItem } from "@/lib/catalog-lookbook-data";
 import {
   generateStaticPageMetadata,
   safeJsonLdReplacer,
@@ -32,30 +30,20 @@ export default async function CatalogsPage({ params }: PageProps) {
   const currentLocale = (locale as Locale) || "fa";
   setRequestLocale(currentLocale);
 
-  const [groupedCatalogs, tMeta, seoSettings] = await Promise.all([
+  const [groupedCatalogs, t, tMeta, seoSettings] = await Promise.all([
     getGroupedCatalogsService(currentLocale),
+    getTranslations({ locale: currentLocale, namespace: "Catalogs" }),
     getTranslations({ locale: currentLocale, namespace: "Metadata" }),
     getSeoSettingsService(currentLocale),
   ]);
 
-  // ایجاد لیست مسطح تمام کاتالوگ‌ها
-  const dbCatalogs: CatalogItem[] = Object.values(groupedCatalogs).flat();
-
-  // در صورت خالی بودن دیتابیس، از کاتالوگ جامع استاندارد برند استفاده می‌شود
-  const allCatalogs: CatalogItem[] =
-    dbCatalogs.length > 0
-      ? dbCatalogs
-      : [buildFallbackCatalogItem(currentLocale)];
-
-  // انتخاب کاتالوگ پرچم‌دار جهت نمایش در هیرو سکشن
-  const flagshipCatalog =
-    allCatalogs.find((c) => c.catalog_type === "full_catalog") ||
-    allCatalogs[0];
+  // واکشی کاتالوگ‌های منتشر شده از دیتابیس
+  const allCatalogs: CatalogItem[] = Object.values(groupedCatalogs).flat();
 
   const catalogsSchema = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    name: seoSettings.pages.catalogs.title || "Persis Quartz Publications",
+    name: seoSettings.pages.catalogs.title || t("title"),
     description: seoSettings.pages.catalogs.description || "",
     mainEntity: {
       "@type": "ItemList",
@@ -73,22 +61,19 @@ export default async function CatalogsPage({ params }: PageProps) {
   };
 
   return (
-    <main className="container mx-auto px-4 sm:px-12 pt-28 sm:pt-36 pb-24 min-h-screen space-y-12 sm:space-y-16 select-none">
+    <main className="container mx-auto px-4 sm:px-12 pt-28 sm:pt-36 pb-24 min-h-screen space-y-10 sm:space-y-12 select-none">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLdReplacer(catalogsSchema) }}
       />
 
-      {/* عنوان و واترمارک لوکس بالای صفحه */}
+      {/* هدر رسمی و واتر‌مارک صفحه */}
       <PageWatermarkHeader
-        watermark="LOOKBOOK"
+        watermark="PUBLICATIONS"
         title={seoSettings.pages.catalogs.title || tMeta("catalogs.title")}
       />
 
-      {/* کاتالوگ شاخص سال (Featured Master Lookbook Showcase) */}
-      <CatalogHeroFeatured flagshipCatalog={flagshipCatalog} />
-
-      {/* آرشیو و دایرکتوری انتشارات با فیلتر آنی */}
+      {/* نمایش تمیز و شیک کاتالوگ‌های واقعی کارفرما */}
       <CatalogsDirectoryClient initialCatalogs={allCatalogs} />
     </main>
   );

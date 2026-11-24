@@ -8,12 +8,12 @@
 - **Completed:**
   - Base project scaffolding with strict RSC, modular services (`src/services/`), and logical RTL/LTR design tokens.
   - Multilingual corporate portal with SEO metadata, canonicalization, and localized catalogs/products.
-  - Bespoke Architectural Lookbook & In-Site Interactive Catalog Showcase (`/catalogs`):
-    - Completely replaced the plain, boring download cards with an ultra-luxury editorial lookbook architecture inspired by Caesarstone & Breton.
-    - Designed `CatalogHeroFeatured` showcasing the flagship 2026 Master Collection with 3D perspective depth, technical slab specs (320x160cm, 20/30mm, 93% silica, Bretonstone®), and dual luxury actions.
-    - Built `CatalogLookbookModal`: bespoke full-screen dark architectural modal with macro texture zoom, dual view modes (Curated Interactive Material Spreads with hot-spots linking directly to products + Native High-Performance In-Site PDF Viewer frame), keyboard navigation (Arrows, Esc, F), touch swipe gestures on mobile, overview grid drawer, and one-click share.
-    - Implemented `CatalogsDirectoryClient` with sub-millisecond in-memory category filtering (Master, Technical, Collections, Guides) and real-time live search.
-    - Ensured 100% responsiveness on mobile, tablet, and wide desktop with zero layout shift (CLS = 0) and zero heavy, crashing client-side canvas dependencies (First Load JS: 173 kB).
+  - Bespoke Clean In-Site Catalog Experience & PDF Viewer Overhaul (`/catalogs`):
+    - Completely eliminated all dummy hardcoded texts, fake specs, and bloated dummy spreads.
+    - Fixed cover image framing using `object-contain` with authentic aspect ratio and subtle drop-shadow, preventing any cropping of cover titles.
+    - Built `CatalogViewerModal`: a clean, focused, 100% full-screen responsive in-site PDF reader for the real catalog PDF uploaded by the client, with body scroll locking, escape shortcut, fullscreen toggle, and direct download.
+    - Refactored `CatalogCard` and `CatalogsDirectoryClient` to strictly present real CMS data without empty tabs or visual clutter.
+    - Production build verified (`5.48 kB` route size, `164 kB` first load JS).
   - Showrooms & Dealers Locator Overhaul (`/dealers`):
     - Resolved PostgreSQL enum type crash (`22P02: invalid input value for enum enum_dealers_province: "تهران"`).
     - Integrated provincial capital city mapping into `IRAN_PROVINCES` (`center`, `centerEn`, `centerAr`), enabling instant city-level search (شیراز، کرج، مشهد، تبریز، اهواز، رشت، ساری، ارومیه).
@@ -29,20 +29,13 @@
 
 ## Log Entries (Newest First)
 
-### [2026-11-24] — Bespoke Architectural Lookbook, Interactive Material Reader & Luxury Catalog Showcase
+### [2026-11-24] — Clean Luxury Catalog Showcase & In-Site PDF Viewer Overhaul
 - **Changes:**
-  - **Hero Showcase (`CatalogHeroFeatured`):** Replaced the plain static card layout with an editorial 3D publication showcase for the flagship 2026 Master Collection. Features slab dimension specs ($320 \times 160\text{ cm}$, $20\text{ & }30\text{ mm}$), Bretonstone® technology badge, and prominent dual CTAs ("ورق زدن و کاوش در ژورنال" + "دانلود نسخه چاپی با کیفیت بالا").
-  - **Interactive Lookbook Reader (`CatalogLookbookModal`):**
-    - Built a dedicated full-screen dark architectural reader (`bg-neutral-950/98 backdrop-blur-2xl`) tailored specifically for luxury quartz stone surfaces.
-    - **Interactive Spreads Mode:** Displays curated architectural spreads with macro texture zoom ($0.75\times$ to $2.5\times$), technical stone specifications, and pulsing interactive hotspots on slabs linking directly to product pages.
-    - **In-Site Native Document Mode:** Clean sandboxed frame rendering the uploaded PDF directly without forcing external downloads or throwing the user out of the site context.
-    - **Controls & Navigation:** Full keyboard support (RTL/LTR aware Left/Right arrows, Esc to exit, F for fullscreen), mobile touch-swipe gestures, overview contact-sheet grid drawer, and one-click URL sharing with clipboard feedback.
-  - **High-Performance Client Directory (`CatalogsDirectoryClient`):** Sub-millisecond in-memory category filtering (همه، کاتالوگ جامع، مشخصات فنی، کالکشن‌ها، راهنماها) and live instant search with zero layout shift.
-  - **Editorial Monograph Cards (`CatalogEditorialCard`):** Redesigned catalog cards with an architectural portrait ratio (`aspect-[3/4]`), spine depth styling, year badges, Breton Tech badge, and dual action buttons.
-  - **Multilingual Localization:** Updated `fa.json`, `en.json`, and `ar.json` with over 25+ luxury architectural terminology keys.
-- **Key Decisions:**
-  - Abandoned skeuomorphic faux paper flipping (which crashed in prior attempts due to `react-pdf` / React 19 incompatibilities and heavy client canvas bloat).
-  - Adopted a modern editorial showcase architecture (Caesarstone & Breton standard): lightweight First Load JS (173 kB), zero CLS, sub-millisecond filtering, and 60fps gesture transitions.
+  - **Removed Overengineered & Hardcoded Bloat:** Completely purged dummy hardcoded spreads, fake English headers, fake technical spec rows ("خلوص ۹۳٪", "۳۲۰ در ۱۶۰"), and awkward overlaid badges.
+  - **Fixed Cover Image Cropping:** Configured catalog cover image with `object-contain` and standard catalog proportions, ensuring the client's cover typography (e.g. "CATALOG PERSIS QUARTZ") is fully visible without any edge cropping.
+  - **Clean In-Site Viewer Modal (`CatalogViewerModal`):** Built a dedicated 100% full-screen in-site reader displaying the client's actual uploaded PDF. Features proper body scroll lock, dark backdrop, direct download, fullscreen controls, and keyboard `Esc` exit.
+  - **Minimalist Directory (`CatalogsDirectoryClient` & `CatalogCard`):** Removed empty category tabs, displaying only categories that contain published items. Cards display genuine CMS titles, descriptions, publication year, and localized file size.
+  - **Clean Multilingual Localization:** Purged bloated buzzwords from `fa.json`, `en.json`, and `ar.json`, keeping only clean, direct translations.
 - **Changes:**
   - **PostgreSQL Enum Type Fix:** Eliminated `{ province: { equals: match.fa } }` from `src/services/dealer.service.ts`. Because Payload CMS maps `select` fields to Postgres enums (`enum_dealers_province`), passing Persian labels caused PostgreSQL error `22P02`. Queries now strictly query the valid enum slug (`match.slug`).
   - **Capital Cities & Regional Mapping:** Enriched `IRAN_PROVINCES` in `src/lib/constants/provinces.ts` with `center`, `centerEn`, and `centerAr` for all 31 Iranian provinces, enabling `normalizeProvinceToSlug` to resolve city names directly to their province slugs (e.g. "شیراز" -> "fars", "کرج" -> "alborz", "مشهد" -> "khorasan-razavi").
