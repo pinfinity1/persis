@@ -4,6 +4,24 @@ import { getPayload } from "payload";
 import configPromise from "@/payload.config";
 import { unstable_cache } from "next/cache";
 
+export interface CatalogMediaSize {
+  url?: string | null;
+  width?: number | null;
+  height?: number | null;
+}
+
+export interface CatalogCoverMedia {
+  url: string;
+  alt?: string | null;
+  width?: number | null;
+  height?: number | null;
+  sizes?: {
+    thumbnail?: CatalogMediaSize;
+    card?: CatalogMediaSize;
+    desktop?: CatalogMediaSize;
+  } | null;
+}
+
 export interface CatalogItem {
   id: string;
   title: string;
@@ -11,7 +29,7 @@ export interface CatalogItem {
   year: number;
   catalog_type: "full_catalog" | "technical" | "collection" | "guide";
   description?: string;
-  cover_image: { url: string; alt?: string } | string;
+  cover_image: CatalogCoverMedia | string;
   pdf_file: { url: string; filename?: string } | string;
   file_size_mb: number;
   page_count?: number;

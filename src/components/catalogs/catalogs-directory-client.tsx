@@ -20,7 +20,7 @@ export const CatalogsDirectoryClient: React.FC<CatalogsDirectoryClientProps> = (
   const [activeType, setActiveType] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
-  // شناسایی دسته‌بندی‌هایی که واقعاً دارای کاتالوگ هستند (جلوگیری از نمایش تب‌های خالی)
+  // شناسایی دسته‌بندی‌هایی که واقعاً دارای کاتالوگ هستند
   const availableTypes = useMemo(() => {
     const types = new Set<string>();
     initialCatalogs.forEach((c) => {
@@ -29,7 +29,7 @@ export const CatalogsDirectoryClient: React.FC<CatalogsDirectoryClientProps> = (
     return Array.from(types);
   }, [initialCatalogs]);
 
-  // فیلتر درلحظه
+  // فیلتر آنی در حافظه (<1ms)
   const filteredCatalogs = useMemo(() => {
     let result = initialCatalogs;
 
@@ -50,11 +50,14 @@ export const CatalogsDirectoryClient: React.FC<CatalogsDirectoryClientProps> = (
     return result;
   }, [initialCatalogs, activeType, searchQuery]);
 
+  const showFilterBar =
+    initialCatalogs.length > 2 || availableTypes.length > 1;
+
   return (
-    <div className="space-y-8 select-none">
-      {/* در صورتی که بیش از ۱ کاتالوگ یا بیش از ۱ دسته وجود داشته باشد، تولبار فیلتر نمایش داده می‌شود */}
-      {(initialCatalogs.length > 1 || availableTypes.length > 1) && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/50">
+    <div className="space-y-8 sm:space-y-10 select-none">
+      {/* نوار فیلتر و جستجو تنها زمانی نمایش داده می‌شود که کاتالوگ‌های متنوع وجود داشته باشند */}
+      {showFilterBar && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/40">
           {availableTypes.length > 1 && (
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
               <button
@@ -96,7 +99,8 @@ export const CatalogsDirectoryClient: React.FC<CatalogsDirectoryClientProps> = (
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="جستجو در کاتالوگ‌ها..."
+                placeholder={t("searchPlaceholder")}
+                aria-label={t("searchPlaceholder")}
                 className="rounded-none ps-9 h-9 text-xs bg-background/60 border-border/70"
               />
             </div>
@@ -104,15 +108,19 @@ export const CatalogsDirectoryClient: React.FC<CatalogsDirectoryClientProps> = (
         </div>
       )}
 
-      {/* لیست کاتالوگ‌ها */}
+      {/* گرید یکدست و منظم کارت‌های کاتالوگ در موبایل، تبلت و دسکتاپ */}
       {filteredCatalogs.length > 0 ? (
-        <div className="space-y-6">
-          {filteredCatalogs.map((catalog) => (
-            <CatalogCard key={catalog.id} catalog={catalog} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+          {filteredCatalogs.map((catalog, idx) => (
+            <CatalogCard
+              key={catalog.id}
+              catalog={catalog}
+              priority={idx < 3}
+            />
           ))}
         </div>
       ) : (
-        <div className="p-12 text-center bg-card border border-border/50">
+        <div className="p-12 sm:p-16 text-center bg-card/50 border border-border/40">
           <p className="text-sm font-light text-muted-foreground">
             {t("noCatalogsFound")}
           </p>

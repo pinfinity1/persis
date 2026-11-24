@@ -8,12 +8,13 @@
 - **Completed:**
   - Base project scaffolding with strict RSC, modular services (`src/services/`), and logical RTL/LTR design tokens.
   - Multilingual corporate portal with SEO metadata, canonicalization, and localized catalogs/products.
-  - Bespoke Clean In-Site Catalog Experience & PDF Viewer Overhaul (`/catalogs`):
-    - Completely eliminated all dummy hardcoded texts, fake specs, and bloated dummy spreads.
-    - Fixed cover image framing using `object-contain` with authentic aspect ratio and subtle drop-shadow, preventing any cropping of cover titles.
-    - Built `CatalogViewerModal`: a clean, focused, 100% full-screen responsive in-site PDF reader for the real catalog PDF uploaded by the client, with body scroll locking, escape shortcut, fullscreen toggle, and direct download.
-    - Refactored `CatalogCard` and `CatalogsDirectoryClient` to strictly present real CMS data without empty tabs or visual clutter.
-    - Production build verified (`5.48 kB` route size, `164 kB` first load JS).
+  - High-Performance Progressive Catalog & PDF Streaming Studio (`/catalogs`):
+    - Eliminated the slow 30MB monolithic `<iframe>` PDF download bottleneck by architecting `CatalogPdfReader` using pure `pdfjs-dist` (`6.5.438` legacy build) loaded via dynamic import on demand (`0 KB` initial page JS overhead) and a local worker (`public/pdf.worker.min.mjs`, zero external CDN reliance).
+    - Configured HTTP Byte-Range streaming (`disableAutoFetch: true`, `rangeChunkSize: 65536`) paired with `@payloadcms/storage-s3` `206 Partial Content` support, allowing Page 1 to stream and render on HiDPI `<canvas>` rapidly with background prefetching for subsequent pages.
+    - Built full responsive reader controls: Desktop Single/Spread view toggle, lazy IntersectionObserver thumbnail drawer, zoom (`75%`–`225%`), keyboard shortcuts (`Arrows`, `Esc`, `F`, `+`/`-`), mobile touch-swipe navigation, real-time progress bar, and error fallback links.
+    - Implemented a uniform responsive card grid (`grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`) in `CatalogsDirectoryClient` + `CatalogCard`, ensuring consistent horizontal alignment across multiple catalogs on mobile, tablet, and desktop.
+    - Framed catalog covers inside `aspect-[4/3]` with an ambient blurred backdrop matching each cover's palette + uncropped `object-contain` foreground, adapting seamlessly to square, landscape, or portrait artwork.
+    - Production build verified (`9.85 kB` route size, `168 kB` first load JS).
   - Showrooms & Dealers Locator Overhaul (`/dealers`):
     - Resolved PostgreSQL enum type crash (`22P02: invalid input value for enum enum_dealers_province: "تهران"`).
     - Integrated provincial capital city mapping into `IRAN_PROVINCES` (`center`, `centerEn`, `centerAr`), enabling instant city-level search (شیراز، کرج، مشهد، تبریز، اهواز، رشت، ساری، ارومیه).
@@ -28,6 +29,16 @@
 ---
 
 ## Log Entries (Newest First)
+
+### [2026-11-25] — High-Performance Progressive PDF.js Range-Streaming Reader & ISR Optimization
+- **Changes:**
+  - **Eliminated 30MB `<iframe>` Bottleneck (`CatalogPdfReader`):** Installed `pdfjs-dist` (`6.5.438`) and copied `pdf.worker.min.mjs` locally to `public/pdf.worker.min.mjs` (eliminating external CDN dependencies). Dynamically imported `pdfjs-dist/legacy/build/pdf.mjs` only when opening a catalog, keeping `/[locale]/catalogs` First Load JS at `168 kB`.
+  - **Progressive HTTP Range Streaming:** Configured `disableAutoFetch: true` and `rangeChunkSize: 65536` (`64 KB` chunks) to stream only needed page bytes over HTTP `206 Partial Content`, rendering HiDPI `<canvas>` pages with background prefetching of the next page.
+  - **Responsive Luxury Reader UX:** Added Single/Spread view toggle on desktop (`>= 960px`), lazy `IntersectionObserver` thumbnails drawer, zoom (`75%–225%`), keyboard shortcuts, mobile touch-swipe navigation, real-time loading progress bar, and direct open/download fallback.
+  - **ISR & WebP Image Optimization:** Added `export const revalidate = 3600` to `src/app/[locale]/catalogs/page.tsx` and updated `CatalogService` + `CatalogCard` to serve Payload's pre-generated WebP `sizes.desktop` cover image directly.
+  - **ESLint Config:** Added `public/pdf.worker.min.mjs` to `eslint.config.mjs` ignores.
+- **Key Decisions:**
+  - Using `pdfjs-dist/legacy/build/pdf.mjs` directly (without `react-pdf`) avoids React 19 peer/SSR canvas issues while supporting Safari 16+/iOS and all modern browsers via local worker assets.
 
 ### [2026-11-24] — Clean Luxury Catalog Showcase & In-Site PDF Viewer Overhaul
 - **Changes:**

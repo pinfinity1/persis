@@ -1,6 +1,8 @@
 // src/app/[locale]/catalogs/page.tsx
 import React from "react";
 import type { Metadata } from "next";
+
+export const revalidate = 3600;
 import { getGroupedCatalogsService, type CatalogItem } from "@/services/catalog.service";
 import { getSeoSettingsService } from "@/services/seo.service";
 import { getTranslations, setRequestLocale } from "next-intl/server";
