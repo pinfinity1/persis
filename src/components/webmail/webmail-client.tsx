@@ -468,10 +468,10 @@ export default function WebmailClient({
           className="flex items-center gap-2.5 transition-opacity hover:opacity-85"
         >
           <Image
-            src="/PersisQuartz-Red.png"
+            src="/PersisQuartz-White.svg"
             alt="Persis Quartz"
             width={130}
-            height={32}
+            height={46}
             priority
             className="h-7 w-auto object-contain"
           />

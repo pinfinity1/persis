@@ -77,7 +77,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ heroData }) => {
           <div className="absolute inset-0 bg-[radial-gradient(#ffffff08_1px,transparent_1px)] [background-size:24px_24px] opacity-40" />
           <div className="relative w-52 sm:w-64 h-42 opacity-50">
             <Image
-              src="/PersisQuartz-Red.png"
+              src="/PersisQuartz-Red.svg"
               alt="Persis Quartz Logo"
               fill
               className="object-contain"

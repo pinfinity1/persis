@@ -59,7 +59,8 @@ export const Footer: React.FC<FooterProps> = ({ categories = [] }) => {
           <div className="lg:col-span-4 space-y-8 pb-8 sm:pb-0 border-b border-neutral-900 sm:border-none">
             <Logo
               variant="full"
-              className="w-40 brightness-0 invert opacity-90 hover:opacity-100 transition-opacity"
+              tone="white"
+              className="w-40 opacity-95 hover:opacity-100 transition-opacity"
             />
             <p className="text-sm text-neutral-400 leading-relaxed max-w-sm font-light">
               {t("description")}

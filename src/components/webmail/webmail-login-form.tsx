@@ -4,7 +4,15 @@
 import React, { useState, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Mail, Lock, ShieldCheck, ArrowRight, Eye, EyeOff, Loader2 } from "lucide-react";
+import {
+  Mail,
+  Lock,
+  ShieldCheck,
+  ArrowRight,
+  Eye,
+  EyeOff,
+  Loader2,
+} from "lucide-react";
 import { webmailLoginAction } from "@/app/actions/mail-actions";
 
 export default function WebmailLoginForm() {
@@ -29,13 +37,13 @@ export default function WebmailLoginForm() {
   return (
     <main className="relative flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 overflow-hidden bg-background">
       {/* Ambient Lighting & Architectural Glow */}
-      <div 
-        aria-hidden="true" 
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(155,7,55,0.18),transparent_70%)]" 
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(155,7,55,0.18),transparent_70%)]"
       />
-      <div 
-        aria-hidden="true" 
-        className="pointer-events-none absolute -bottom-40 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-primary/5 rounded-full blur-3xl" 
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-40 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-primary/5 rounded-full blur-3xl"
       />
 
       {/* Main Container */}
@@ -48,10 +56,10 @@ export default function WebmailLoginForm() {
             className="group mb-6 inline-flex transition-transform hover:scale-105 duration-300"
           >
             <Image
-              src="/PersisQuartz-Red.png"
+              src="/PersisQuartz-Red.svg"
               alt="لوگوی پرسیس کوارتز"
               width={190}
-              height={50}
+              height={67}
               priority
               className="h-10 w-auto object-contain drop-shadow-sm"
             />
@@ -60,7 +68,8 @@ export default function WebmailLoginForm() {
             سامانه مکاتبات سازمانی
           </h1>
           <p className="mt-2 text-xs sm:text-sm text-muted-foreground max-w-xs leading-relaxed">
-            درگاه یکپارچه مدیریت ارتباطات، ارسال و دریافت نامه‌های الکترونیکی رسمی شرکت
+            درگاه یکپارچه مدیریت ارتباطات، ارسال و دریافت نامه‌های الکترونیکی
+            رسمی شرکت
           </p>
         </div>
 
@@ -130,10 +139,16 @@ export default function WebmailLoginForm() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? "پنهان کردن رمز عبور" : "نمایش رمز عبور"}
+                  aria-label={
+                    showPassword ? "پنهان کردن رمز عبور" : "نمایش رمز عبور"
+                  }
                   className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
             </div>

@@ -23,12 +23,28 @@
   - Payload CMS administrative portal (`/persis-cp`) with automated migration management.
   - Contact and Inquiry forms with Sliding Window Rate Limiter and asynchronous non-blocking email dispatch.
   - Enterprise Webmail & Outbound/Inbound Infrastructure (`mail.persisquartz.com`).
-- **In Progress:** Cloudflare Worker edge deployment & production build verification.
-- **Next Up:** Domain DNS cutover and live email routing tests.
+  - Brand Identity & Custom Latin Typeface Samples (`PersisType Display` & `PersisType Luxury`):
+    - Engineered a mathematically exact `11u × 11u` `P` monogram (`1.0u` uniform stroke, `2u/1u` concentric arcs, `0.6u` architectural stencil gap, parallel `45°` bevels) and applied the full perfected icon & wordmark suite (`public/logo-Red.*`, `public/logo-Red-bgwhite.svg`, `public/logo-Circle.svg`, `public/logo-Mark.svg`, `public/PersisQuartz-Red.*`, `public/PersisQuartz-White.*`, `public/logo/*`, `src/app/icon0.svg`, `icon1.png`, `apple-icon.png`, `favicon.ico`, `web-app-manifest-*.png`).
+    - Upgraded `Logo` (`src/components/shared/logo.tsx`) to crisp vector SVG with `tone="white"` / `full-white` / `icon-circle` / `icon-transparent` variants and wired dark-surface components (`Header` over hero, `Footer`, `HeroBanner` fallback, `/mail` login & sidebar, and `[locale]/loading.tsx`) to use crisp `PersisQuartz-White.svg` and `logo-Red.svg`.
+    - **Sample 1 (`PersisType Display` V1.1 in `public/fonts/PersisTypeDisplay-Latin.*`):** `67` glyphs (`83` codepoints) derived from the `P` monogram with Breton-accurate `b`/`d` symmetry, **10 OpenType `GSUB` (`liga`/`calt`) horizontal interlocks** (`ab, de, op, ob, ap, ep, up, qu, qr, st`), and `GPOS` kerning.
+    - **Sample 2 (`PersisType Luxury` V1.0 in `public/fonts/PersisTypeLuxury-Latin.*`):** `58` glyphs (`84` codepoints) wide `1:8.3` luxury display typeface inspired by the client's `PERSIS` & `CATALOG` artwork, designed to pair with the `P` monogram logo.
+- **In Progress:** Cloudflare Worker edge deployment & production build verification; bilingual Persian typeface phase pending explicit user confirmation.
+- **Next Up:** Domain DNS cutover, live email routing tests, and Persian companion selection for `PersisType`.
 
 ---
 
 ## Log Entries (Newest First)
+
+### [2026-11-27] — Brand Identity Overhaul: P-Monogram Grid, `PersisType Display` V1.1 (Breton Interlocks) & `PersisType Luxury` Sample 2
+- **Changes:**
+  - **Geometric Monogram Reconstruction & Clean Repo Assets:** Standardized the `P` monogram onto an `11u × 11u` grid and updated `public/logo-Red.*`, `public/logo-Red-bgwhite.svg`, `public/logo-Circle.svg`, `public/logo-Mark.svg`, `public/PersisQuartz-Red.*` (with `q_u` interlock), `public/PersisQuartz-White.*`, `public/logo/*`, `src/app/icon0.svg`, `icon1.png`, `apple-icon.png`, `favicon.ico`, and maskable PWA icons.
+  - **UI Component Integration (`Logo`, `Header`, `Footer`, `HeroBanner`, Webmail, `Loading`):** Upgraded `src/components/shared/logo.tsx` to crisp vector SVGs with `tone="white"` and circle/transparent variants; wired dark surfaces (`Header` un-scrolled hero bar, `Footer` replacing `brightness-0 invert`, `HeroBanner` dark fallback, `webmail-login-form.tsx`, `webmail-client.tsx`) to `/PersisQuartz-White.svg` and `[locale]/loading.tsx` to `/logo-Red.svg`.
+  - **Sample 1 (`PersisType Display` V1.1 — `public/fonts/PersisTypeDisplay-Latin.*`):** Added Breton-style vertical mirrors on `b` and `d` (extended `5u..6u` crossbars matching `p`/`q`), **10 OpenType `GSUB` (`liga`/`calt`) horizontal interlocking bridges** (`a_b`, `d_e`, `o_p`, `o_b`, `a_p`, `e_p`, `u_p`, `q_u`, `q_r`, `s_t`), and tight `GPOS` kerning (`67` glyphs).
+  - **Sample 2 (`PersisType Luxury` V1.0 — `public/fonts/PersisTypeLuxury-Latin.*`):** Engineered a distinct wide architectural All-Caps display font (`58` glyphs, `1:8.33` stroke, swept leaf terminals, open `P/R/B/A/H/K` breaks) matching the client's `PERSIS` & `CATALOG` artwork to pair alongside the `P` monogram.
+- **Key Decisions:**
+  - Adopted the Breton identity principle where the monogram (`P`) is literally the lowercase `p` glyph of the brand typeface (`PersisType Display`).
+  - Set `OS/2` `ulCodePageRange1 = 0x1` (CP1252 Latin 1) and `fsType = 0` so `.ttf`/`.otf` install cleanly in Microsoft Word, Figma, macOS Font Book, and Windows.
+  - Deferred Persian companion design until explicit user instruction; `layout.tsx` and `globals.css` fonts remain untouched on `Vazirmatn` + `Inter` for now.
 
 ### [2026-11-25] — High-Performance Progressive PDF.js Range-Streaming Reader & ISR Optimization
 - **Changes:**

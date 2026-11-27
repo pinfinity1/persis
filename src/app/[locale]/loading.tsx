@@ -25,7 +25,7 @@ export default function Loading() {
         {/* ۲. آیکون تک‌حرفی P کاملاً صلب و شارپ */}
         <div className="relative size-11 flex items-center justify-center">
           <Image
-            src="/logo-Red.png"
+            src="/logo/persis-icon-transparent-red.svg"
             alt="Persis Quartz Loading"
             fill
             priority
