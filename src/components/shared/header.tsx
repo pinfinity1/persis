@@ -140,11 +140,7 @@ export const Header: React.FC<HeaderProps> = ({ categories = [] }) => {
       >
         <div className="container mx-auto flex h-20 items-center justify-between px-4 sm:px-8 xl:px-12">
           {/* ۱. لوگو */}
-          <Logo
-            variant="full"
-            tone={isHomePage && !isScrolled ? "white" : "default"}
-            className="w-32 sm:w-36 xl:w-40 shrink-0"
-          />
+          <Logo variant="full" className="w-32 sm:w-36 xl:w-40 shrink-0" />
 
           {/* ۲. منوی دسکتاپ (از xl به بالا تا در 1000 تا 1200 پیکسل به هم نریزد) */}
           <nav className="hidden xl:flex items-center gap-1 2xl:gap-2 min-w-0">
